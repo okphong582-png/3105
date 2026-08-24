@@ -67,49 +67,56 @@ struct SettingsView: View {
                     Text(language.text("settings.supported_versions_footer"))
                 }
 
-                Section(language.text("settings.social_media")) {
-                    creditsRow(
-                        name: "GitHub Repository",
-                        role: "3105 x HoangHaMod,TrongKien",
-                        url: "https://github.com/okphong582-png/3105"
-                    )
+                // License Management Section
+                Section("BẢN QUYỀN & GIẤY PHÉP") {
+                    if let license = LicenseManager.shared.currentLicense {
+                        LabeledContent("Mã Key") {
+                            Text(maskedKey(license.key))
+                                .font(.subheadline.weight(.semibold).monospaced())
+                                .foregroundStyle(AppTheme.accent)
+                        }
+                        LabeledContent("Thời Hạn Còn Lại") {
+                            Text(license.remainingTimeFormatted)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.green)
+                        }
+                        LabeledContent("Thiết Bị Đã Liên Kết") {
+                            Text(license.deviceUsageFormatted)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    LabeledContent("Mã Thiết Bị (HWID)") {
+                        Text(LicenseManager.shared.deviceHWID)
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+
+                    Button(role: .destructive) {
+                        LicenseManager.shared.logout()
+                        dismiss()
+                    } label: {
+                        HStack {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                            Text("Đăng Xuất License Key")
+                        }
+                        .foregroundStyle(.red)
+                    }
+                }
+
+                Section("HỖ TRỢ & CỘNG ĐỒNG") {
                     creditsRow(
                         name: "HoangHaMod & TrongKien",
-                        role: "Mod & Customization",
-                        url: "https://github.com/okphong582-png/3105"
+                        role: "Phát triển & Tùy biến OniAkuma",
+                        url: "https://t.me/ioscrackvn"
                     )
                     creditsRow(
                         name: "Cộng Đồng IOSVN",
-                        role: language.text("social.iosvn_role"),
+                        role: "Kênh chia sẻ & Hỗ trợ kỹ thuật",
                         url: "https://t.me/ioscrackvn"
-                    )
-                }
-
-                Section(language.text("settings.credits")) {
-                    creditsRow(
-                        name: "YangJiii",
-                        role: language.text("credit.yangjiii"),
-                        url: "https://x.com/duongduong0908"
-                    )
-                    creditsRow(
-                        name: "0xjohnnydev",
-                        role: language.text("credit.filzaslop"),
-                        url: "https://github.com/0xjohnnydev/FilzaSlop"
-                    )
-                    creditsRow(
-                        name: "LeminLimez",
-                        role: language.text("credit.pocket_poster"),
-                        url: "https://github.com/leminlimez/Pocket-Poster"
-                    )
-                    creditsRow(
-                        name: "CrazyMind90",
-                        role: language.text("credit.sandbox_escape"),
-                        url: "https://github.com/CrazyMind90"
-                    )
-                    creditsRow(
-                        name: "forcequitOS",
-                        role: language.text("credit.forcequit"),
-                        url: "https://github.com/forcequitOS"
                     )
                 }
             }
@@ -172,5 +179,12 @@ struct SettingsView: View {
             }
             .accessibilityLabel(language.text("accessibility.open_profile", name))
         }
+    }
+
+    private func maskedKey(_ key: String) -> String {
+        guard key.count > 6 else { return key }
+        let prefix = key.prefix(4)
+        let suffix = key.suffix(3)
+        return "\(prefix)••••\(suffix)"
     }
 }

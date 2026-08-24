@@ -6,26 +6,19 @@ struct ThreeOneOSFiveApp: App {
     @StateObject private var appState = AppState()
     @StateObject private var patchDraftCoordinator = PatchDraftCoordinator()
     @StateObject private var fileOperationCoordinator = FileOperationCoordinator()
+    @ObservedObject private var licenseManager = LicenseManager.shared
     @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.vietnamese.rawValue
     @State private var showOnboarding = OnboardingStore.shouldShow()
     @State private var showAttribution = false
-    @State private var updateOffer: AppUpdateChecker.Offer?
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
         setupLogCapture()
-        log("app: 3105 launching — iOS \(AppInfo.osVersion) (\(AppInfo.osBuild)) \(AppInfo.machineName)")
+        log("app: OniAkuma launching — iOS \(AppInfo.osVersion) (\(AppInfo.osBuild)) \(AppInfo.machineName)")
     }
 
     private var language: AppLanguage {
         AppLanguage(rawValue: languageCode) ?? .vietnamese
-    }
-
-    private func checkForUpdate() {
-        Task {
-            guard let offer = await AppUpdateChecker.check() else { return }
-            await MainActor.run { updateOffer = offer }
-        }
     }
 
     @State private var showSplash = true
@@ -33,23 +26,31 @@ struct ThreeOneOSFiveApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                ContentView()
-                    .environmentObject(appState)
-                    .environmentObject(patchDraftCoordinator)
-                    .environmentObject(fileOperationCoordinator)
-                    .environment(\.appLanguage, language)
-                    .environment(\.locale, language.locale)
-                    .opacity((showSplash || showOnboarding) ? 0 : 1)
-                    .allowsHitTesting(!showSplash && !showOnboarding)
+                if !licenseManager.isAuthorized && !showSplash {
+                    KeyAuthView()
+                        .environment(\.appLanguage, language)
+                        .environment(\.locale, language.locale)
+                        .transition(.opacity)
+                        .zIndex(0)
+                } else {
+                    ContentView()
+                        .environmentObject(appState)
+                        .environmentObject(patchDraftCoordinator)
+                        .environmentObject(fileOperationCoordinator)
+                        .environment(\.appLanguage, language)
+                        .environment(\.locale, language.locale)
+                        .opacity((showSplash || showOnboarding) ? 0 : 1)
+                        .allowsHitTesting(!showSplash && !showOnboarding)
+                        .zIndex(0)
+                }
 
-                if showOnboarding && !showSplash {
+                if showOnboarding && !showSplash && licenseManager.isAuthorized {
                     OnboardingView {
                         OnboardingStore.markCompleted()
                         withAnimation(.spring(response: 0.42, dampingFraction: 0.86)) {
                             showOnboarding = false
                         }
                         appState.detectSupport()
-                        checkForUpdate()
                     }
                     .environment(\.appLanguage, language)
                     .environment(\.locale, language.locale)
@@ -62,9 +63,8 @@ struct ThreeOneOSFiveApp: App {
                         withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
                             showSplash = false
                         }
-                        if !showOnboarding {
+                        if !showOnboarding && licenseManager.isAuthorized {
                             appState.detectSupport()
-                            checkForUpdate()
                         }
                     }
                     .transition(.opacity.combined(with: .scale(scale: 1.05)))
@@ -72,30 +72,24 @@ struct ThreeOneOSFiveApp: App {
                 }
             }
             .preferredColorScheme(.dark)
-            .displayIdentityAttribution(isPresented: $showAttribution, enabled: !showOnboarding && !showSplash)
+            .displayIdentityAttribution(isPresented: $showAttribution, enabled: !showOnboarding && !showSplash && licenseManager.isAuthorized)
             .sheet(isPresented: $showAttribution) {
                 DisplayAttributionSheet()
             }
-            .alert(item: $updateOffer) { offer in
-                Alert(
-                    title: Text(language.text("update.title")),
-                    message: Text(language.text("update.message", offer.version)),
-                    primaryButton: .default(Text(language.text("update.agree"))) {
-                        UIApplication.shared.open(offer.url)
-                    },
-                    secondaryButton: .cancel(Text(language.text("update.dismiss"))) {
-                        AppUpdateChecker.dismiss(version: offer.version)
-                    }
-                )
-            }
             .onAppear {
-                if !showOnboarding && !showSplash {
+                if !showOnboarding && !showSplash && licenseManager.isAuthorized {
                     appState.detectSupport()
-                    checkForUpdate()
+                }
+                Task {
+                    await licenseManager.recheckLicense()
                 }
             }
             .onChange(of: scenePhase) { phase in
-                guard phase == .active, !showOnboarding, !showSplash else { return }
+                guard phase == .active else { return }
+                Task {
+                    await licenseManager.recheckLicense()
+                }
+                guard !showOnboarding, !showSplash, licenseManager.isAuthorized else { return }
                 appState.detectSupport()
             }
             .onOpenURL { url in

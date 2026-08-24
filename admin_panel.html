@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OniAkuma - Hệ Thống Quản Lý Bản Quyền Key</title>
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDK (v8 compat for reliable standalone execution) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #0a0c10;
+            --bg-surface: #12161f;
+            --bg-elevated: #1a202c;
+            --accent: #00e5ff;
+            --accent-glow: rgba(0, 229, 255, 0.35);
+            --gold: #ffc107;
+            --gold-glow: rgba(255, 193, 7, 0.35);
+            --danger: #ff4757;
+            --success: #2ed573;
+            --text: #f1f2f6;
+            --text-muted: #8892b0;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-active: rgba(0, 229, 255, 0.5);
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(0, 229, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(255, 193, 7, 0.05) 0%, transparent 40%);
+        }
+
+        /* Header */
+        header {
+            background: rgba(18, 22, 31, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1.5px solid var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--accent);
+            box-shadow: 0 0 16px var(--accent-glow);
+        }
+
+        .brand-info h1 {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            background: linear-gradient(90deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-info p {
+            font-size: 11px;
+            color: var(--gold);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+
+        .db-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(46, 213, 115, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(46, 213, 115, 0.3);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Container */
+        .container {
+            max-width: 1300px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 28px 20px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-active);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-val {
+            font-size: 26px;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-icon {
+            font-size: 28px;
+            opacity: 0.85;
+        }
+
+        /* Main Grid: Create Key & Key List */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1000px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+        }
+
+        .card-title i {
+            color: var(--accent);
+        }
+
+        /* Form Inputs */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        input.mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .btn {
+            background: var(--bg-elevated);
+            color: #fff;
+            border: 1px solid var(--border);
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.25s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--border-active);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00e5ff, #0099ff);
+            color: #000;
+            border: none;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #33ebff, #33adff);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        .btn-danger {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--danger);
+            border-color: rgba(255, 71, 87, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        /* Controls & Search */
+        .table-controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .search-box input {
+            padding-left: 38px;
+        }
+
+        /* Key Table */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-elevated);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 14px 16px;
+            font-weight: 700;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .key-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--accent);
+            background: rgba(0, 229, 255, 0.08);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-active {
+            background: rgba(46, 213, 115, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(46, 213, 115, 0.3);
+        }
+
+        .badge-unused {
+            background: rgba(255, 193, 7, 0.15);
+            color: var(--gold);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .badge-expired {
+            background: rgba(136, 146, 176, 0.15);
+            color: var(--text-muted);
+            border: 1px solid rgba(136, 146, 176, 0.3);
+        }
+
+        .badge-banned {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--danger);
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 6px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            max-width: 500px;
+            width: 100%;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+        }
+
+        /* Toast */
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: #1e293b;
+            color: #fff;
+            border-left: 4px solid var(--accent);
+            padding: 14px 20px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="brand-info">
+                <h1>OniAkuma License Portal</h1>
+                <p>3105 x HoangHaMod,TrongKien</p>
+            </div>
+        </div>
+
+        <div class="db-status">
+            <div class="status-dot"></div>
+            <span>Firebase Connected</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Tổng Số Key</div>
+                    <div class="stat-val" id="stat-total" style="color: #fff;">0</div>
+                </div>
+                <i class="fa-solid fa-key stat-icon" style="color: var(--accent);"></i>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Đang Hoạt Động</div>
+                    <div class="stat-val" id="stat-active" style="color: var(--success);">0</div>
+                </div>
+                <i class="fa-solid fa-circle-check stat-icon" style="color: var(--success);"></i>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Chưa Kích Hoạt</div>
+                    <div class="stat-val" id="stat-unused" style="color: var(--gold);">0</div>
+                </div>
+                <i class="fa-solid fa-clock stat-icon" style="color: var(--gold);"></i>
+            </div>
+
+            <div class="stat-card">
+                <div>
+                    <div class="stat-label">Hết Hạn / Bị Khóa</div>
+                    <div class="stat-val" id="stat-expired" style="color: var(--danger);">0</div>
+                </div>
+                <i class="fa-solid fa-ban stat-icon" style="color: var(--danger);"></i>
+            </div>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Create Key Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        <span>Tạo Key Mới</span>
+                    </div>
+                </div>
+
+                <form id="createKeyForm" onsubmit="handleCreateKey(event)">
+                    <div class="form-group">
+                        <label>Mã Bản Quyền (Key)</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="newKeyInput" class="mono" placeholder="ONIAKUMA-XXXX-XXXX" required>
+                            <button type="button" class="btn btn-sm" onclick="generateRandomKey()" title="Tạo mã ngẫu nhiên">
+                                <i class="fa-solid fa-dice"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Thời Hạn Bản Quyền</label>
+                        <select id="durationSelect" onchange="handleDurationChange()">
+                            <option value="1h">1 Giờ (1h)</option>
+                            <option value="1d" selected>1 Ngày (1d)</option>
+                            <option value="1w">1 Tuần (7d)</option>
+                            <option value="1m">1 Tháng (30d)</option>
+                            <option value="1y">1 Năm (365d)</option>
+                            <option value="lifetime">Vĩnh Viễn (Lifetime)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Số Thiết Bị Tối Đa (Max Devices)</label>
+                        <input type="number" id="maxDevicesInput" min="1" max="100" value="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ghi Chú Khách Hàng</label>
+                        <input type="text" id="noteInput" placeholder="VD: Khách Telegram @abc, FB: XYZ">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="margin-top: 10px; width: 100%;">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Tạo Key Ngay</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Key List Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Danh Sách Key Real-Time</span>
+                    </div>
+
+                    <button class="btn btn-sm" onclick="refreshKeys()">
+                        <i class="fa-solid fa-arrows-rotate"></i> Làm mới
+                    </button>
+                </div>
+
+                <div class="table-controls">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchInput" placeholder="Tìm theo mã key hoặc ghi chú..." oninput="filterKeys()">
+                    </div>
+
+                    <select id="statusFilter" style="width: auto;" onchange="filterKeys()">
+                        <option value="all">Tất Cả Trạng Thái</option>
+                        <option value="active">Đang Hoạt Động</option>
+                        <option value="unused">Chưa Kích Hoạt</option>
+                        <option value="expired">Đã Hết Hạn</option>
+                        <option value="banned">Bị Khóa</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mã Key</th>
+                                <th>Trạng Thái</th>
+                                <th>Thời Hạn / Còn Lại</th>
+                                <th>Thiết Bị</th>
+                                <th>Ghi Chú</th>
+                                <th>Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keysTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 20px;"></i> Đang tải dữ liệu từ Firebase...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HWID Details Modal -->
+    <div class="modal-overlay" id="hwidModal">
+        <div class="modal">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="fa-solid fa-mobile-screen"></i>
+                    <span>Danh Sách Thiết Bị Đã Log</span>
+                </div>
+                <button class="btn btn-sm" onclick="closeHWIDModal()">✕</button>
+            </div>
+            <div id="hwidListContent" style="display: flex; flex-direction: column; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px;"></div>
+            <button class="btn btn-danger" id="resetDevicesModalBtn" style="margin-top: 10px;">
+                <i class="fa-solid fa-trash-can"></i> Reset Toàn Bộ Thiết Bị
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script>
+        // Firebase Config from User
+        const firebaseConfig = {
+            apiKey: "AIzaSyDG0lwriCxQ9NMVDVCA6EoCBvUIdxN3KV4",
+            authDomain: "ewrergdf.firebaseapp.com",
+            databaseURL: "https://ewrergdf-default-rtdb.firebaseio.com",
+            projectId: "ewrergdf",
+            storageBucket: "ewrergdf.firebasestorage.app",
+            messagingSenderId: "431460023212",
+            appId: "1:431460023212:web:a7e0dcebe8b8da8db49809",
+            measurementId: "G-XPXK8VH9DV"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+        const keysRef = db.ref('keys');
+
+        let allKeys = {};
+
+        // Realtime Listener
+        keysRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            allKeys = data || {};
+            renderKeys();
+            updateStats();
+        }, (error) => {
+            showToast('Lỗi kết nối Firebase: ' + error.message, 'error');
+        });
+
+        // Generate Random Key
+        function generateRandomKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let part1 = '';
+            let part2 = '';
+            for (let i = 0; i < 4; i++) part1 += chars.charAt(Math.floor(Math.random() * chars.length));
+            for (let i = 0; i < 4; i++) part2 += chars.charAt(Math.floor(Math.random() * chars.length));
+            document.getElementById('newKeyInput').value = `ONIAKUMA-${part1}-${part2}`;
+        }
+
+        // Duration Seconds Map
+        const DURATION_MAP = {
+            '1h': 3600,
+            '1d': 86400,
+            '1w': 604800,
+            '1m': 2592000,
+            '1y': 31536000,
+            'lifetime': -1
+        };
+
+        // Handle Create Key
+        function handleCreateKey(e) {
+            e.preventDefault();
+            const rawKey = document.getElementById('newKeyInput').value.trim().toUpperCase();
+            const duration = document.getElementById('durationSelect').value;
+            const maxDevices = parseInt(document.getElementById('maxDevicesInput').value) || 1;
+            const note = document.getElementById('noteInput').value.trim();
+
+            if (!rawKey) {
+                showToast('Vui lòng nhập mã key!', 'error');
+                return;
+            }
+
+            const sanitizedKey = rawKey.replace(/[.#$\[\]\/]/g, '_');
+            const now = Date.now();
+            const durationSec = DURATION_MAP[duration];
+
+            const keyData = {
+                key: rawKey,
+                status: 'active',
+                duration: duration,
+                durationSeconds: durationSec,
+                maxDevices: maxDevices,
+                usedDevices: [],
+                createdAt: now,
+                activatedAt: null,
+                expiresAt: null,
+                note: note || 'Không có ghi chú'
+            };
+
+            keysRef.child(sanitizedKey).set(keyData).then(() => {
+                showToast(`Đã tạo key ${rawKey} thành công!`, 'success');
+                document.getElementById('createKeyForm').reset();
+                generateRandomKey();
+            }).catch((err) => {
+                showToast('Lỗi khi tạo key: ' + err.message, 'error');
+            });
+        }
+
+        // Render Keys Table
+        function renderKeys() {
+            const tbody = document.getElementById('keysTableBody');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            const keyArray = Object.keys(allKeys).map(k => allKeys[k]);
+
+            const filtered = keyArray.filter(item => {
+                if (!item || !item.key) return false;
+                const matchSearch = item.key.toLowerCase().includes(searchTerm) || (item.note && item.note.toLowerCase().includes(searchTerm));
+                
+                const now = Date.now();
+                let computedStatus = item.status;
+                if (item.status === 'banned') {
+                    computedStatus = 'banned';
+                } else if (!item.activatedAt) {
+                    computedStatus = 'unused';
+                } else if (item.expiresAt > 0 && now > item.expiresAt) {
+                    computedStatus = 'expired';
+                } else {
+                    computedStatus = 'active';
+                }
+
+                if (statusFilter === 'all') return matchSearch;
+                return matchSearch && computedStatus === statusFilter;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                            Không tìm thấy key nào phù hợp!
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(item => {
+                const now = Date.now();
+                let statusBadge = '';
+                let remainingText = '';
+
+                if (item.status === 'banned') {
+                    statusBadge = '<span class="badge badge-banned"><i class="fa-solid fa-ban"></i> Bị Khóa</span>';
+                    remainingText = '<span style="color: var(--danger);">Đã vô hiệu hóa</span>';
+                } else if (!item.activatedAt) {
+                    statusBadge = '<span class="badge badge-unused"><i class="fa-solid fa-clock"></i> Chưa Kích Hoạt</span>';
+                    remainingText = `<span style="color: var(--gold);">${formatDuration(item.durationSeconds)} (Chưa kích)</span>`;
+                } else if (item.expiresAt === -1 || item.duration === 'lifetime') {
+                    statusBadge = '<span class="badge badge-active"><i class="fa-solid fa-infinity"></i> Vĩnh Viễn</span>';
+                    remainingText = '<span style="color: var(--accent);">Vĩnh Viễn</span>';
+                } else if (item.expiresAt && now > item.expiresAt) {
+                    statusBadge = '<span class="badge badge-expired"><i class="fa-solid fa-hourglass-end"></i> Hết Hạn</span>';
+                    remainingText = '<span style="color: var(--text-muted);">Đã hết hạn</span>';
+                } else {
+                    statusBadge = '<span class="badge badge-active"><i class="fa-solid fa-check"></i> Đang Dùng</span>';
+                    remainingText = `<span style="color: var(--success); font-weight: 600;">${getRemainingTimeString(item.expiresAt)}</span>`;
+                }
+
+                const usedCount = (item.usedDevices || []).length;
+                const maxDevs = item.maxDevices || 1;
+                const sanitized = item.key.replace(/[.#$\[\]\/]/g, '_');
+
+                return `
+                    <tr>
+                        <td>
+                            <div class="key-badge">
+                                <span>${item.key}</span>
+                                <i class="fa-regular fa-copy" style="cursor: pointer;" onclick="copyToClipboard('${item.key}')" title="Sao chép"></i>
+                            </div>
+                        </td>
+                        <td>${statusBadge}</td>
+                        <td>${remainingText}</td>
+                        <td>
+                            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; cursor: pointer; text-decoration: underline;" onclick="openHWIDModal('${sanitized}')" title="Xem danh sách HWID">
+                                ${usedCount}/${maxDevs} thiết bị
+                            </span>
+                        </td>
+                        <td style="color: var(--text-muted); font-size: 12px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${item.note || '-'}
+                        </td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="btn btn-sm" onclick="toggleBanKey('${sanitized}', '${item.status}')" title="${item.status === 'banned' ? 'Mở khóa' : 'Khóa key'}">
+                                    <i class="fa-solid ${item.status === 'banned' ? 'fa-unlock' : 'fa-lock'}"></i>
+                                </button>
+                                <button class="btn btn-sm" onclick="resetDevices('${sanitized}')" title="Reset thiết bị">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteKey('${sanitized}')" title="Xóa key">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Helpers
+        function formatDuration(sec) {
+            if (sec === -1) return 'Vĩnh Viễn';
+            const days = Math.floor(sec / 86400);
+            const hours = Math.floor((sec % 86400) / 3600);
+            if (days > 0) return `${days} ngày`;
+            if (hours > 0) return `${hours} giờ`;
+            return `${Math.floor(sec / 60)} phút`;
+        }
+
+        function getRemainingTimeString(expMs) {
+            const diffMs = expMs - Date.now();
+            if (diffMs <= 0) return 'Đã hết hạn';
+            const diffSec = Math.floor(diffMs / 1000);
+            const days = Math.floor(diffSec / 86400);
+            const hours = Math.floor((diffSec % 86400) / 3600);
+            const minutes = Math.floor((diffSec % 3600) / 60);
+
+            if (days > 0) return `Còn ${days} ngày ${hours}h`;
+            if (hours > 0) return `Còn ${hours}h ${minutes}m`;
+            return `Còn ${minutes} phút`;
+        }
+
+        function updateStats() {
+            const keys = Object.values(allKeys);
+            const now = Date.now();
+            let total = keys.length;
+            let active = 0;
+            let unused = 0;
+            let expired = 0;
+
+            keys.forEach(k => {
+                if (k.status === 'banned' || (k.expiresAt > 0 && now > k.expiresAt)) {
+                    expired++;
+                } else if (!k.activatedAt) {
+                    unused++;
+                } else {
+                    active++;
+                }
+            });
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-active').innerText = active;
+            document.getElementById('stat-unused').innerText = unused;
+            document.getElementById('stat-expired').innerText = expired;
+        }
+
+        function filterKeys() {
+            renderKeys();
+        }
+
+        function refreshKeys() {
+            renderKeys();
+            showToast('Đã làm mới danh sách!', 'success');
+        }
+
+        // Actions
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            showToast(`Đã sao chép: ${text}`, 'success');
+        }
+
+        function deleteKey(sanitizedKey) {
+            if (confirm(`Bạn có chắc chắn muốn XÓA key này vĩnh viễn?`)) {
+                keysRef.child(sanitizedKey).remove().then(() => {
+                    showToast('Đã xóa key thành công!', 'success');
+                }).catch(err => {
+                    showToast('Lỗi khi xóa: ' + err.message, 'error');
+                });
+            }
+        }
+
+        function toggleBanKey(sanitizedKey, currentStatus) {
+            const newStatus = currentStatus === 'banned' ? 'active' : 'banned';
+            keysRef.child(sanitizedKey).update({ status: newStatus }).then(() => {
+                showToast(`Đã ${newStatus === 'banned' ? 'khóa' : 'mở khóa'} key!`, 'success');
+            }).catch(err => {
+                showToast('Lỗi: ' + err.message, 'error');
+            });
+        }
+
+        function resetDevices(sanitizedKey) {
+            if (confirm('Xóa toàn bộ thiết bị đã log trên key này để khách đăng nhập máy mới?')) {
+                keysRef.child(sanitizedKey).update({ usedDevices: [] }).then(() => {
+                    showToast('Đã reset thiết bị cho key!', 'success');
+                }).catch(err => {
+                    showToast('Lỗi: ' + err.message, 'error');
+                });
+            }
+        }
+
+        // HWID Modal
+        function openHWIDModal(sanitizedKey) {
+            const item = allKeys[sanitizedKey];
+            if (!item) return;
+
+            const modal = document.getElementById('hwidModal');
+            const content = document.getElementById('hwidListContent');
+            const resetBtn = document.getElementById('resetDevicesModalBtn');
+
+            const devices = item.usedDevices || [];
+            if (devices.length === 0) {
+                content.innerHTML = '<div style="color: var(--text-muted); padding: 10px;">Chưa có thiết bị nào kích hoạt key này.</div>';
+            } else {
+                content.innerHTML = devices.map((d, i) => `
+                    <div style="background: var(--bg-elevated); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+                        <span>#${i+1}: ${d}</span>
+                        <i class="fa-solid fa-copy" style="cursor: pointer; color: var(--accent);" onclick="copyToClipboard('${d}')"></i>
+                    </div>
+                `).join('');
+            }
+
+            resetBtn.onclick = () => {
+                resetDevices(sanitizedKey);
+                closeHWIDModal();
+            };
+
+            modal.classList.add('active');
+        }
+
+        function closeHWIDModal() {
+            document.getElementById('hwidModal').classList.remove('active');
+        }
+
+        // Toast Helper
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i><span>${msg}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Auto-generate initial random key on load
+        generateRandomKey();
+    </script>
+</body>
+</html>
