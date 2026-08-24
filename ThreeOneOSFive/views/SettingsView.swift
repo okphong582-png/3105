@@ -121,6 +121,7 @@ struct SettingsView: View {
 
                     Button(role: .destructive) {
                         LicenseManager.shared.logout()
+                        MultiLayerSecurityService.shared.lockdown()
                         dismiss()
                     } label: {
                         HStack {

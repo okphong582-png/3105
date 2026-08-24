@@ -8,6 +8,7 @@ struct ThreeOneOSFiveApp: App {
     @StateObject private var fileOperationCoordinator = FileOperationCoordinator()
     @ObservedObject private var licenseManager = LicenseManager.shared
     @ObservedObject private var vpnGuard = VPNGuardService.shared
+    @ObservedObject private var securityService = MultiLayerSecurityService.shared
     @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.vietnamese.rawValue
     @Environment(\.scenePhase) private var scenePhase
 
@@ -30,8 +31,8 @@ struct ThreeOneOSFiveApp: App {
                     VPNBlockedView()
                         .transition(.opacity)
                         .zIndex(10)
-                } else if !licenseManager.isAuthorized && !showSplash {
-                    KeyAuthView()
+                } else if !securityService.isCoreAccessPermitted() && !showSplash {
+                    MultiLayerSecurityGateView()
                         .environment(\.appLanguage, language)
                         .environment(\.locale, language.locale)
                         .transition(.opacity)
@@ -53,7 +54,7 @@ struct ThreeOneOSFiveApp: App {
                         withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
                             showSplash = false
                         }
-                        if licenseManager.isAuthorized {
+                        if securityService.isCoreAccessPermitted() {
                             appState.detectSupport()
                         }
                     }
@@ -65,7 +66,7 @@ struct ThreeOneOSFiveApp: App {
             .onAppear {
                 enforce_binary_security()
                 vpnGuard.checkVPN()
-                if !showSplash && licenseManager.isAuthorized {
+                if !showSplash && securityService.isCoreAccessPermitted() {
                     appState.detectSupport()
                 }
                 Task {
@@ -79,7 +80,7 @@ struct ThreeOneOSFiveApp: App {
                 Task {
                     await licenseManager.recheckLicense()
                 }
-                guard !showSplash, licenseManager.isAuthorized else { return }
+                guard !showSplash, securityService.isCoreAccessPermitted() else { return }
                 appState.detectSupport()
             }
             .onOpenURL { url in
