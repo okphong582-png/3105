@@ -218,18 +218,36 @@ struct KeyAuthView: View {
                     )
 
                     // Contact / Support
-                    VStack(spacing: 6) {
+                    VStack(spacing: 10) {
                         Text("Chưa có Key bản quyền?")
                             .font(.caption)
                             .foregroundStyle(.secondary)
 
-                        Link(destination: URL(string: "https://t.me/ioscrackvn")!) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "paperplane.fill")
-                                Text("Liên hệ Admin / Mua Key")
+                        HStack(spacing: 12) {
+                            Link(destination: URL(string: "https://zalo.me/0866445455")!) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "phone.fill")
+                                    Text("Mua Key (Zalo: 0866445455)")
+                                }
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(Color.white)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(Color.blue.opacity(0.85).cornerRadius(10))
                             }
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(AppTheme.accent)
+
+                            Link(destination: URL(string: "https://t.me/+1fstsksh_dMxNjE1")!) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "paperplane.fill")
+                                    Text("Nhóm Cộng Đồng")
+                                }
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(AppTheme.accent)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(AppTheme.accent.opacity(0.15).cornerRadius(10))
+                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.accent.opacity(0.4), lineWidth: 1))
+                            }
                         }
                     }
                     .padding(.top, 8)

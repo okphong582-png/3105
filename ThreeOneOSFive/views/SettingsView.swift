@@ -109,14 +109,19 @@ struct SettingsView: View {
 
                 Section("HỖ TRỢ & CỘNG ĐỒNG") {
                     creditsRow(
-                        name: "HoangHaMod & TrongKien",
-                        role: "Phát triển & Tùy biến OniAkuma",
-                        url: "https://t.me/ioscrackvn"
+                        name: "Mua Key / Hỗ Trợ Zalo",
+                        role: "Zalo: 0866445455",
+                        url: "https://zalo.me/0866445455"
                     )
                     creditsRow(
-                        name: "Cộng Đồng IOSVN",
-                        role: "Kênh chia sẻ & Hỗ trợ kỹ thuật",
-                        url: "https://t.me/ioscrackvn"
+                        name: "Nhóm Cộng Đồng OniAkuma",
+                        role: "Telegram: Nhóm Hỗ Trợ & Thảo Luận",
+                        url: "https://t.me/+1fstsksh_dMxNjE1"
+                    )
+                    creditsRow(
+                        name: "HoangHaMod & TrongKien",
+                        role: "Phát triển & Tùy biến OniAkuma",
+                        url: "https://zalo.me/0866445455"
                     )
                 }
             }
