@@ -31,13 +31,15 @@ jobs:
             sudo xcode-select -s /Applications/Xcode_16.0.app
           fi
           xcodebuild -version
+          echo "Listing Project Schemes & Targets:"
+          xcodebuild -list -project ThreeOneOSFive.xcodeproj
 
       - name: Build Xcode Project
         run: |
           set -o pipefail
           xcodebuild clean build \
             -project ThreeOneOSFive.xcodeproj \
-            -scheme ThreeOneOSFive \
+            -scheme 3105 \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build \
