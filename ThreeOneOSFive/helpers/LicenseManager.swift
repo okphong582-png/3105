@@ -4,7 +4,7 @@ import Security
 
 // MARK: - License Models
 struct LicenseInfo: Codable {
-    let key: String
+    var key: String
     var status: String // "active", "banned", "expired"
     var duration: String // "1h", "1d", "1w", "1m", "1y", "lifetime"
     var durationSeconds: Int64
@@ -14,6 +14,158 @@ struct LicenseInfo: Codable {
     var activatedAt: Int64?
     var expiresAt: Int64?
     var note: String?
+
+    enum CodingKeys: String, CodingKey {
+        case key, status, duration, durationSeconds, maxDevices, usedDevices, createdAt, activatedAt, expiresAt, note
+    }
+
+    init(
+        key: String,
+        status: String = "active",
+        duration: String = "1d",
+        durationSeconds: Int64 = 86400,
+        maxDevices: Int = 1,
+        usedDevices: [String] = [],
+        createdAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000),
+        activatedAt: Int64? = nil,
+        expiresAt: Int64? = nil,
+        note: String? = nil
+    ) {
+        self.key = key
+        self.status = status
+        self.duration = duration
+        self.durationSeconds = durationSeconds
+        self.maxDevices = maxDevices
+        self.usedDevices = usedDevices
+        self.createdAt = createdAt
+        self.activatedAt = activatedAt
+        self.expiresAt = expiresAt
+        self.note = note
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        self.key = (try? container.decode(String.self, forKey: .key)) ?? ""
+        self.status = (try? container.decode(String.self, forKey: .status)) ?? "active"
+        self.duration = (try? container.decode(String.self, forKey: .duration)) ?? "1d"
+
+        if let sec = try? container.decode(Int64.self, forKey: .durationSeconds) {
+            self.durationSeconds = sec
+        } else if let secInt = try? container.decode(Int.self, forKey: .durationSeconds) {
+            self.durationSeconds = Int64(secInt)
+        } else if let secStr = try? container.decode(String.self, forKey: .durationSeconds), let secVal = Int64(secStr) {
+            self.durationSeconds = secVal
+        } else {
+            self.durationSeconds = 86400
+        }
+
+        if let maxDev = try? container.decode(Int.self, forKey: .maxDevices) {
+            self.maxDevices = maxDev
+        } else if let maxDevStr = try? container.decode(String.self, forKey: .maxDevices), let maxVal = Int(maxDevStr) {
+            self.maxDevices = maxVal
+        } else {
+            self.maxDevices = 1
+        }
+
+        if let devList = try? container.decode([String].self, forKey: .usedDevices) {
+            self.usedDevices = devList
+        } else if let devDict = try? container.decode([String: String].self, forKey: .usedDevices) {
+            self.usedDevices = Array(devDict.values)
+        } else {
+            self.usedDevices = []
+        }
+
+        if let created = try? container.decode(Int64.self, forKey: .createdAt) {
+            self.createdAt = created
+        } else if let createdInt = try? container.decode(Int.self, forKey: .createdAt) {
+            self.createdAt = Int64(createdInt)
+        } else {
+            self.createdAt = Int64(Date().timeIntervalSince1970 * 1000)
+        }
+
+        if let act = try? container.decode(Int64.self, forKey: .activatedAt) {
+            self.activatedAt = act
+        } else if let actInt = try? container.decode(Int.self, forKey: .activatedAt) {
+            self.activatedAt = Int64(actInt)
+        } else {
+            self.activatedAt = nil
+        }
+
+        if let exp = try? container.decode(Int64.self, forKey: .expiresAt) {
+            self.expiresAt = exp
+        } else if let expInt = try? container.decode(Int.self, forKey: .expiresAt) {
+            self.expiresAt = Int64(expInt)
+        } else {
+            self.expiresAt = nil
+        }
+
+        self.note = try? container.decode(String.self, forKey: .note)
+    }
+
+    init(dict: [String: Any], fallbackKey: String) {
+        self.key = (dict["key"] as? String) ?? fallbackKey
+        self.status = (dict["status"] as? String) ?? "active"
+        self.duration = (dict["duration"] as? String) ?? "1d"
+        
+        if let sec = dict["durationSeconds"] as? Int64 {
+            self.durationSeconds = sec
+        } else if let sec = dict["durationSeconds"] as? Int {
+            self.durationSeconds = Int64(sec)
+        } else if let sec = dict["durationSeconds"] as? NSNumber {
+            self.durationSeconds = sec.int64Value
+        } else if let secStr = dict["durationSeconds"] as? String, let val = Int64(secStr) {
+            self.durationSeconds = val
+        } else {
+            self.durationSeconds = 86400
+        }
+
+        if let maxDev = dict["maxDevices"] as? Int {
+            self.maxDevices = maxDev
+        } else if let maxDev = dict["maxDevices"] as? NSNumber {
+            self.maxDevices = maxDev.intValue
+        } else if let maxDevStr = dict["maxDevices"] as? String, let val = Int(maxDevStr) {
+            self.maxDevices = val
+        } else {
+            self.maxDevices = 1
+        }
+
+        if let devs = dict["usedDevices"] as? [String] {
+            self.usedDevices = devs
+        } else if let devsDict = dict["usedDevices"] as? [String: String] {
+            self.usedDevices = Array(devsDict.values)
+        } else if let devsObj = dict["usedDevices"] as? [Any] {
+            self.usedDevices = devsObj.compactMap { "\($0)" }
+        } else {
+            self.usedDevices = []
+        }
+
+        if let created = dict["createdAt"] as? NSNumber {
+            self.createdAt = created.int64Value
+        } else if let created = dict["createdAt"] as? Int64 {
+            self.createdAt = created
+        } else {
+            self.createdAt = Int64(Date().timeIntervalSince1970 * 1000)
+        }
+
+        if let act = dict["activatedAt"] as? NSNumber {
+            self.activatedAt = act.int64Value
+        } else if let act = dict["activatedAt"] as? Int64 {
+            self.activatedAt = act
+        } else {
+            self.activatedAt = nil
+        }
+
+        if let exp = dict["expiresAt"] as? NSNumber {
+            self.expiresAt = exp.int64Value
+        } else if let exp = dict["expiresAt"] as? Int64 {
+            self.expiresAt = exp
+        } else {
+            self.expiresAt = nil
+        }
+
+        self.note = dict["note"] as? String
+    }
 
     var isLifetime: Bool {
         duration == "lifetime" || durationSeconds == -1 || expiresAt == -1
@@ -174,7 +326,16 @@ final class LicenseManager: ObservableObject {
                 return ActivationResult(success: false, message: msg, remaining: "", devices: "")
             }
 
-            var license = try JSONDecoder().decode(LicenseInfo.self, from: data)
+            // Parse robustly from JSON dictionary
+            let jsonObject = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            guard let dict = jsonObject, !dict.isEmpty else {
+                let msg = "Key không tồn tại hoặc đã bị xoá!"
+                lastErrorMessage = msg
+                return ActivationResult(success: false, message: msg, remaining: "", devices: "")
+            }
+
+            var license = LicenseInfo(dict: dict, fallbackKey: cleaned)
+            if license.key.isEmpty { license.key = cleaned }
 
             // Check Banned
             if license.status == "banned" {
@@ -267,13 +428,16 @@ final class LicenseManager: ObservableObject {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
                   !data.isEmpty,
-                  String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) != "null" else {
+                  let dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+                  !dict.isEmpty else {
                 // Key removed on server
                 logout()
                 return
             }
 
-            let license = try JSONDecoder().decode(LicenseInfo.self, from: data)
+            var license = LicenseInfo(dict: dict, fallbackKey: savedRawKey)
+            if license.key.isEmpty { license.key = savedRawKey }
+
             let currentHWID = deviceHWID
 
             if license.status == "banned" || license.isExpired || !license.usedDevices.contains(currentHWID) {
