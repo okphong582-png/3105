@@ -7,7 +7,7 @@ struct MainInjectorView: View {
     @StateObject private var store = PatchProjectStore()
 
     @AppStorage("selectedGameBundle") private var selectedBundle = "com.dts.freefireth"
-    @State private var isInjected = false
+    @AppStorage("oni_akuma_injected_state") private var isInjected = false
     @State private var isProcessing = false
     @State private var processingMessage = ""
     @State private var toastMessage: String? = nil
@@ -208,106 +208,100 @@ struct MainInjectorView: View {
         .disabled(isProcessing)
     }
 
-    // MARK: - Main Toggle Card
+    // MARK: - Main Toggle Card (Single Master Toggle Control)
     private var mainToggleCard: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 16) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            isInjected
-                                ? Color.green.opacity(0.2)
-                                : Color.white.opacity(0.06)
-                        )
-                        .frame(width: 54, height: 54)
+        Button(action: handleToggleAction) {
+            VStack(spacing: 14) {
+                HStack(spacing: 16) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                isInjected
+                                    ? Color.green.opacity(0.2)
+                                    : Color.white.opacity(0.06)
+                            )
+                            .frame(width: 56, height: 56)
 
-                    Image(systemName: isInjected ? "bolt.shield.fill" : "shield.fill")
-                        .font(.system(size: 26, weight: .bold))
-                        .foregroundStyle(
-                            isInjected
-                                ? LinearGradient(colors: [Color.green, AppTheme.accent], startPoint: .top, endPoint: .bottom)
-                                : LinearGradient(colors: [.secondary, .secondary.opacity(0.6)], startPoint: .top, endPoint: .bottom)
-                        )
-                }
+                        Image(systemName: isInjected ? "bolt.shield.fill" : "shield.slash.fill")
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundStyle(
+                                isInjected
+                                    ? LinearGradient(colors: [Color.green, AppTheme.accent], startPoint: .top, endPoint: .bottom)
+                                    : LinearGradient(colors: [.secondary, .secondary.opacity(0.6)], startPoint: .top, endPoint: .bottom)
+                            )
+                    }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(isInjected ? "ĐÃ TIÊM FILE" : "FILE GỐC")
-                        .font(.title3.weight(.black))
-                        .foregroundStyle(isInjected ? Color.green : Color.white)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(isInjected ? Color.green : Color.red.opacity(0.8))
+                                .frame(width: 8, height: 8)
 
-                    Text(isInjected ? "Đang áp dụng Aim Body cho \(gameShortName)" : "Chưa kích hoạt bản vá")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                            Text(isInjected ? "TRẠNG THÁI: ĐÃ TIÊM" : "TRẠNG THÁI: GAME GỐC")
+                                .font(.subheadline.weight(.black))
+                                .foregroundStyle(isInjected ? Color.green : Color.white)
+                        }
 
-                Spacer()
+                        Text(isInjected ? "Đang áp dụng Aim Body cho \(gameShortName)" : "Chạm để tiêm Aim Body vào \(gameShortName)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
 
-                if isProcessing {
-                    ProgressView()
-                        .tint(AppTheme.accent)
-                        .scaleEffect(1.2)
-                } else {
-                    Toggle("", isOn: Binding(
-                        get: { isInjected },
-                        set: { _ in handleToggleAction() }
-                    ))
-                    .labelsHidden()
-                    .toggleStyle(SwitchToggleStyle(tint: AppTheme.accent))
-                    .scaleEffect(1.15)
-                }
-            }
+                    Spacer()
 
-            Divider()
-                .background(AppTheme.borderSubtle)
-
-            Button(action: handleToggleAction) {
-                HStack(spacing: 10) {
                     if isProcessing {
                         ProgressView()
-                            .tint(.black)
-                            .controlSize(.small)
-                        Text(processingMessage)
-                            .font(.headline.weight(.bold))
+                            .tint(AppTheme.accent)
+                            .scaleEffect(1.2)
                     } else {
-                        Image(systemName: isInjected ? "arrow.uturn.backward.circle.fill" : "syringe.fill")
-                            .font(.headline.weight(.bold))
-                        Text(isInjected ? "Khôi Phục Game Gốc" : "Bật Tiêm File Ngay")
-                            .font(.headline.weight(.bold))
+                        // Custom interactive Toggle switch
+                        ZStack(alignment: isInjected ? .trailing : .leading) {
+                            Capsule()
+                                .fill(isInjected ? AppTheme.accent : Color.white.opacity(0.16))
+                                .frame(width: 54, height: 32)
+
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 26, height: 26)
+                                .padding(3)
+                                .shadow(color: .black.opacity(0.3), radius: 3)
+                        }
+                        .animation(.spring(response: 0.3, dampingFraction: 0.75), value: isInjected)
                     }
                 }
-                .foregroundStyle(isProcessing ? .white : (isInjected ? .white : .black))
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(
-                            isInjected
-                                ? LinearGradient(colors: [Color.red.opacity(0.85), Color.red], startPoint: .top, endPoint: .bottom)
-                                : AppTheme.accentGradient
-                        )
-                )
-                .shadow(
-                    color: (isInjected ? Color.red : AppTheme.accent).opacity(0.35),
-                    radius: 10,
-                    x: 0,
-                    y: 4
-                )
+
+                if isProcessing {
+                    HStack(spacing: 8) {
+                        ProgressView().controlSize(.small).tint(AppTheme.accent)
+                        Text(processingMessage)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(AppTheme.accent)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(AppTheme.cardBackgroundElevated.cornerRadius(8))
+                }
             }
-            .disabled(isProcessing)
-            .buttonStyle(.plain)
+            .padding(18)
+            .background(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(AppTheme.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                            .stroke(
+                                isInjected ? AppTheme.accent.opacity(0.6) : AppTheme.borderSubtle,
+                                lineWidth: isInjected ? 1.5 : 1
+                            )
+                    )
+                    .shadow(
+                        color: isInjected ? AppTheme.accent.opacity(0.18) : Color.clear,
+                        radius: 12,
+                        y: 4
+                    )
+            )
         }
-        .padding(18)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(AppTheme.cardBackground)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .stroke(
-                            isInjected ? Color.green.opacity(0.4) : AppTheme.borderSubtle,
-                            lineWidth: 1.2
-                        )
-                )
-        )
+        .buttonStyle(.plain)
+        .disabled(isProcessing)
     }
 
     // MARK: - System Status Card
@@ -407,7 +401,8 @@ struct MainInjectorView: View {
     private func checkCurrentState() {
         store.reload()
         if let project = activeProject {
-            isInjected = DevicePatchService.latestReceipt(projectID: project.id) != nil
+            let receiptExists = DevicePatchService.latestReceipt(projectID: project.id) != nil
+            isInjected = receiptExists
         }
     }
 
@@ -426,7 +421,7 @@ struct MainInjectorView: View {
         }
 
         isProcessing = true
-        processingMessage = "Đang tiêm file..."
+        processingMessage = "Đang tiêm file vào \(gameShortName)..."
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
 
@@ -443,7 +438,9 @@ struct MainInjectorView: View {
                 _ = try DevicePatchService.apply(project: adaptedProject)
                 await MainActor.run {
                     self.isProcessing = false
-                    self.isInjected = true
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                        self.isInjected = true
+                    }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
                     self.triggerToast("Đã tiêm Aim Body vào \(targetName) thành công!")
@@ -467,35 +464,37 @@ struct MainInjectorView: View {
     }
 
     private func restoreOriginals() {
-        guard let project = activeProject,
-              let receipt = DevicePatchService.latestReceipt(projectID: project.id) else {
+        isProcessing = true
+        processingMessage = "Đang khôi phục game gốc..."
+        let impact = UIImpactFeedbackGenerator(style: .medium)
+        impact.impactOccurred()
+
+        guard let project = activeProject else {
             isInjected = false
+            isProcessing = false
             triggerToast("Đã ở trạng thái file gốc!")
             return
         }
 
-        isProcessing = true
-        processingMessage = "Đang khôi phục..."
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        let receipt = DevicePatchService.latestReceipt(projectID: project.id)
 
         Task.detached(priority: .userInitiated) {
-            do {
-                try DevicePatchService.restore(receipt: receipt)
-                await MainActor.run {
-                    self.isProcessing = false
+            if let receipt {
+                do {
+                    try DevicePatchService.restore(receipt: receipt)
+                } catch {
+                    log("restore error: \(error.localizedDescription)")
+                }
+            }
+
+            await MainActor.run {
+                self.isProcessing = false
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
                     self.isInjected = false
-                    let notif = UINotificationFeedbackGenerator()
-                    notif.notificationOccurred(.success)
-                    self.triggerToast("Đã khôi phục game gốc thành công!")
                 }
-            } catch {
-                await MainActor.run {
-                    self.isProcessing = false
-                    let notif = UINotificationFeedbackGenerator()
-                    notif.notificationOccurred(.error)
-                    self.triggerToast("Lỗi khi khôi phục: \(error.localizedDescription)")
-                }
+                let notif = UINotificationFeedbackGenerator()
+                notif.notificationOccurred(.success)
+                self.triggerToast("Đã khôi phục game gốc thành công!")
             }
         }
     }
