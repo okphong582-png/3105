@@ -45,62 +45,23 @@ struct SplashLoadingView: View {
                         .fill(
                             RadialGradient(
                                 colors: [
-                                    Color(red: 0.0, green: 0.86, blue: 1.0).opacity(0.25),
+                                    Color(red: 0.0, green: 0.86, blue: 1.0).opacity(0.35),
                                     Color.clear
                                 ],
                                 center: .center,
                                 startRadius: 10,
-                                endRadius: 65
+                                endRadius: 75
                             )
                         )
-                        .frame(width: 130, height: 130)
+                        .frame(width: 140, height: 140)
                         .scaleEffect(pulseGlow ? 1.15 : 0.95)
 
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.10, green: 0.12, blue: 0.18),
-                                    Color(red: 0.05, green: 0.06, blue: 0.09)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 96, height: 96)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [
-                                            Color(red: 0.0, green: 0.86, blue: 1.0).opacity(0.8),
-                                            Color(red: 0.2, green: 0.5, blue: 1.0).opacity(0.3)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
-                                    lineWidth: 1.5
-                                )
-                        )
-                        .shadow(color: Color(red: 0.0, green: 0.86, blue: 1.0).opacity(0.35), radius: 14, x: 0, y: 6)
-
-                    Image(systemName: "shield.checkered")
-                        .font(.system(size: 44, weight: .bold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.0, green: 0.92, blue: 1.0),
-                                    Color(red: 0.35, green: 0.65, blue: 1.0)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
+                    AppLogo(size: 96)
                 }
 
                 // Brand & Collaboration Typography
                 VStack(spacing: 8) {
-                    Text("3105")
+                    Text("OniAkuma")
                         .font(.system(size: 38, weight: .black, design: .rounded))
                         .foregroundStyle(
                             LinearGradient(

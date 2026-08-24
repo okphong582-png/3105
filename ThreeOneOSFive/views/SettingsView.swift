@@ -14,7 +14,7 @@ struct SettingsView: View {
                         AppLogo(size: 52)
 
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("3105").font(.headline)
+                            Text("OniAkuma").font(.headline.weight(.bold))
                             Text("3105 x HoangHaMod,TrongKien")
                                 .font(.caption.weight(.semibold).monospaced())
                                 .foregroundStyle(AppTheme.accent)

@@ -60,15 +60,15 @@ jobs:
           
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
-          zip -r9 3105_HoangHaMod_TrongKien.ipa Payload
-          echo "Successfully packaged 3105_HoangHaMod_TrongKien.ipa"
-          ls -lh 3105_HoangHaMod_TrongKien.ipa
+          zip -r9 OniAkuma_HoangHaMod_TrongKien.ipa Payload
+          echo "Successfully packaged OniAkuma_HoangHaMod_TrongKien.ipa"
+          ls -lh OniAkuma_HoangHaMod_TrongKien.ipa
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: 3105_HoangHaMod_TrongKien_IPA
-          path: 3105_HoangHaMod_TrongKien.ipa
+          name: OniAkuma_HoangHaMod_TrongKien_IPA
+          path: OniAkuma_HoangHaMod_TrongKien.ipa
           retention-days: 30
 
       - name: Create GitHub Release (On tag)

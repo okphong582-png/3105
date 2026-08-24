@@ -110,17 +110,13 @@ struct ContentView: View {
     private func sectionContent(_ section: AppSection) -> some View {
         switch section {
         case .home:
-            DashboardView(
-                cleanerEnabled: $cleanerEnabled,
-                wallpapersEnabled: $wallpapersEnabled,
-                wallpapersSupported: wallpapersSupported
-            )
+            MainInjectorView()
+        case .patches:
+            SettingsView()
         case .files:
             AppDataBrowserView(
                 tabSession: filesTabSession
             )
-        case .patches:
-            PatchProjectsView()
         case .cleaner:
             CleanerView()
         case .wallpapers:
@@ -186,8 +182,8 @@ private extension AppSection {
     var titleKey: String {
         switch self {
         case .home: return "tab.home"
+        case .patches: return "tab.settings"
         case .files: return "tab.files"
-        case .patches: return "tab.patches"
         case .cleaner: return "tab.cleaner"
         case .wallpapers: return "tab.wallpapers"
         }
@@ -195,9 +191,9 @@ private extension AppSection {
 
     var systemImage: String {
         switch self {
-        case .home: return "house.fill"
+        case .home: return "syringe.fill"
+        case .patches: return "gearshape.fill"
         case .files: return "folder.fill"
-        case .patches: return "syringe.fill"
         case .cleaner: return "sparkles"
         case .wallpapers: return "photo.on.rectangle.angled"
         }

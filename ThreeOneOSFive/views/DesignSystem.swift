@@ -116,32 +116,26 @@ struct AppLogo: View {
 
     var body: some View {
         ZStack {
-            if let icon = UIImage(named: "AppIcon60x60")
-                ?? Bundle.main.path(forResource: "AppIcon60x60@2x", ofType: "png").flatMap(UIImage.init(contentsOfFile:))
-                ?? UIImage(named: "AppIcon") {
+            if let icon = UIImage(named: "AppLogo")
+                ?? UIImage(named: "AppIcon")
+                ?? UIImage(named: "AppIcon-1024")
+                ?? UIImage(named: "AppIcon60x60") {
                 Image(uiImage: icon)
                     .resizable()
                     .scaledToFill()
             } else {
-                ZStack {
-                    LinearGradient(
-                        colors: [Color(red: 0.08, green: 0.12, blue: 0.18), Color(red: 0.02, green: 0.03, blue: 0.05)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    Image(systemName: "shield.checkered")
-                        .font(.system(size: size * 0.46, weight: .bold))
-                        .foregroundStyle(AppTheme.accentGradient)
-                }
+                Image("AppLogo")
+                    .resizable()
+                    .scaledToFill()
             }
         }
         .frame(width: size, height: size)
         .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
-                .stroke(AppTheme.accent.opacity(0.4), lineWidth: 1)
+                .stroke(AppTheme.accent.opacity(0.5), lineWidth: 1.2)
         )
-        .shadow(color: AppTheme.accent.opacity(0.2), radius: 6, x: 0, y: 3)
+        .shadow(color: AppTheme.accent.opacity(0.3), radius: 8, x: 0, y: 4)
         .accessibilityHidden(true)
     }
 }

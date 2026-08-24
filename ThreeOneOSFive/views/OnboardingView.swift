@@ -299,7 +299,7 @@ struct OnboardingView: View {
     private var controls: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                if step != .language {
+                if step != .welcome {
                     Button {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
                             if let prev = step.prev { step = prev }
@@ -335,12 +335,6 @@ struct OnboardingView: View {
                 .controlSize(.large)
             }
             .padding(.horizontal, 20)
-
-            if step == .language {
-                Text(language.text("onboarding.language_hint"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
         }
         .padding(.vertical, 16)
         .background(.bar)
