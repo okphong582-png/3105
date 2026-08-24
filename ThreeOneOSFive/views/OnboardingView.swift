@@ -1,19 +1,19 @@
 import SwiftUI
 
 private enum OnboardingStep: Int, CaseIterable {
-    case language = 0, welcome, versions, install
+    case welcome = 0, versions, install
 
     var next: OnboardingStep? { Self(rawValue: rawValue + 1) }
     var prev: OnboardingStep? { Self(rawValue: rawValue - 1) }
 }
 
 struct OnboardingView: View {
-    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.english.rawValue
-    @State private var step: OnboardingStep = .language
+    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.vietnamese.rawValue
+    @State private var step: OnboardingStep = .welcome
     @State private var dragOffset: CGFloat = 0
     var onComplete: () -> Void
 
-    private var language: AppLanguage { AppLanguage(rawValue: languageCode) ?? .english }
+    private var language: AppLanguage { AppLanguage(rawValue: languageCode) ?? .vietnamese }
 
     var body: some View {
         ZStack {
@@ -71,7 +71,6 @@ struct OnboardingView: View {
     @ViewBuilder
     private func page(for s: OnboardingStep) -> some View {
         switch s {
-        case .language: languagePage
         case .welcome: welcomePage
         case .versions: versionsPage
         case .install: installPage

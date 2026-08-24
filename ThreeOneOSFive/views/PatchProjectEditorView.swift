@@ -50,6 +50,34 @@ struct PatchProjectEditorView: View {
 
                 if existingProject == nil {
                     Section {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Bản Game:")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(AppTheme.accent)
+
+                            Picker("Game", selection: Binding(
+                                get: {
+                                    if bundleID.trimmingCharacters(in: .whitespacesAndNewlines) == "com.dts.freefiremax" {
+                                        return 1
+                                    } else {
+                                        return 0
+                                    }
+                                },
+                                set: { newValue in
+                                    if newValue == 0 {
+                                        bundleID = "com.dts.freefireth"
+                                    } else if newValue == 1 {
+                                        bundleID = "com.dts.freefiremax"
+                                    }
+                                }
+                            )) {
+                                Text("Free Fire Thường").tag(0)
+                                Text("FF Max").tag(1)
+                            }
+                            .pickerStyle(.segmented)
+                        }
+                        .padding(.vertical, 4)
+
                         if let capturedBundle = initialDraft?.bundleIdentifiers.first {
                             LabeledContent(language.text("patch.target_bundle")) {
                                 Text(capturedBundle)
@@ -57,7 +85,7 @@ struct PatchProjectEditorView: View {
                                     .foregroundStyle(.secondary)
                             }
                         } else {
-                            TextField("com.example.app", text: $bundleID)
+                            TextField("com.dts.freefireth", text: $bundleID)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .font(.body.monospaced())
@@ -266,7 +294,35 @@ struct PatchRuleEditorView: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("com.example.app", text: $bundleID)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Bản Game:")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(AppTheme.accent)
+
+                        Picker("Game", selection: Binding(
+                            get: {
+                                if bundleID.trimmingCharacters(in: .whitespacesAndNewlines) == "com.dts.freefiremax" {
+                                    return 1
+                                } else {
+                                    return 0
+                                }
+                            },
+                            set: { newValue in
+                                if newValue == 0 {
+                                    bundleID = "com.dts.freefireth"
+                                } else if newValue == 1 {
+                                    bundleID = "com.dts.freefiremax"
+                                }
+                            }
+                        )) {
+                            Text("Free Fire Thường").tag(0)
+                            Text("FF Max").tag(1)
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                    .padding(.vertical, 4)
+
+                    TextField("com.dts.freefireth", text: $bundleID)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .font(.body.monospaced())

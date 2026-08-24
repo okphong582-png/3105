@@ -443,10 +443,17 @@ private struct PatchProjectDetailView: View {
     }
 
     private func ruleSummary(_ rule: PatchRule) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(rule.bundleID)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
+        let gameLabel = rule.bundleID == "com.dts.freefiremax" ? "FF Max" : (rule.bundleID == "com.dts.freefireth" ? "Free Fire Thường" : rule.bundleID)
+        return VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text(gameLabel)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Spacer()
+                Text(rule.bundleID)
+                    .font(.caption2.monospaced())
+                    .foregroundStyle(AppTheme.accent)
+            }
             Text(rule.relativePath)
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
