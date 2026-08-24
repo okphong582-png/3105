@@ -277,13 +277,12 @@ struct KeyAuthView: View {
         isFieldFocused = false
 
         Task {
-            let result = await licenseManager.activateKey(inputKey)
+            let result = await LicenseManager.shared.activateKey(inputKey)
             await MainActor.run {
-                switch result {
-                case .success(let (remain, devs)):
+                if result.success {
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
-                    successToastMessage = "Thời hạn: \(remain) • Đã liên kết: \(devs)"
+                    successToastMessage = "Thời hạn: \(result.remaining) • Đã liên kết: \(result.devices)"
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         showSuccessToast = true
                     }
@@ -292,7 +291,7 @@ struct KeyAuthView: View {
                             showSuccessToast = false
                         }
                     }
-                case .failure:
+                } else {
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
                 }

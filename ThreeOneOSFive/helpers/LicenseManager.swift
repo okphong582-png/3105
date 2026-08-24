@@ -64,6 +64,13 @@ struct LicenseInfo: Codable {
     }
 }
 
+struct ActivationResult {
+    let success: Bool
+    let message: String
+    let remaining: String
+    let devices: String
+}
+
 // MARK: - License Manager
 final class LicenseManager: ObservableObject {
     static let shared = LicenseManager()
@@ -123,12 +130,12 @@ final class LicenseManager: ObservableObject {
 
     // MARK: - Activate / Login Key
     @MainActor
-    func activateKey(_ rawKey: String) async -> Result<(String, String), String> {
+    func activateKey(_ rawKey: String) async -> ActivationResult {
         let cleaned = rawKey.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         guard !cleaned.isEmpty else {
             let msg = "Vui lòng nhập mã bản quyền (Key)!"
             lastErrorMessage = msg
-            return .failure(msg)
+            return ActivationResult(success: false, message: msg, remaining: "", devices: "")
         }
 
         isVerifying = true
@@ -146,7 +153,7 @@ final class LicenseManager: ObservableObject {
         guard let requestURL = URL(string: "\(databaseEndpoint)/\(sanitizedKey).json") else {
             let msg = "Đường dẫn xác thực không hợp lệ!"
             lastErrorMessage = msg
-            return .failure(msg)
+            return ActivationResult(success: false, message: msg, remaining: "", devices: "")
         }
 
         do {
@@ -158,13 +165,13 @@ final class LicenseManager: ObservableObject {
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
                 let msg = "Không thể kết nối máy chủ xác thực! (Mã: \((response as? HTTPURLResponse)?.statusCode ?? 0))"
                 lastErrorMessage = msg
-                return .failure(msg)
+                return ActivationResult(success: false, message: msg, remaining: "", devices: "")
             }
 
             if data.isEmpty || String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) == "null" {
                 let msg = "Key không tồn tại hoặc đã bị xoá!"
                 lastErrorMessage = msg
-                return .failure(msg)
+                return ActivationResult(success: false, message: msg, remaining: "", devices: "")
             }
 
             var license = try JSONDecoder().decode(LicenseInfo.self, from: data)
@@ -173,7 +180,7 @@ final class LicenseManager: ObservableObject {
             if license.status == "banned" {
                 let msg = "Key này đã bị khoá / vô hiệu hoá bởi quản trị viên!"
                 lastErrorMessage = msg
-                return .failure(msg)
+                return ActivationResult(success: false, message: msg, remaining: "", devices: "")
             }
 
             let now = Int64(Date().timeIntervalSince1970 * 1000)
@@ -199,7 +206,7 @@ final class LicenseManager: ObservableObject {
                     _ = try? await patchLicenseToFirebase(key: sanitizedKey, license: license)
                     let msg = "Key đã hết hạn sử dụng!"
                     lastErrorMessage = msg
-                    return .failure(msg)
+                    return ActivationResult(success: false, message: msg, remaining: "", devices: "")
                 }
 
                 // Check Device HWID
@@ -210,7 +217,7 @@ final class LicenseManager: ObservableObject {
                     } else {
                         let msg = "Key đã đạt giới hạn tối đa (\(license.maxDevices) thiết bị)! Vui lòng liên hệ Admin để reset thiết bị."
                         lastErrorMessage = msg
-                        return .failure(msg)
+                        return ActivationResult(success: false, message: msg, remaining: "", devices: "")
                     }
                 }
             }
@@ -223,12 +230,12 @@ final class LicenseManager: ObservableObject {
 
             let remain = license.remainingTimeFormatted
             let devs = license.deviceUsageFormatted
-            return .success((remain, devs))
+            return ActivationResult(success: true, message: "Kích hoạt thành công!", remaining: remain, devices: devs)
 
         } catch {
             let msg = "Lỗi xác thực: \(error.localizedDescription)"
             lastErrorMessage = msg
-            return .failure(msg)
+            return ActivationResult(success: false, message: msg, remaining: "", devices: "")
         }
     }
 
