@@ -4,7 +4,12 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.appLanguage) private var language
     @EnvironmentObject private var appState: AppState
-    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.english.rawValue
+    @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.vietnamese.rawValue
+    @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "cyan"
+
+    private var activeTheme: AppColorTheme {
+        AppColorTheme(rawValue: currentThemeRaw) ?? .cyan
+    }
 
     var body: some View {
         NavigationStack {
@@ -15,15 +20,47 @@ struct SettingsView: View {
 
                         VStack(alignment: .leading, spacing: 3) {
                             Text("OniAkuma").font(.headline.weight(.bold))
-                            Text("3105 x HoangHaMod,TrongKien")
+                            Text("HoangHaMod & TrongKien")
                                 .font(.caption.weight(.semibold).monospaced())
-                                .foregroundStyle(AppTheme.accent)
-                            Text(language.text("common.version", appVersion))
-                                .font(.caption)
+                                .foregroundStyle(activeTheme.primaryColor)
+                            Text("Exploit Kernel By 3105 • v\(appVersion)")
+                                .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
                     }
                     .padding(.vertical, 4)
+                }
+
+                // Theme Color Customizer
+                Section("GIAO DIỆN MÀU SẮC (THEME)") {
+                    ForEach(AppColorTheme.allCases) { theme in
+                        Button {
+                            let generator = UIImpactFeedbackGenerator(style: .medium)
+                            generator.impactOccurred()
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                currentThemeRaw = theme.rawValue
+                            }
+                        } label: {
+                            HStack {
+                                Circle()
+                                    .fill(theme.primaryColor)
+                                    .frame(width: 18, height: 18)
+                                    .shadow(color: theme.primaryColor.opacity(0.4), radius: 4)
+
+                                Text(theme.displayName)
+                                    .font(.subheadline.weight(currentThemeRaw == theme.rawValue ? .bold : .regular))
+                                    .foregroundStyle(currentThemeRaw == theme.rawValue ? .white : .secondary)
+
+                                Spacer()
+
+                                if currentThemeRaw == theme.rawValue {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(theme.primaryColor)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
 
                 Section(language.text("settings.language")) {
@@ -41,30 +78,17 @@ struct SettingsView: View {
                     LabeledContent(language.text("settings.ios_version"), value: "\(AppInfo.osVersion) (\(AppInfo.osBuild))")
                 }
 
-                Section {
+                Section("KHAI THÁC LỖ HỔNG HỆ THỐNG") {
                     HStack {
-                        Text(language.text("settings.current_version"))
+                        Text("Trạng Thái")
                         Spacer()
-                        Text(language.text(appState.isSupported ? "settings.supported" : "settings.unsupported"))
-                        .foregroundStyle(appState.isSupported ? Color.green : Color.red)
+                        Text(appState.isSupported ? "Đã Kích Hoạt" : "Sẵn Sàng")
+                            .foregroundStyle(appState.isSupported ? Color.green : activeTheme.primaryColor)
                     }
+                    LabeledContent("Nhân Khai Thác", value: "Exploit Kernel By 3105")
                     LabeledContent("iOS 17", value: ExploitSupportPolicy.verifiedIOS17Range)
                     LabeledContent("iOS 18", value: ExploitSupportPolicy.verifiedIOS18Range)
                     LabeledContent("iOS 26", value: ExploitSupportPolicy.verifiedIOS26Range)
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("iOS 27.0")
-                            .font(.body)
-                        ForEach(ExploitSupportPolicy.verifiedIOS27Builds, id: \.build) { version in
-                            Text(versionLabel(version))
-                            .font(.caption.monospaced())
-                            .foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 2)
-                } header: {
-                    Text(language.text("settings.verified_versions"))
-                } footer: {
-                    Text(language.text("settings.supported_versions_footer"))
                 }
 
                 // License Management Section
@@ -73,7 +97,7 @@ struct SettingsView: View {
                         LabeledContent("Mã Key") {
                             Text(maskedKey(license.key))
                                 .font(.subheadline.weight(.semibold).monospaced())
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(activeTheme.primaryColor)
                         }
                         LabeledContent("Thời Hạn Còn Lại") {
                             Text(license.remainingTimeFormatted)
@@ -125,7 +149,7 @@ struct SettingsView: View {
                     )
                 }
             }
-            .tint(AppTheme.accent)
+            .tint(activeTheme.primaryColor)
             .navigationTitle(language.text("settings.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -140,25 +164,7 @@ struct SettingsView: View {
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "AppReleaseDisplayVersion") as? String
             ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-            ?? "1.0"
-    }
-
-    private func versionLabel(
-        _ version: (beta: Int, publicBeta: Int?, build: String)
-    ) -> String {
-        if let publicBeta = version.publicBeta {
-            return language.text(
-                "settings.developer_public_beta_build",
-                Int64(version.beta),
-                Int64(publicBeta),
-                version.build
-            )
-        }
-        return language.text(
-            "settings.developer_beta_build",
-            Int64(version.beta),
-            version.build
-        )
+            ?? "1.1.1"
     }
 
     @ViewBuilder
@@ -169,7 +175,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(name)
                             .font(.headline)
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(.white)
                         Text(role)
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -177,12 +183,11 @@ struct SettingsView: View {
                     Spacer()
                     Image(systemName: "arrow.up.right")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(activeTheme.primaryColor)
                         .frame(width: 28, height: 28)
                 }
                 .contentShape(Rectangle())
             }
-            .accessibilityLabel(language.text("accessibility.open_profile", name))
         }
     }
 

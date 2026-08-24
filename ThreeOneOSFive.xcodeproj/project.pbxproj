@@ -71,6 +71,8 @@
 		3105ONI2 /* MainInjectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105ONI1; };
 		3105LIC2 /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105LIC1; };
 		3105KEY2 /* KeyAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105KEY1; };
+		3105VPN2 /* VPNGuardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105VPN1; };
+		3105VPB2 /* VPNBlockedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105VPB1; };
 		3105AIM2 /* Aim Body.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105AIM1; };
 		3105HOLO2 /* HOLO.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105HOLO1; };
 		3105A211 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3105A031; };
@@ -148,6 +150,8 @@
 		3105ONI1 /* MainInjectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainInjectorView.swift; sourceTree = "<group>"; };
 		3105LIC1 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		3105KEY1 /* KeyAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyAuthView.swift; sourceTree = "<group>"; };
+		3105VPN1 /* VPNGuardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNGuardService.swift; sourceTree = "<group>"; };
+		3105VPB1 /* VPNBlockedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNBlockedView.swift; sourceTree = "<group>"; };
 		3105AIM1 /* Aim Body.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Body.3105"; sourceTree = "<group>"; };
 		3105HOLO1 /* HOLO.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "HOLO.3105"; sourceTree = "<group>"; };
 		3105F106 /* WallpaperLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLabView.swift; sourceTree = "<group>"; };
@@ -242,6 +246,7 @@
 				3105Z100 /* SplashLoadingView.swift */,
 				3105ONI1 /* MainInjectorView.swift */,
 				3105KEY1 /* KeyAuthView.swift */,
+				3105VPB1 /* VPNBlockedView.swift */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -249,6 +254,7 @@
 		3105A405 /* helpers */ = {
 			isa = PBXGroup;
 			children = (
+				3105VPN1 /* VPNGuardService.swift */,
 				3105LIC1 /* LicenseManager.swift */,
 				3105A099 /* Localization.swift */,
 				3105A104 /* ContainerStore.swift */,
@@ -433,6 +439,8 @@
 				3105ONI2,
 				3105LIC2,
 				3105KEY2,
+				3105VPN2,
+				3105VPB2,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

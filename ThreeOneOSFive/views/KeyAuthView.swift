@@ -57,7 +57,7 @@ struct KeyAuthView: View {
                                 )
                                 .shadow(color: AppTheme.accent.opacity(0.6), radius: 10, x: 0, y: 2)
 
-                            Text("3105 x HoangHaMod,TrongKien")
+                            Text("HoangHaMod & TrongKien")
                                 .font(.caption.weight(.bold).monospaced())
                                 .foregroundStyle(AppTheme.accent)
                         }

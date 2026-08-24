@@ -1,16 +1,55 @@
 import SwiftUI
 
-enum AppTheme {
-    // Luxury Cyber Cyan & Ice Diamond Accent (No orange)
-    static let accent = Color(red: 0.0, green: 0.86, blue: 1.0) // #00DBFF
-    static let secondaryAccent = Color(red: 0.38, green: 0.55, blue: 1.0) // Deep Electric Blue
-    static let goldAccent = Color(red: 0.95, green: 0.77, blue: 0.25) // Luxury Gold
+enum AppColorTheme: String, CaseIterable, Identifiable {
+    case cyan = "cyan"
+    case crimson = "crimson"
+    case purple = "purple"
+    case gold = "gold"
+    case emerald = "emerald"
 
-    static let accentGradient = LinearGradient(
-        colors: [Color(red: 0.0, green: 0.92, blue: 1.0), Color(red: 0.18, green: 0.55, blue: 1.0)],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .cyan: return "Neon Cyan (Mặc định)"
+        case .crimson: return "Blood Crimson (Đỏ Ác Quỷ)"
+        case .purple: return "Phantom Purple (Tím Ma Quái)"
+        case .gold: return "Cyber Gold (Vàng Hoàng Gia)"
+        case .emerald: return "Emerald Green (Xanh Lục Bảo)"
+        }
+    }
+
+    var primaryColor: Color {
+        switch self {
+        case .cyan: return Color(red: 0.0, green: 0.86, blue: 1.0)
+        case .crimson: return Color(red: 1.0, green: 0.22, blue: 0.35)
+        case .purple: return Color(red: 0.72, green: 0.35, blue: 1.0)
+        case .gold: return Color(red: 1.0, green: 0.78, blue: 0.20)
+        case .emerald: return Color(red: 0.18, green: 0.88, blue: 0.48)
+        }
+    }
+
+    static var current: AppColorTheme {
+        let saved = UserDefaults.standard.string(forKey: "oni_akuma_theme_color") ?? "cyan"
+        return AppColorTheme(rawValue: saved) ?? .cyan
+    }
+}
+
+enum AppTheme {
+    static var accent: Color {
+        AppColorTheme.current.primaryColor
+    }
+
+    static let secondaryAccent = Color(red: 0.38, green: 0.55, blue: 1.0)
+    static let goldAccent = Color(red: 0.95, green: 0.77, blue: 0.25)
+
+    static var accentGradient: LinearGradient {
+        LinearGradient(
+            colors: [accent, accent.opacity(0.7)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
 
     static let darkSurfaceGradient = LinearGradient(
         colors: [Color(red: 0.09, green: 0.10, blue: 0.14), Color(red: 0.05, green: 0.05, blue: 0.08)],
@@ -24,7 +63,7 @@ enum AppTheme {
     static let cardBackgroundElevated = Color(red: 0.12, green: 0.13, blue: 0.17)
     static let consoleBackground = Color(red: 0.03, green: 0.03, blue: 0.05)
     static let borderSubtle = Color.white.opacity(0.08)
-    static let borderGlow = Color(red: 0.0, green: 0.86, blue: 1.0).opacity(0.3)
+    static var borderGlow: Color { accent.opacity(0.3) }
 
     static let pageInset: CGFloat = 16
     static let rowIconSize: CGFloat = 17

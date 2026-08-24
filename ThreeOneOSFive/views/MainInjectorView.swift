@@ -9,16 +9,21 @@ struct MainInjectorView: View {
     @AppStorage("selectedGameBundle") private var selectedBundle = "com.dts.freefireth"
     @AppStorage("oni_akuma_aim_enabled") private var isAimEnabled = false
     @AppStorage("oni_akuma_holo_enabled") private var isHoloEnabled = false
+    @AppStorage("oni_akuma_has_shown_welcome_v2") private var hasShownWelcome = false
+    @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "cyan"
 
     @State private var isProcessingAim = false
     @State private var isProcessingHolo = false
-    @State private var processingMessage = ""
     @State private var toastMessage: String? = nil
     @State private var showToast = false
     @State private var showSettings = false
     @State private var showLogs = false
+    @State private var showWelcomeDialog = false
 
-    // Look for specific projects in the library
+    private var activeTheme: AppColorTheme {
+        AppColorTheme(rawValue: currentThemeRaw) ?? .cyan
+    }
+
     private var aimProject: PatchProject? {
         store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") })?.project
             ?? store.items.first?.project
@@ -46,7 +51,7 @@ struct MainInjectorView: View {
                             icon: "scope",
                             isEnabled: isAimEnabled,
                             isProcessing: isProcessingAim,
-                            accentColor: AppTheme.accent
+                            accentColor: activeTheme.primaryColor
                         ) {
                             handleToggleAim()
                         }
@@ -64,6 +69,9 @@ struct MainInjectorView: View {
                         }
                     }
 
+                    // Open Game Button
+                    openGameButton
+
                     systemStatusCard
 
                     creditsBadge
@@ -78,14 +86,14 @@ struct MainInjectorView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button { showLogs = true } label: {
                         Image(systemName: "apple.terminal")
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(activeTheme.primaryColor)
                     }
                     .accessibilityLabel(language.text("accessibility.open_logs"))
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button { showSettings = true } label: {
                         Image(systemName: "gearshape.fill")
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(activeTheme.primaryColor)
                     }
                     .accessibilityLabel(language.text("accessibility.open_settings"))
                 }
@@ -94,6 +102,18 @@ struct MainInjectorView: View {
             .sheet(isPresented: $showLogs) { LogView() }
             .onAppear {
                 store.reload()
+                if !hasShownWelcome {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            showWelcomeDialog = true
+                        }
+                    }
+                }
+            }
+            .overlay {
+                if showWelcomeDialog {
+                    welcomeDialogOverlay
+                }
             }
             .overlay(alignment: .bottom) {
                 if showToast, let toastMessage {
@@ -112,7 +132,7 @@ struct MainInjectorView: View {
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: [AppTheme.accent.opacity(0.35), Color.clear],
+                            colors: [activeTheme.primaryColor.opacity(0.35), Color.clear],
                             center: .center,
                             startRadius: 10,
                             endRadius: 55
@@ -128,26 +148,26 @@ struct MainInjectorView: View {
                     .font(.system(size: 26, weight: .black, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.white, Color(red: 0.8, green: 0.95, blue: 1.0)],
+                            colors: [.white, Color(red: 0.85, green: 0.95, blue: 1.0)],
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
-                    .shadow(color: AppTheme.accent.opacity(0.5), radius: 8, x: 0, y: 2)
+                    .shadow(color: activeTheme.primaryColor.opacity(0.5), radius: 8, x: 0, y: 2)
 
                 HStack(spacing: 6) {
                     Image(systemName: "sparkles")
                         .font(.system(size: 10, weight: .bold))
-                    Text("3105 x HoangHaMod,TrongKien")
+                    Text("HoangHaMod & TrongKien")
                         .font(.caption2.weight(.bold).monospaced())
                 }
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(activeTheme.primaryColor)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 4)
                 .background(
                     Capsule()
-                        .fill(AppTheme.accent.opacity(0.12))
-                        .overlay(Capsule().stroke(AppTheme.accent.opacity(0.3), lineWidth: 1))
+                        .fill(activeTheme.primaryColor.opacity(0.12))
+                        .overlay(Capsule().stroke(activeTheme.primaryColor.opacity(0.3), lineWidth: 1))
                 )
             }
         }
@@ -160,10 +180,10 @@ struct MainInjectorView: View {
             Label {
                 Text("BẢN GAME ĐÍCH")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(activeTheme.primaryColor)
             } icon: {
                 Image(systemName: "gamecontroller.fill")
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(activeTheme.primaryColor)
             }
 
             HStack(spacing: 12) {
@@ -205,13 +225,13 @@ struct MainInjectorView: View {
                 HStack {
                     Image(systemName: icon)
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(isSelected ? AppTheme.accent : .secondary)
+                        .foregroundStyle(isSelected ? activeTheme.primaryColor : .secondary)
 
                     Spacer()
 
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(isSelected ? AppTheme.accent : .secondary.opacity(0.4))
+                        .foregroundStyle(isSelected ? activeTheme.primaryColor : .secondary.opacity(0.4))
                 }
 
                 Text(title)
@@ -220,18 +240,18 @@ struct MainInjectorView: View {
 
                 Text(bundleID)
                     .font(.system(size: 9, weight: .regular, design: .monospaced))
-                    .foregroundStyle(isSelected ? AppTheme.accent.opacity(0.8) : .secondary.opacity(0.6))
+                    .foregroundStyle(isSelected ? activeTheme.primaryColor.opacity(0.8) : .secondary.opacity(0.6))
                     .lineLimit(1)
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(isSelected ? AppTheme.accent.opacity(0.12) : AppTheme.cardBackgroundElevated)
+                    .fill(isSelected ? activeTheme.primaryColor.opacity(0.12) : AppTheme.cardBackgroundElevated)
                     .overlay(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .stroke(
-                                isSelected ? AppTheme.accent : AppTheme.borderSubtle,
+                                isSelected ? activeTheme.primaryColor : AppTheme.borderSubtle,
                                 lineWidth: isSelected ? 1.5 : 1
                             )
                     )
@@ -306,7 +326,6 @@ struct MainInjectorView: View {
                             .tint(accentColor)
                             .scaleEffect(1.1)
                     } else {
-                        // Animated Custom Toggle Switch
                         ZStack(alignment: isEnabled ? .trailing : .leading) {
                             Capsule()
                                 .fill(isEnabled ? accentColor : Color.white.opacity(0.16))
@@ -344,16 +363,60 @@ struct MainInjectorView: View {
         .disabled(isProcessing)
     }
 
+    // MARK: - Open Game Button
+    private var openGameButton: some View {
+        Button {
+            openTargetGame()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "arrowtriangle.right.circle.fill")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(.white)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("MỞ GAME NGAY (\(gameShortName))")
+                        .font(.headline.weight(.black))
+                        .foregroundStyle(.white)
+
+                    Text("Khởi chạy nhanh \(selectedBundle)")
+                        .font(.caption2)
+                        .foregroundStyle(Color.white.opacity(0.8))
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color.white.opacity(0.8))
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 15)
+            .background(
+                LinearGradient(
+                    colors: [
+                        activeTheme.primaryColor,
+                        activeTheme.primaryColor.opacity(0.75)
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .cornerRadius(18)
+            .shadow(color: activeTheme.primaryColor.opacity(0.35), radius: 10, y: 4)
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - System Status Card
     private var systemStatusCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label {
                 Text("THÔNG TIN HỆ THỐNG")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(activeTheme.primaryColor)
             } icon: {
                 Image(systemName: "info.circle.fill")
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(activeTheme.primaryColor)
             }
 
             VStack(spacing: 8) {
@@ -372,10 +435,10 @@ struct MainInjectorView: View {
                 )
 
                 statusRow(
-                    label: "Trạng Thái Khai Thác",
-                    value: appState.isSupported ? "Đã Kích Hoạt" : "Sẵn Sàng",
+                    label: "Khai Thác Lỗ Hổng",
+                    value: "Exploit Kernel By 3105",
                     icon: "shield.lefthalf.filled",
-                    color: appState.isSupported ? .green : AppTheme.goldAccent
+                    color: appState.isSupported ? .green : activeTheme.primaryColor
                 )
             }
         }
@@ -395,7 +458,7 @@ struct MainInjectorView: View {
         HStack {
             Image(systemName: icon)
                 .font(.system(size: 13))
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(activeTheme.primaryColor)
                 .frame(width: 18)
 
             Text(label)
@@ -418,7 +481,7 @@ struct MainInjectorView: View {
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
 
-            Text("OniAkuma v1.1.1 (Build 7)")
+            Text("Exploit Kernel By 3105 • OniAkuma v1.1.1")
                 .font(.caption2.monospaced())
                 .foregroundStyle(.secondary.opacity(0.6))
         }
@@ -428,6 +491,118 @@ struct MainInjectorView: View {
 
     private var gameShortName: String {
         selectedBundle == "com.dts.freefiremax" ? "FF MAX" : "Free Fire"
+    }
+
+    // MARK: - Open Target Game via URL Scheme
+    private func openTargetGame() {
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.impactOccurred()
+
+        var candidateURLs: [URL] = []
+        if selectedBundle == "com.dts.freefiremax" {
+            if let u = URL(string: "freefiremax://") { candidateURLs.append(u) }
+        } else {
+            if let u1 = URL(string: "freefireth://") { candidateURLs.append(u1) }
+            if let u2 = URL(string: "freefire://") { candidateURLs.append(u2) }
+        }
+
+        var didOpen = false
+        for candidate in candidateURLs {
+            if UIApplication.shared.canOpenURL(candidate) {
+                UIApplication.shared.open(candidate, options: [:]) { success in
+                    if !success {
+                        self.triggerToast("Chưa cài đặt \(self.gameShortName) trên thiết bị!")
+                    }
+                }
+                didOpen = true
+                break
+            }
+        }
+
+        if !didOpen {
+            // Attempt direct open if canOpenURL was restricted
+            if let first = candidateURLs.first {
+                UIApplication.shared.open(first, options: [:]) { success in
+                    if !success {
+                        self.triggerToast("Chưa cài đặt \(self.gameShortName) trên máy! Vui lòng tải game trước.")
+                    }
+                }
+            } else {
+                triggerToast("Chưa cài đặt \(gameShortName) trên thiết bị!")
+            }
+        }
+    }
+
+    // MARK: - Welcome Dialog
+    private var welcomeDialogOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.7)
+                .ignoresSafeArea()
+                .transition(.opacity)
+
+            VStack(spacing: 20) {
+                AppLogo(size: 76)
+
+                VStack(spacing: 8) {
+                    Text("OniAkuma Mod")
+                        .font(.system(size: 22, weight: .black, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.white, activeTheme.primaryColor],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+
+                    Text("Chúc mọi người chơi game vui vẻ!")
+                        .font(.headline.weight(.bold))
+                        .foregroundStyle(.white)
+
+                    Text("Bản mod Free Fire cao cấp được phát triển và tối ưu bởi HoangHaMod & TrongKien.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 16)
+                }
+
+                Button {
+                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                    generator.impactOccurred()
+                    hasShownWelcome = true
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        showWelcomeDialog = false
+                    }
+                } label: {
+                    Text("Bắt Đầu Ngay")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            LinearGradient(
+                                colors: [activeTheme.primaryColor, activeTheme.primaryColor.opacity(0.8)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(14)
+                        .shadow(color: activeTheme.primaryColor.opacity(0.4), radius: 8, y: 3)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(24)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(AppTheme.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(activeTheme.primaryColor.opacity(0.4), lineWidth: 1.5)
+                    )
+                    .shadow(color: .black.opacity(0.8), radius: 24, y: 12)
+            )
+            .padding(.horizontal, 32)
+            .transition(.scale(scale: 0.85).combined(with: .opacity))
+        }
     }
 
     // MARK: - Toggle Actions
@@ -453,11 +628,7 @@ struct MainInjectorView: View {
             return
         }
 
-        if isAim {
-            isProcessingAim = true
-        } else {
-            isProcessingHolo = true
-        }
+        if isAim { isProcessingAim = true } else { isProcessingHolo = true }
 
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
@@ -508,11 +679,7 @@ struct MainInjectorView: View {
     }
 
     private func restoreFeature(featureName: String, isAim: Bool) {
-        if isAim {
-            isProcessingAim = true
-        } else {
-            isProcessingHolo = true
-        }
+        if isAim { isProcessingAim = true } else { isProcessingHolo = true }
 
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
@@ -563,7 +730,7 @@ struct MainInjectorView: View {
     private func toastView(message: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(activeTheme.primaryColor)
             Text(message)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.white)
@@ -573,7 +740,7 @@ struct MainInjectorView: View {
         .background(
             Capsule()
                 .fill(Color(red: 0.12, green: 0.14, blue: 0.18))
-                .overlay(Capsule().stroke(AppTheme.accent.opacity(0.4), lineWidth: 1))
+                .overlay(Capsule().stroke(activeTheme.primaryColor.opacity(0.4), lineWidth: 1))
                 .shadow(color: .black.opacity(0.4), radius: 10, y: 5)
         )
     }
