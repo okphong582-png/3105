@@ -197,7 +197,7 @@ private extension AppSection {
         switch self {
         case .home: return "house.fill"
         case .files: return "folder.fill"
-        case .patches: return "shippingbox.fill"
+        case .patches: return "syringe.fill"
         case .cleaner: return "sparkles"
         case .wallpapers: return "photo.on.rectangle.angled"
         }
@@ -218,7 +218,6 @@ private struct DashboardView: View {
             List {
                 heroBrandingSection
                 deviceSection
-                featuresSection
             }
             .navigationBarTitleDisplayMode(.inline)
             .tint(AppTheme.accent)
@@ -268,23 +267,6 @@ private struct DashboardView: View {
                 Spacer()
             }
             .padding(.vertical, 4)
-        }
-    }
-
-    private var featuresSection: some View {
-        Section {
-            Toggle(isOn: $cleanerEnabled) {
-                Label(language.text("tab.cleaner"), systemImage: "sparkles")
-            }
-            if wallpapersSupported {
-                Toggle(isOn: $wallpapersEnabled) {
-                    Label(language.text("tab.wallpapers"), systemImage: "photo.on.rectangle.angled")
-                }
-            }
-        } header: {
-            Text(language.text("dashboard.features"))
-        } footer: {
-            Text(language.text("dashboard.features_footer"))
         }
     }
 

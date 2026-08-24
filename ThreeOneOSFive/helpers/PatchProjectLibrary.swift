@@ -39,8 +39,19 @@ enum PatchProjectLibrary {
     }
 
     static func load(fileManager: FileManager = .default) -> [PatchLibraryItem] {
-        guard let root = try? packageRootURL(fileManager: fileManager),
-              let urls = try? fileManager.contentsOfDirectory(
+        guard let root = try? packageRootURL(fileManager: fileManager) else { return [] }
+
+        // Automatically load and copy bundled .3105 files (e.g. Aim Body.3105)
+        if let bundledURLs = Bundle.main.urls(forResourcesWithExtension: "3105", subdirectory: nil) {
+            for bundledURL in bundledURLs {
+                let destURL = root.appendingPathComponent(bundledURL.lastPathComponent)
+                if !fileManager.fileExists(atPath: destURL.path) {
+                    try? fileManager.copyItem(at: bundledURL, to: destURL)
+                }
+            }
+        }
+
+        guard let urls = try? fileManager.contentsOfDirectory(
                 at: root,
                 includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey],
                 options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
