@@ -12,6 +12,7 @@ struct ThreeOneOSFiveApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        enforce_binary_security()
         setupLogCapture()
         log("app: OniAkuma launching — iOS \(AppInfo.osVersion) (\(AppInfo.osBuild)) \(AppInfo.machineName)")
     }
@@ -62,6 +63,7 @@ struct ThreeOneOSFiveApp: App {
             }
             .preferredColorScheme(.dark)
             .onAppear {
+                enforce_binary_security()
                 vpnGuard.checkVPN()
                 if !showSplash && licenseManager.isAuthorized {
                     appState.detectSupport()
@@ -72,6 +74,7 @@ struct ThreeOneOSFiveApp: App {
             }
             .onChange(of: scenePhase) { phase in
                 guard phase == .active else { return }
+                enforce_binary_security()
                 vpnGuard.checkVPN()
                 Task {
                     await licenseManager.recheckLicense()

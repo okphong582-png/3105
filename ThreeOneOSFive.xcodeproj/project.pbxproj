@@ -73,6 +73,7 @@
 		3105KEY2 /* KeyAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105KEY1; };
 		3105VPN2 /* VPNGuardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105VPN1; };
 		3105VPB2 /* VPNBlockedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105VPB1; };
+		3105BSG2 /* BinarySecurityGuard.m in Sources */ = {isa = PBXBuildFile; fileRef = 3105BSG1; };
 		3105AIM2 /* Aim Body.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105AIM1; };
 		3105HOLO2 /* HOLO.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105HOLO1; };
 		3105A211 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3105A031; };
@@ -152,6 +153,8 @@
 		3105KEY1 /* KeyAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyAuthView.swift; sourceTree = "<group>"; };
 		3105VPN1 /* VPNGuardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNGuardService.swift; sourceTree = "<group>"; };
 		3105VPB1 /* VPNBlockedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNBlockedView.swift; sourceTree = "<group>"; };
+		3105BSG0 /* BinarySecurityGuard.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BinarySecurityGuard.h; sourceTree = "<group>"; };
+		3105BSG1 /* BinarySecurityGuard.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BinarySecurityGuard.m; sourceTree = "<group>"; };
 		3105AIM1 /* Aim Body.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Body.3105"; sourceTree = "<group>"; };
 		3105HOLO1 /* HOLO.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "HOLO.3105"; sourceTree = "<group>"; };
 		3105F106 /* WallpaperLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLabView.swift; sourceTree = "<group>"; };
@@ -254,6 +257,8 @@
 		3105A405 /* helpers */ = {
 			isa = PBXGroup;
 			children = (
+				3105BSG0 /* BinarySecurityGuard.h */,
+				3105BSG1 /* BinarySecurityGuard.m */,
 				3105VPN1 /* VPNGuardService.swift */,
 				3105LIC1 /* LicenseManager.swift */,
 				3105A099 /* Localization.swift */,
@@ -441,6 +446,7 @@
 				3105KEY2,
 				3105VPN2,
 				3105VPB2,
+				3105BSG2,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
