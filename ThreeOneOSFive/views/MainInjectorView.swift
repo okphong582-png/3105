@@ -7,38 +7,69 @@ struct MainInjectorView: View {
     @StateObject private var store = PatchProjectStore()
 
     @AppStorage("selectedGameBundle") private var selectedBundle = "com.dts.freefireth"
-    @AppStorage("oni_akuma_injected_state") private var isInjected = false
-    @State private var isProcessing = false
+    @AppStorage("oni_akuma_aim_enabled") private var isAimEnabled = false
+    @AppStorage("oni_akuma_holo_enabled") private var isHoloEnabled = false
+
+    @State private var isProcessingAim = false
+    @State private var isProcessingHolo = false
     @State private var processingMessage = ""
     @State private var toastMessage: String? = nil
     @State private var showToast = false
     @State private var showSettings = false
     @State private var showLogs = false
 
-    private var activeProject: PatchProject? {
-        store.items.first(where: { !$0.isLocked })?.project ?? store.items.first?.project
+    // Look for specific projects in the library
+    private var aimProject: PatchProject? {
+        store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") })?.project
+            ?? store.items.first?.project
     }
 
-    private var activeItem: PatchLibraryItem? {
-        store.items.first
+    private var holoProject: PatchProject? {
+        store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("HOLO") })?.project
+            ?? store.items.last?.project
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: 18) {
                     heroHeader
 
                     gameSelectorCard
 
-                    mainToggleCard
+                    // Feature Toggles Section
+                    VStack(spacing: 14) {
+                        featureToggleCard(
+                            title: "AIM BODY",
+                            subtitle: "Tự động ghim tâm vào thân đối thủ",
+                            filename: "Aim Body.3105",
+                            icon: "scope",
+                            isEnabled: isAimEnabled,
+                            isProcessing: isProcessingAim,
+                            accentColor: AppTheme.accent
+                        ) {
+                            handleToggleAim()
+                        }
+
+                        featureToggleCard(
+                            title: "ĐỊNH VỊ (HOLO)",
+                            subtitle: "Định vị vị trí và phát hiện kẻ địch (ESP Holo)",
+                            filename: "HOLO.3105",
+                            icon: "viewfinder.circle.fill",
+                            isEnabled: isHoloEnabled,
+                            isProcessing: isProcessingHolo,
+                            accentColor: AppTheme.goldAccent
+                        ) {
+                            handleToggleHolo()
+                        }
+                    }
 
                     systemStatusCard
 
                     creditsBadge
                 }
                 .padding(.horizontal, AppTheme.pageInset)
-                .padding(.top, 10)
+                .padding(.top, 8)
                 .padding(.bottom, 32)
             }
             .background(AppTheme.pageBackground.ignoresSafeArea())
@@ -61,7 +92,9 @@ struct MainInjectorView: View {
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showLogs) { LogView() }
-            .onAppear(perform: checkCurrentState)
+            .onAppear {
+                store.reload()
+            }
             .overlay(alignment: .bottom) {
                 if showToast, let toastMessage {
                     toastView(message: toastMessage)
@@ -74,7 +107,7 @@ struct MainInjectorView: View {
 
     // MARK: - Hero Header
     private var heroHeader: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             ZStack {
                 Circle()
                     .fill(
@@ -82,12 +115,12 @@ struct MainInjectorView: View {
                             colors: [AppTheme.accent.opacity(0.35), Color.clear],
                             center: .center,
                             startRadius: 10,
-                            endRadius: 60
+                            endRadius: 55
                         )
                     )
-                    .frame(width: 110, height: 110)
+                    .frame(width: 100, height: 100)
 
-                AppLogo(size: 76)
+                AppLogo(size: 72)
             }
 
             VStack(spacing: 4) {
@@ -118,12 +151,12 @@ struct MainInjectorView: View {
                 )
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
     }
 
     // MARK: - Game Selector Card
     private var gameSelectorCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Label {
                 Text("BẢN GAME ĐÍCH")
                     .font(.caption.weight(.bold))
@@ -147,7 +180,7 @@ struct MainInjectorView: View {
                 )
             }
         }
-        .padding(16)
+        .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(AppTheme.cardBackground)
@@ -168,16 +201,16 @@ struct MainInjectorView: View {
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
         } label: {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 5) {
                 HStack {
                     Image(systemName: icon)
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(isSelected ? AppTheme.accent : .secondary)
 
                     Spacer()
 
                     Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(isSelected ? AppTheme.accent : .secondary.opacity(0.4))
                 }
 
@@ -205,98 +238,105 @@ struct MainInjectorView: View {
             )
         }
         .buttonStyle(.plain)
-        .disabled(isProcessing)
+        .disabled(isProcessingAim || isProcessingHolo)
     }
 
-    // MARK: - Main Toggle Card (Single Master Toggle Control)
-    private var mainToggleCard: some View {
-        Button(action: handleToggleAction) {
-            VStack(spacing: 14) {
-                HStack(spacing: 16) {
+    // MARK: - Individual Feature Toggle Card
+    @ViewBuilder
+    private func featureToggleCard(
+        title: String,
+        subtitle: String,
+        filename: String,
+        icon: String,
+        isEnabled: Bool,
+        isProcessing: Bool,
+        accentColor: Color,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(spacing: 12) {
+                HStack(spacing: 14) {
                     ZStack {
                         Circle()
                             .fill(
-                                isInjected
-                                    ? Color.green.opacity(0.2)
+                                isEnabled
+                                    ? accentColor.opacity(0.2)
                                     : Color.white.opacity(0.06)
                             )
-                            .frame(width: 56, height: 56)
+                            .frame(width: 52, height: 52)
 
-                        Image(systemName: isInjected ? "bolt.shield.fill" : "shield.slash.fill")
-                            .font(.system(size: 26, weight: .bold))
+                        Image(systemName: icon)
+                            .font(.system(size: 24, weight: .bold))
                             .foregroundStyle(
-                                isInjected
-                                    ? LinearGradient(colors: [Color.green, AppTheme.accent], startPoint: .top, endPoint: .bottom)
-                                    : LinearGradient(colors: [.secondary, .secondary.opacity(0.6)], startPoint: .top, endPoint: .bottom)
+                                isEnabled
+                                    ? LinearGradient(colors: [accentColor, .white], startPoint: .top, endPoint: .bottom)
+                                    : LinearGradient(colors: [.secondary, .secondary.opacity(0.5)], startPoint: .top, endPoint: .bottom)
                             )
                     }
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 3) {
                         HStack(spacing: 6) {
-                            Circle()
-                                .fill(isInjected ? Color.green : Color.red.opacity(0.8))
-                                .frame(width: 8, height: 8)
+                            Text(title)
+                                .font(.headline.weight(.black))
+                                .foregroundStyle(isEnabled ? accentColor : .white)
 
-                            Text(isInjected ? "TRẠNG THÁI: ĐÃ TIÊM" : "TRẠNG THÁI: GAME GỐC")
-                                .font(.subheadline.weight(.black))
-                                .foregroundStyle(isInjected ? Color.green : Color.white)
+                            Circle()
+                                .fill(isEnabled ? Color.green : Color.red.opacity(0.8))
+                                .frame(width: 7, height: 7)
+
+                            Text(isEnabled ? "BẬT" : "TẮT")
+                                .font(.caption2.weight(.black))
+                                .foregroundStyle(isEnabled ? Color.green : .secondary)
                         }
 
-                        Text(isInjected ? "Đang áp dụng Aim Body cho \(gameShortName)" : "Chạm để tiêm Aim Body vào \(gameShortName)")
+                        Text(subtitle)
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
+
+                        Text("File: \(filename)")
+                            .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(isEnabled ? accentColor.opacity(0.8) : .secondary.opacity(0.6))
                     }
 
                     Spacer()
 
                     if isProcessing {
                         ProgressView()
-                            .tint(AppTheme.accent)
-                            .scaleEffect(1.2)
+                            .tint(accentColor)
+                            .scaleEffect(1.1)
                     } else {
-                        // Custom interactive Toggle switch
-                        ZStack(alignment: isInjected ? .trailing : .leading) {
+                        // Animated Custom Toggle Switch
+                        ZStack(alignment: isEnabled ? .trailing : .leading) {
                             Capsule()
-                                .fill(isInjected ? AppTheme.accent : Color.white.opacity(0.16))
-                                .frame(width: 54, height: 32)
+                                .fill(isEnabled ? accentColor : Color.white.opacity(0.16))
+                                .frame(width: 50, height: 28)
 
                             Circle()
                                 .fill(Color.white)
-                                .frame(width: 26, height: 26)
+                                .frame(width: 22, height: 22)
                                 .padding(3)
-                                .shadow(color: .black.opacity(0.3), radius: 3)
+                                .shadow(color: .black.opacity(0.3), radius: 2)
                         }
-                        .animation(.spring(response: 0.3, dampingFraction: 0.75), value: isInjected)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.75), value: isEnabled)
                     }
-                }
-
-                if isProcessing {
-                    HStack(spacing: 8) {
-                        ProgressView().controlSize(.small).tint(AppTheme.accent)
-                        Text(processingMessage)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(AppTheme.accent)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 6)
-                    .background(AppTheme.cardBackgroundElevated.cornerRadius(8))
                 }
             }
-            .padding(18)
+            .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(AppTheme.cardBackground)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .stroke(
-                                isInjected ? AppTheme.accent.opacity(0.6) : AppTheme.borderSubtle,
-                                lineWidth: isInjected ? 1.5 : 1
+                                isEnabled ? accentColor.opacity(0.5) : AppTheme.borderSubtle,
+                                lineWidth: isEnabled ? 1.5 : 1
                             )
                     )
                     .shadow(
-                        color: isInjected ? AppTheme.accent.opacity(0.18) : Color.clear,
-                        radius: 12,
-                        y: 4
+                        color: isEnabled ? accentColor.opacity(0.15) : Color.clear,
+                        radius: 10,
+                        y: 3
                     )
             )
         }
@@ -306,7 +346,7 @@ struct MainInjectorView: View {
 
     // MARK: - System Status Card
     private var systemStatusCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Label {
                 Text("THÔNG TIN HỆ THỐNG")
                     .font(.caption.weight(.bold))
@@ -316,14 +356,7 @@ struct MainInjectorView: View {
                     .foregroundStyle(AppTheme.accent)
             }
 
-            VStack(spacing: 10) {
-                statusRow(
-                    label: "Bản Vá Mặc Định",
-                    value: "Aim Body.3105",
-                    icon: "doc.zipper",
-                    color: AppTheme.accent
-                )
-
+            VStack(spacing: 8) {
                 statusRow(
                     label: "Target Bundle",
                     value: selectedBundle,
@@ -346,7 +379,7 @@ struct MainInjectorView: View {
                 )
             }
         }
-        .padding(16)
+        .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(AppTheme.cardBackground)
@@ -361,9 +394,9 @@ struct MainInjectorView: View {
     private func statusRow(label: String, value: String, icon: String, color: Color) -> some View {
         HStack {
             Image(systemName: icon)
-                .font(.system(size: 14))
+                .font(.system(size: 13))
                 .foregroundStyle(AppTheme.accent)
-                .frame(width: 20)
+                .frame(width: 18)
 
             Text(label)
                 .font(.subheadline)
@@ -380,7 +413,7 @@ struct MainInjectorView: View {
 
     // MARK: - Credits Badge
     private var creditsBadge: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
             Text("Phát triển & Tùy biến bởi HoangHaMod & TrongKien")
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
@@ -390,38 +423,42 @@ struct MainInjectorView: View {
                 .foregroundStyle(.secondary.opacity(0.6))
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
     }
 
     private var gameShortName: String {
         selectedBundle == "com.dts.freefiremax" ? "FF MAX" : "Free Fire"
     }
 
-    // MARK: - Actions
-    private func checkCurrentState() {
-        store.reload()
-        if let project = activeProject {
-            let receiptExists = DevicePatchService.latestReceipt(projectID: project.id) != nil
-            isInjected = receiptExists
-        }
-    }
-
-    private func handleToggleAction() {
-        if isInjected {
-            restoreOriginals()
+    // MARK: - Toggle Actions
+    private func handleToggleAim() {
+        if isAimEnabled {
+            restoreFeature(featureName: "Aim Body", isAim: true)
         } else {
-            injectPatch()
+            injectFeature(project: aimProject, featureName: "Aim Body", isAim: true)
         }
     }
 
-    private func injectPatch() {
-        guard let project = activeProject else {
-            triggerToast("Không tìm thấy file Aim Body.3105!")
+    private func handleToggleHolo() {
+        if isHoloEnabled {
+            restoreFeature(featureName: "Định Vị Holo", isAim: false)
+        } else {
+            injectFeature(project: holoProject, featureName: "Định Vị Holo", isAim: false)
+        }
+    }
+
+    private func injectFeature(project: PatchProject?, featureName: String, isAim: Bool) {
+        guard let proj = project else {
+            triggerToast("Không tìm thấy file \(featureName)!")
             return
         }
 
-        isProcessing = true
-        processingMessage = "Đang tiêm file vào \(gameShortName)..."
+        if isAim {
+            isProcessingAim = true
+        } else {
+            isProcessingHolo = true
+        }
+
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
 
@@ -429,7 +466,7 @@ struct MainInjectorView: View {
         let targetName = gameShortName
 
         Task.detached(priority: .userInitiated) {
-            var adaptedProject = project
+            var adaptedProject = proj
             for i in 0..<adaptedProject.rules.count {
                 adaptedProject.rules[i].bundleID = bundleID
             }
@@ -437,46 +474,51 @@ struct MainInjectorView: View {
             do {
                 _ = try DevicePatchService.apply(project: adaptedProject)
                 await MainActor.run {
-                    self.isProcessing = false
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                        self.isInjected = true
+                    if isAim {
+                        self.isProcessingAim = false
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                            self.isAimEnabled = true
+                        }
+                    } else {
+                        self.isProcessingHolo = false
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                            self.isHoloEnabled = true
+                        }
                     }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
-                    self.triggerToast("Đã tiêm Aim Body vào \(targetName) thành công!")
+                    self.triggerToast("Đã bật \(featureName) trên \(targetName)!")
                 }
             } catch let error as PatchPackageError {
                 await MainActor.run {
-                    self.isProcessing = false
+                    if isAim { self.isProcessingAim = false } else { self.isProcessingHolo = false }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
                     self.triggerToast(error.localizationKey)
                 }
             } catch {
                 await MainActor.run {
-                    self.isProcessing = false
+                    if isAim { self.isProcessingAim = false } else { self.isProcessingHolo = false }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    self.triggerToast("Lỗi khi tiêm file: \(error.localizedDescription)")
+                    self.triggerToast("Lỗi khi bật \(featureName): \(error.localizedDescription)")
                 }
             }
         }
     }
 
-    private func restoreOriginals() {
-        isProcessing = true
-        processingMessage = "Đang khôi phục game gốc..."
+    private func restoreFeature(featureName: String, isAim: Bool) {
+        if isAim {
+            isProcessingAim = true
+        } else {
+            isProcessingHolo = true
+        }
+
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
 
-        guard let project = activeProject else {
-            isInjected = false
-            isProcessing = false
-            triggerToast("Đã ở trạng thái file gốc!")
-            return
-        }
-
-        let receipt = DevicePatchService.latestReceipt(projectID: project.id)
+        let targetProj = isAim ? aimProject : holoProject
+        let receipt = targetProj.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
 
         Task.detached(priority: .userInitiated) {
             if let receipt {
@@ -488,13 +530,20 @@ struct MainInjectorView: View {
             }
 
             await MainActor.run {
-                self.isProcessing = false
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                    self.isInjected = false
+                if isAim {
+                    self.isProcessingAim = false
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                        self.isAimEnabled = false
+                    }
+                } else {
+                    self.isProcessingHolo = false
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                        self.isHoloEnabled = false
+                    }
                 }
                 let notif = UINotificationFeedbackGenerator()
                 notif.notificationOccurred(.success)
-                self.triggerToast("Đã khôi phục game gốc thành công!")
+                self.triggerToast("Đã tắt \(featureName)!")
             }
         }
     }
@@ -504,7 +553,7 @@ struct MainInjectorView: View {
         withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
             showToast = true
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
             withAnimation(.easeInOut(duration: 0.25)) {
                 showToast = false
             }
