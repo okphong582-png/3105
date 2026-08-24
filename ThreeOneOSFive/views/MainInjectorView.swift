@@ -430,10 +430,13 @@ struct MainInjectorView: View {
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
 
+        let bundleID = selectedBundle
+        let targetName = gameShortName
+
         Task.detached(priority: .userInitiated) {
             var adaptedProject = project
             for i in 0..<adaptedProject.rules.count {
-                adaptedProject.rules[i].bundleID = selectedBundle
+                adaptedProject.rules[i].bundleID = bundleID
             }
 
             do {
@@ -443,7 +446,7 @@ struct MainInjectorView: View {
                     self.isInjected = true
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
-                    self.triggerToast("Đã tiêm Aim Body vào \(gameShortName) thành công!")
+                    self.triggerToast("Đã tiêm Aim Body vào \(targetName) thành công!")
                 }
             } catch let error as PatchPackageError {
                 await MainActor.run {
