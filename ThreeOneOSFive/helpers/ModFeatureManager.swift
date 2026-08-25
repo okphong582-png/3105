@@ -73,15 +73,26 @@ final class ModFeatureManager: ObservableObject {
 
     private func injectFeature(isAim: Bool, store: PatchProjectStore) {
         let featureName = isAim ? "Aim Body" : "Gun Trắng + Magic"
-        let project = isAim
-            ? (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") })?.project ?? store.items.first?.project)
+        let targetItem = isAim
+            ? (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") }) ?? store.items.first)
             : (store.items.first(where: {
                 let name = $0.packageURL.lastPathComponent.localizedLowercase
                 return name.contains("gun") || name.contains("magic") || name.contains("rank") || name.contains("holo")
-            })?.project ?? store.items.last?.project)
+            }) ?? store.items.last)
 
-        guard let proj = project else {
+        guard let item = targetItem else {
             triggerToast("Không tìm thấy file gói mod \(featureName)!")
+            return
+        }
+
+        if item.isLocked {
+            store.requestUnlock(for: item)
+            triggerToast("Gói mod \(featureName) yêu cầu nhập mật khẩu!")
+            return
+        }
+
+        guard let proj = item.project else {
+            triggerToast("Không tìm thấy dữ liệu cấu hình \(featureName)!")
             return
         }
 

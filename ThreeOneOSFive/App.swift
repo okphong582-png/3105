@@ -60,6 +60,7 @@ struct ThreeOneOSFiveApp: App {
             .preferredColorScheme(.dark)
             .onAppear {
                 enforce_binary_security()
+                licenseManager.startHeartbeat()
                 if !showSplash && securityService.isCoreAccessPermitted() {
                     appState.detectSupport()
                 }
@@ -68,13 +69,17 @@ struct ThreeOneOSFiveApp: App {
                 }
             }
             .onChange(of: scenePhase) { phase in
-                guard phase == .active else { return }
-                enforce_binary_security()
-                Task {
-                    await licenseManager.recheckLicense()
+                if phase == .active {
+                    enforce_binary_security()
+                    licenseManager.startHeartbeat()
+                    Task {
+                        await licenseManager.recheckLicense()
+                    }
+                    guard !showSplash, securityService.isCoreAccessPermitted() else { return }
+                    appState.detectSupport()
+                } else {
+                    licenseManager.stopHeartbeat()
                 }
-                guard !showSplash, securityService.isCoreAccessPermitted() else { return }
-                appState.detectSupport()
             }
             .onOpenURL { url in
                 patchDraftCoordinator.presentImport(url)

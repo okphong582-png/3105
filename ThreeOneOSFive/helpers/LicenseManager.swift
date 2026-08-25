@@ -234,6 +234,7 @@ final class LicenseManager: ObservableObject {
 
     private let storageKey = "oni_akuma_active_license_v2"
     private let savedKeyStringKey = "oni_akuma_saved_raw_key"
+    private var heartbeatTimer: Timer?
     
     // Obfuscated Firebase Realtime Database Base URL
     // https://ewrergdf-default-rtdb.firebaseio.com
@@ -259,6 +260,24 @@ final class LicenseManager: ObservableObject {
 
     init() {
         loadCachedLicense()
+        startHeartbeat()
+    }
+
+    // MARK: - Realtime Heartbeat Monitoring (Instant Kickout on Delete/Expire)
+    func startHeartbeat() {
+        stopHeartbeat()
+        DispatchQueue.main.async { [weak self] in
+            self?.heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    _ = await self?.recheckLicense()
+                }
+            }
+        }
+    }
+
+    func stopHeartbeat() {
+        heartbeatTimer?.invalidate()
+        heartbeatTimer = nil
     }
 
     // MARK: - Load Cache
@@ -311,7 +330,7 @@ final class LicenseManager: ObservableObject {
         do {
             var request = URLRequest(url: requestURL)
             request.httpMethod = "GET"
-            request.timeoutInterval = 12.0
+            request.timeoutInterval = 10.0
 
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
@@ -320,8 +339,9 @@ final class LicenseManager: ObservableObject {
                 return ActivationResult(success: false, message: msg, remaining: "", devices: "")
             }
 
-            if data.isEmpty || String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) == "null" {
-                let msg = "Key không tồn tại hoặc đã bị xoá!"
+            let textContent = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            if data.isEmpty || textContent == "null" || textContent == "{}" {
+                let msg = "Key không tồn tại hoặc đã bị xoá bởi Admin!"
                 lastErrorMessage = msg
                 return ActivationResult(success: false, message: msg, remaining: "", devices: "")
             }
@@ -329,7 +349,7 @@ final class LicenseManager: ObservableObject {
             // Parse robustly from JSON dictionary
             let jsonObject = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
             guard let dict = jsonObject, !dict.isEmpty else {
-                let msg = "Key không tồn tại hoặc đã bị xoá!"
+                let msg = "Key không tồn tại hoặc đã bị xoá bởi Admin!"
                 lastErrorMessage = msg
                 return ActivationResult(success: false, message: msg, remaining: "", devices: "")
             }
@@ -400,14 +420,14 @@ final class LicenseManager: ObservableObject {
         }
     }
 
-    // MARK: - Recheck License Silently
+    // MARK: - Recheck License Silently (Returns true if valid, false if revoked/expired)
     @MainActor
-    func recheckLicense() async {
+    @discardableResult
+    func recheckLicense() async -> Bool {
         guard let savedRawKey = UserDefaults.standard.string(forKey: savedKeyStringKey),
               !savedRawKey.isEmpty else {
-            isAuthorized = false
-            currentLicense = nil
-            return
+            logout(reason: "Chưa có Key bản quyền!")
+            return false
         }
 
         let sanitizedKey = savedRawKey
@@ -418,21 +438,36 @@ final class LicenseManager: ObservableObject {
             .replacingOccurrences(of: "]", with: "_")
             .replacingOccurrences(of: "/", with: "_")
 
-        guard let requestURL = URL(string: "\(databaseEndpoint)/\(sanitizedKey).json") else { return }
+        guard let requestURL = URL(string: "\(databaseEndpoint)/\(sanitizedKey).json") else {
+            logout(reason: "Đường dẫn Key không hợp lệ!")
+            return false
+        }
 
         do {
             var request = URLRequest(url: requestURL)
             request.httpMethod = "GET"
-            request.timeoutInterval = 10.0
+            request.timeoutInterval = 8.0
 
             let (data, response) = try await URLSession.shared.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
-                  !data.isEmpty,
-                  let dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
-                  !dict.isEmpty else {
-                // Key removed on server
-                logout()
-                return
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                // If offline or network error, check local expiry
+                if let cached = currentLicense, cached.isExpired {
+                    logout(reason: "Key bản quyền đã hết hạn sử dụng!")
+                    return false
+                }
+                return isAuthorized
+            }
+
+            let textContent = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            if data.isEmpty || textContent == "null" || textContent == "{}" {
+                // Key removed on server by Admin
+                logout(reason: "Key không tồn tại hoặc đã bị xoá bởi Admin!")
+                return false
+            }
+
+            guard let dict = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], !dict.isEmpty else {
+                logout(reason: "Key không tồn tại hoặc đã bị xoá bởi Admin!")
+                return false
             }
 
             var license = LicenseInfo(dict: dict, fallbackKey: savedRawKey)
@@ -440,27 +475,46 @@ final class LicenseManager: ObservableObject {
 
             let currentHWID = deviceHWID
 
-            if license.status == "banned" || license.isExpired || !license.usedDevices.contains(currentHWID) {
-                logout()
-            } else {
-                saveLicenseLocally(license, rawKey: savedRawKey)
-                self.currentLicense = license
-                self.isAuthorized = true
+            if license.status == "banned" {
+                logout(reason: "Key đã bị khoá / vô hiệu hoá bởi Admin!")
+                return false
             }
+
+            if license.isExpired || license.status == "expired" {
+                logout(reason: "Key bản quyền đã hết hạn sử dụng!")
+                return false
+            }
+
+            if !license.usedDevices.contains(currentHWID) {
+                logout(reason: "Mã thiết bị không khớp với Key bản quyền!")
+                return false
+            }
+
+            saveLicenseLocally(license, rawKey: savedRawKey)
+            self.currentLicense = license
+            self.isAuthorized = true
+            return true
+
         } catch {
-            // Keep local state if offline, but check local expiry
+            // If offline, enforce local expiration strictly
             if let cached = currentLicense, cached.isExpired {
-                logout()
+                logout(reason: "Key bản quyền đã hết hạn sử dụng!")
+                return false
             }
+            return isAuthorized
         }
     }
 
-    // MARK: - Logout / Remove Key
-    func logout() {
+    // MARK: - Logout / Remove Key / Instant Lockdown
+    func logout(reason: String? = nil) {
         clearCachedLicense()
+        MultiLayerSecurityService.shared.lockdown()
         DispatchQueue.main.async {
             self.isAuthorized = false
             self.currentLicense = nil
+            if let reason = reason {
+                self.lastErrorMessage = reason
+            }
         }
     }
 

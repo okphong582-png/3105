@@ -88,11 +88,18 @@ final class MultiLayerSecurityService: ObservableObject {
     }
 
     private func checkPreviousAuthorization() {
-        // If license was previously verified and valid, start at Layer 1 integrity scan
-        if LicenseManager.shared.isAuthorized {
+        let licManager = LicenseManager.shared
+        if licManager.isAuthorized,
+           let lic = licManager.currentLicense,
+           !lic.isExpired,
+           lic.status == "active" {
             passedLayers.insert(SecurityGateLayer.layer2_licenseKey.rawValue)
             l2_keyVerified = true
             tokenL2 = "L2_\(UUID().uuidString)"
+        } else {
+            passedLayers.remove(SecurityGateLayer.layer2_licenseKey.rawValue)
+            l2_keyVerified = false
+            tokenL2 = nil
         }
     }
 
@@ -163,20 +170,23 @@ final class MultiLayerSecurityService: ObservableObject {
         l3_pinErrorMessage = nil
     }
 
-    func verifyLayer3Pin() {
-        if l3_pinInput == configuredPin || l3_pinInput == defaultMasterPin {
+    func clearPin() {
+        l3_pinInput = ""
+        l3_pinErrorMessage = nil
+    }
+
+    private func verifyLayer3Pin() {
+        if l3_pinInput == configuredPin {
             l3_pinErrorMessage = nil
             passedLayers.insert(SecurityGateLayer.layer3_securityPin.rawValue)
             tokenL3 = "L3_\(UUID().uuidString)"
             advanceToNextLayer()
-        } else if l3_pinInput.count == 4 {
-            l3_pinErrorMessage = "Mã PIN không chính xác! (Mặc định: \(defaultMasterPin))"
-            let gen = UINotificationFeedbackGenerator()
-            gen.notificationOccurred(.error)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                self.l3_pinInput = ""
-                self.refreshScrambledPinPad()
-            }
+        } else if l3_pinInput.count >= configuredPin.count {
+            l3_pinErrorMessage = "Mã PIN không chính xác!"
+            let notif = UINotificationFeedbackGenerator()
+            notif.notificationOccurred(.error)
+            l3_pinInput = ""
+            refreshScrambledPinPad()
         }
     }
 
@@ -222,29 +232,17 @@ final class MultiLayerSecurityService: ObservableObject {
         }
     }
 
-    // MARK: - Layer 5: Decrypt and Launch Core Area
+    // MARK: - Layer 5: Dynamic Core Decryption
     func startLayer5CoreDecryption(completion: @escaping () -> Void) {
-        guard passedLayers.contains(1),
-              passedLayers.contains(2),
-              passedLayers.contains(3),
-              passedLayers.contains(4) else {
-            lockdown()
-            return
-        }
-
+        guard !l5_isDecrypting else { return }
         l5_isDecrypting = true
         l5_progress = 0.0
 
-        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] timer in
-            guard let self = self else {
+        Timer.scheduledTimer(withTimeInterval: 0.04, repeats: true) { timer in
+            if self.l5_progress < 1.0 {
+                self.l5_progress += 0.05
+            } else {
                 timer.invalidate()
-                return
-            }
-
-            self.l5_progress += 0.05
-            if self.l5_progress >= 1.0 {
-                timer.invalidate()
-                self.l5_progress = 1.0
                 self.passedLayers.insert(SecurityGateLayer.layer5_coreDecryption.rawValue)
                 
                 // Form composite master token
@@ -279,27 +277,33 @@ final class MultiLayerSecurityService: ObservableObject {
 
     // MARK: - Tamper Lockdown
     func lockdown() {
-        tokenL1 = nil
-        tokenL2 = nil
-        tokenL3 = nil
-        tokenL4 = nil
-        compositeMasterToken = nil
-        passedLayers.removeAll()
-        isFullyUnlocked = false
-        currentLayer = .layer1_environment
-        l1_integrityOk = false
-        l2_keyVerified = false
-        l3_pinInput = ""
-        generateLayer4Challenge()
+        DispatchQueue.main.async {
+            self.tokenL1 = nil
+            self.tokenL2 = nil
+            self.tokenL3 = nil
+            self.tokenL4 = nil
+            self.compositeMasterToken = nil
+            self.passedLayers.removeAll()
+            self.isFullyUnlocked = false
+            self.currentLayer = .layer1_environment
+            self.l1_integrityOk = false
+            self.l2_keyVerified = false
+            self.l3_pinInput = ""
+            self.generateLayer4Challenge()
+        }
     }
 
     // MARK: - Validate Decoupled Core Access
     func isCoreAccessPermitted() -> Bool {
-        return isFullyUnlocked &&
-               compositeMasterToken != nil &&
-               passedLayers.count == 5 &&
-               !is_debugger_attached() &&
-               !is_suspicious_environment() &&
-               !VPNGuardService.shared.isVPNActive
+        guard isFullyUnlocked,
+              compositeMasterToken != nil,
+              passedLayers.count == 5,
+              LicenseManager.shared.isAuthorized,
+              let lic = LicenseManager.shared.currentLicense,
+              !lic.isExpired,
+              lic.status == "active" else {
+            return false
+        }
+        return !is_debugger_attached() && !is_suspicious_environment()
     }
 }

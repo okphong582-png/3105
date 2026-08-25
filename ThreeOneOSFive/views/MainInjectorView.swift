@@ -84,6 +84,9 @@ struct MainInjectorView: View {
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showLogs) { LogView() }
+            .sheet(item: $store.passwordRequest, onDismiss: store.cancelUnlock) { _ in
+                PatchUnlockView(store: store)
+            }
             .onAppear {
                 store.reload()
                 if !hasShownWelcome {

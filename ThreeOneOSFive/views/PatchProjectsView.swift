@@ -214,7 +214,7 @@ private struct PatchProjectRow: View {
     }
 }
 
-private struct PatchUnlockView: View {
+struct PatchUnlockView: View {
     @Environment(\.appLanguage) private var language
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var store: PatchProjectStore
