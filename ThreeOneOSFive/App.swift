@@ -7,7 +7,6 @@ struct ThreeOneOSFiveApp: App {
     @StateObject private var patchDraftCoordinator = PatchDraftCoordinator()
     @StateObject private var fileOperationCoordinator = FileOperationCoordinator()
     @ObservedObject private var licenseManager = LicenseManager.shared
-    @ObservedObject private var vpnGuard = VPNGuardService.shared
     @ObservedObject private var securityService = MultiLayerSecurityService.shared
     @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.vietnamese.rawValue
     @Environment(\.scenePhase) private var scenePhase
@@ -27,11 +26,7 @@ struct ThreeOneOSFiveApp: App {
     var body: some Scene {
         WindowGroup {
             ZStack {
-                if vpnGuard.isVPNActive {
-                    VPNBlockedView()
-                        .transition(.opacity)
-                        .zIndex(10)
-                } else if !securityService.isCoreAccessPermitted() && !showSplash {
+                if !securityService.isCoreAccessPermitted() && !showSplash {
                     MultiLayerSecurityGateView()
                         .environment(\.appLanguage, language)
                         .environment(\.locale, language.locale)
@@ -49,7 +44,7 @@ struct ThreeOneOSFiveApp: App {
                         .zIndex(0)
                 }
 
-                if showSplash && !vpnGuard.isVPNActive {
+                if showSplash {
                     SplashLoadingView {
                         withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
                             showSplash = false
@@ -65,7 +60,6 @@ struct ThreeOneOSFiveApp: App {
             .preferredColorScheme(.dark)
             .onAppear {
                 enforce_binary_security()
-                vpnGuard.checkVPN()
                 if !showSplash && securityService.isCoreAccessPermitted() {
                     appState.detectSupport()
                 }
@@ -76,7 +70,6 @@ struct ThreeOneOSFiveApp: App {
             .onChange(of: scenePhase) { phase in
                 guard phase == .active else { return }
                 enforce_binary_security()
-                vpnGuard.checkVPN()
                 Task {
                     await licenseManager.recheckLicense()
                 }

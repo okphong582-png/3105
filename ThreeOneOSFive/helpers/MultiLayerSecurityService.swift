@@ -108,13 +108,12 @@ final class MultiLayerSecurityService: ObservableObject {
             enforce_binary_security()
             let debuggerAttached = is_debugger_attached()
             let suspiciousEnv = is_suspicious_environment()
-            let vpnActive = VPNGuardService.shared.isVPNActive
 
             self.l1_hwidStatus = "HWID Đã Khóa: \(LicenseManager.shared.deviceHWID.prefix(8))•••"
             self.l1_debuggerStatus = debuggerAttached ? "BỊ PHÁT HIỆN" : "AN TOÀN (0x0)"
-            self.l1_environmentStatus = (suspiciousEnv || vpnActive) ? "PHÁT HIỆN CAN THIỆP" : "SẠCH SẼ (100%)"
+            self.l1_environmentStatus = suspiciousEnv ? "PHÁT HIỆN CAN THIỆP" : "SẠCH SẼ (100%)"
 
-            if !debuggerAttached && !suspiciousEnv && !vpnActive {
+            if !debuggerAttached && !suspiciousEnv {
                 self.l1_integrityOk = true
                 self.passedLayers.insert(SecurityGateLayer.layer1_environment.rawValue)
                 self.tokenL1 = "L1_\(UUID().uuidString)"
