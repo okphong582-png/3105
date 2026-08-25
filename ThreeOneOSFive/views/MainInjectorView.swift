@@ -41,13 +41,13 @@ struct MainInjectorView: View {
                         }
 
                         featureToggleCard(
-                            title: "GUN TRẮNG + MAGIC",
-                            subtitle: "Gun trắng, đạn ma thuật (Magic Bullet) cân rank",
-                            filename: "Gun Trắng + Magic Cân Rank.3105",
-                            icon: "wand.and.stars",
+                            title: "CHẤM XANH NHÂN VẬT",
+                            subtitle: "Hiện chấm xanh định vị vị trí kẻ địch (ESP)",
+                            filename: "CHAM XANH NHÂN VẬT.3105",
+                            icon: "person.fill.viewfinder",
                             isEnabled: modManager.isHoloEnabled,
                             isProcessing: modManager.isProcessingHolo,
-                            accentColor: AppTheme.goldAccent
+                            accentColor: Color.green
                         ) {
                             modManager.toggleHolo(store: store)
                         }

@@ -72,12 +72,12 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func injectFeature(isAim: Bool, store: PatchProjectStore) {
-        let featureName = isAim ? "Aim Body" : "Gun Trắng + Magic"
+        let featureName = isAim ? "Aim Body" : "Chấm Xanh Nhân Vật"
         let targetItem = isAim
             ? (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") }) ?? store.items.first)
             : (store.items.first(where: {
                 let name = $0.packageURL.lastPathComponent.localizedLowercase
-                return name.contains("gun") || name.contains("magic") || name.contains("rank") || name.contains("holo")
+                return name.contains("cham") || name.contains("xanh") || name.contains("nhan") || name.contains("gun") || name.contains("holo")
             }) ?? store.items.last)
 
         guard let item = targetItem else {
@@ -152,12 +152,12 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func restoreFeature(isAim: Bool, store: PatchProjectStore) {
-        let featureName = isAim ? "Aim Body" : "Gun Trắng + Magic"
+        let featureName = isAim ? "Aim Body" : "Chấm Xanh Nhân Vật"
         let project = isAim
             ? (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") })?.project ?? store.items.first?.project)
             : (store.items.first(where: {
                 let name = $0.packageURL.lastPathComponent.localizedLowercase
-                return name.contains("gun") || name.contains("magic") || name.contains("rank") || name.contains("holo")
+                return name.contains("cham") || name.contains("xanh") || name.contains("nhan") || name.contains("gun") || name.contains("holo")
             })?.project ?? store.items.last?.project)
 
         let receiptToRestore = project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
