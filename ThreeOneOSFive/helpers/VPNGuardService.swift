@@ -91,30 +91,30 @@ final class VPNGuardService: ObservableObject {
         }
 
         // Check if HTTP / HTTPS / SOCKS proxy is explicitly enabled with a configured server
-        if let httpEnable = proxySettings[kCFNetworkProxiesHTTPEnable as String] as? Int, httpEnable == 1,
-           let httpProxy = proxySettings[kCFNetworkProxiesHTTPProxy as String] as? String, !httpProxy.trimmingCharacters(in: .whitespaces).isEmpty {
+        if let httpEnable = proxySettings["HTTPEnable"] as? Int, httpEnable == 1,
+           let httpProxy = proxySettings["HTTPProxy"] as? String, !httpProxy.trimmingCharacters(in: .whitespaces).isEmpty {
             return true
         }
 
-        if let httpsEnable = proxySettings[kCFNetworkProxiesHTTPSEnable as String] as? Int, httpsEnable == 1,
-           let httpsProxy = proxySettings[kCFNetworkProxiesHTTPSProxy as String] as? String, !httpsProxy.trimmingCharacters(in: .whitespaces).isEmpty {
+        if let httpsEnable = proxySettings["HTTPSEnable"] as? Int, httpsEnable == 1,
+           let httpsProxy = proxySettings["HTTPSProxy"] as? String, !httpsProxy.trimmingCharacters(in: .whitespaces).isEmpty {
             return true
         }
 
-        if let socksEnable = proxySettings[kCFNetworkProxiesSOCKSEnable as String] as? Int, socksEnable == 1,
-           let socksProxy = proxySettings[kCFNetworkProxiesSOCKSProxy as String] as? String, !socksProxy.trimmingCharacters(in: .whitespaces).isEmpty {
+        if let socksEnable = proxySettings["SOCKSEnable"] as? Int, socksEnable == 1,
+           let socksProxy = proxySettings["SOCKSProxy"] as? String, !socksProxy.trimmingCharacters(in: .whitespaces).isEmpty {
             return true
         }
 
         // Check Scoped interfaces for actual enabled proxies (NOT just interface existence)
         if let scopes = proxySettings["__SCOPED__"] as? [String: [String: Any]] {
             for (_, config) in scopes {
-                if let httpEnable = config[kCFNetworkProxiesHTTPEnable as String] as? Int, httpEnable == 1,
-                   let httpProxy = config[kCFNetworkProxiesHTTPProxy as String] as? String, !httpProxy.trimmingCharacters(in: .whitespaces).isEmpty {
+                if let httpEnable = config["HTTPEnable"] as? Int, httpEnable == 1,
+                   let httpProxy = config["HTTPProxy"] as? String, !httpProxy.trimmingCharacters(in: .whitespaces).isEmpty {
                     return true
                 }
-                if let httpsEnable = config[kCFNetworkProxiesHTTPSEnable as String] as? Int, httpsEnable == 1,
-                   let httpsProxy = config[kCFNetworkProxiesHTTPSProxy as String] as? String, !httpsProxy.trimmingCharacters(in: .whitespaces).isEmpty {
+                if let httpsEnable = config["HTTPSEnable"] as? Int, httpsEnable == 1,
+                   let httpsProxy = config["HTTPSProxy"] as? String, !httpsProxy.trimmingCharacters(in: .whitespaces).isEmpty {
                     return true
                 }
             }

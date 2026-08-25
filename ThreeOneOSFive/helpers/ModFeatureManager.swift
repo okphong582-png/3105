@@ -3,6 +3,7 @@ import SwiftUI
 import Combine
 
 // MARK: - Mod Feature State Manager
+@MainActor
 final class ModFeatureManager: ObservableObject {
     static let shared = ModFeatureManager()
 
@@ -85,44 +86,51 @@ final class ModFeatureManager: ObservableObject {
         let currentBundle = selectedBundle
         let targetName = gameShortName
 
-        Task.detached(priority: .userInitiated) { [weak self] in
-            guard let self = self else { return }
-            var adapted = proj
-            for i in 0..<adapted.rules.count {
-                adapted.rules[i].bundleID = currentBundle
-            }
+        var adapted = proj
+        for i in 0..<adapted.rules.count {
+            adapted.rules[i].bundleID = currentBundle
+        }
 
+        Task.detached(priority: .userInitiated) {
             do {
                 _ = try DevicePatchService.apply(project: adapted)
                 await MainActor.run {
                     if isAim {
-                        self.isProcessingAim = false
+                        ModFeatureManager.shared.isProcessingAim = false
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                            self.isAimEnabled = true
+                            ModFeatureManager.shared.isAimEnabled = true
                         }
                     } else {
-                        self.isProcessingHolo = false
+                        ModFeatureManager.shared.isProcessingHolo = false
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                            self.isHoloEnabled = true
+                            ModFeatureManager.shared.isHoloEnabled = true
                         }
                     }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
-                    self.triggerToast("Đã bật \(featureName) trên \(targetName)!")
+                    ModFeatureManager.shared.triggerToast("Đã bật \(featureName) trên \(targetName)!")
                 }
             } catch let error as PatchPackageError {
                 await MainActor.run {
-                    if isAim { self.isProcessingAim = false } else { self.isProcessingHolo = false }
+                    if isAim {
+                        ModFeatureManager.shared.isProcessingAim = false
+                    } else {
+                        ModFeatureManager.shared.isProcessingHolo = false
+                    }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    self.triggerToast(error.localizationKey)
+                    ModFeatureManager.shared.triggerToast(error.localizationKey)
                 }
             } catch {
                 await MainActor.run {
-                    if isAim { self.isProcessingAim = false } else { self.isProcessingHolo = false }
+                    if isAim {
+                        ModFeatureManager.shared.isProcessingAim = false
+                    } else {
+                        ModFeatureManager.shared.isProcessingHolo = false
+                    }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    self.triggerToast("Lỗi khi bật: \(error.localizedDescription)")
+                    ModFeatureManager.shared.triggerToast("Lỗi khi bật: \(error.localizedDescription)")
                 }
             }
         }
@@ -138,8 +146,7 @@ final class ModFeatureManager: ObservableObject {
 
         if isAim { isProcessingAim = true } else { isProcessingHolo = true }
 
-        Task.detached(priority: .userInitiated) { [weak self] in
-            guard let self = self else { return }
+        Task.detached(priority: .userInitiated) {
             if let receipt {
                 do {
                     try DevicePatchService.restore(receipt: receipt)
@@ -150,19 +157,19 @@ final class ModFeatureManager: ObservableObject {
 
             await MainActor.run {
                 if isAim {
-                    self.isProcessingAim = false
+                    ModFeatureManager.shared.isProcessingAim = false
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                        self.isAimEnabled = false
+                        ModFeatureManager.shared.isAimEnabled = false
                     }
                 } else {
-                    self.isProcessingHolo = false
+                    ModFeatureManager.shared.isProcessingHolo = false
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                        self.isHoloEnabled = false
+                        ModFeatureManager.shared.isHoloEnabled = false
                     }
                 }
                 let notif = UINotificationFeedbackGenerator()
                 notif.notificationOccurred(.success)
-                self.triggerToast("Đã tắt \(featureName)!")
+                ModFeatureManager.shared.triggerToast("Đã tắt \(featureName)!")
             }
         }
     }
@@ -172,9 +179,9 @@ final class ModFeatureManager: ObservableObject {
         withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
             showToast = true
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
             withAnimation(.easeInOut(duration: 0.25)) {
-                self?.showToast = false
+                self.showToast = false
             }
         }
     }
