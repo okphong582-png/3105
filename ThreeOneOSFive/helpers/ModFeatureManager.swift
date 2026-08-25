@@ -117,6 +117,40 @@ final class ModFeatureManager: ObservableObject {
         processingAimMods.contains(type.rawValue)
     }
 
+    // MARK: - Package Resolver Helper
+    private func findItem(forFilename filename: String, altKey: String? = nil, store: PatchProjectStore) -> PatchLibraryItem? {
+        let cleanName = filename.lowercased()
+        let cleanAlt = altKey?.lowercased()
+
+        // 1. Search in store items
+        if let found = store.items.first(where: {
+            let itemFilename = $0.packageURL.lastPathComponent.lowercased()
+            let projName = ($0.project?.name ?? "").lowercased()
+            if itemFilename == cleanName || itemFilename.contains(cleanName) { return true }
+            if let alt = cleanAlt, !alt.isEmpty {
+                if itemFilename.contains(alt) || projName.contains(alt) { return true }
+            }
+            return false
+        }) {
+            return found
+        }
+
+        // 2. Direct lookup from PatchProjectLibrary (checks Root and Bundle directly)
+        if let direct = PatchProjectLibrary.loadItem(forFilename: filename) {
+            return direct
+        }
+        if let alt = altKey, let directAlt = PatchProjectLibrary.loadItem(forFilename: alt) {
+            return directAlt
+        }
+
+        // 3. Trigger reload and check one last time
+        store.reload()
+        return store.items.first(where: {
+            let itemFilename = $0.packageURL.lastPathComponent.lowercased()
+            return itemFilename.contains(cleanName) || (cleanAlt != nil && itemFilename.contains(cleanAlt!))
+        })
+    }
+
     // MARK: - Toggle Aim Mod (5 Chế Độ)
     func toggleAimMod(_ type: AimModType, store: PatchProjectStore) {
         guard !processingAimMods.contains(type.rawValue) else { return }
@@ -134,12 +168,7 @@ final class ModFeatureManager: ObservableObject {
     private func injectAimMod(_ type: AimModType, store: PatchProjectStore) {
         let typeKey = type.rawValue
 
-        let targetItem = store.items.first(where: {
-            $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains(type.filename) ||
-            $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains(type.rawValue)
-        })
-
-        guard let item = targetItem else {
+        guard let item = findItem(forFilename: type.filename, altKey: type.rawValue, store: store) else {
             triggerToast("Không tìm thấy file \(type.filename)!")
             return
         }
@@ -197,11 +226,7 @@ final class ModFeatureManager: ObservableObject {
 
     private func restoreAimMod(_ type: AimModType, store: PatchProjectStore) {
         let typeKey = type.rawValue
-        let targetItem = store.items.first(where: {
-            $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains(type.filename) ||
-            $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains(type.rawValue)
-        })
-
+        let targetItem = findItem(forFilename: type.filename, altKey: type.rawValue, store: store)
         let receiptToRestore = targetItem?.project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
 
         processingAimMods.insert(typeKey)
@@ -242,12 +267,7 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func injectModSkin(store: PatchProjectStore) {
-        let targetItem = store.items.first(where: {
-            let name = $0.packageURL.lastPathComponent.localizedLowercase
-            return name.contains("modskin") || name.contains("skin")
-        })
-
-        guard let item = targetItem else {
+        guard let item = findItem(forFilename: "Modskin.3105", altKey: "modskin", store: store) else {
             triggerToast("Không tìm thấy file Modskin.3105!")
             return
         }
@@ -304,11 +324,7 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func restoreModSkin(store: PatchProjectStore) {
-        let targetItem = store.items.first(where: {
-            let name = $0.packageURL.lastPathComponent.localizedLowercase
-            return name.contains("modskin") || name.contains("skin")
-        })
-
+        let targetItem = findItem(forFilename: "Modskin.3105", altKey: "modskin", store: store)
         let receiptToRestore = targetItem?.project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
 
         isProcessingModSkin = true

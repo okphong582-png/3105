@@ -43,18 +43,71 @@ enum PatchProjectLibrary {
         return clean == "3105" || clean == "hoanghatrongkien"
     }
 
+    /// Finds all bundled .3105 and .hoanghatrongkien URLs using multiple discovery strategies
+    static func findBundledPackageURLs(fileManager: FileManager = .default) -> [URL] {
+        var foundDict: [String: URL] = [:]
+
+        // Strategy 1: Standard Bundle URLs
+        if let urls = Bundle.main.urls(forResourcesWithExtension: "3105", subdirectory: nil) {
+            for u in urls { foundDict[u.lastPathComponent.lowercased()] = u }
+        }
+        if let urls = Bundle.main.urls(forResourcesWithExtension: "hoanghatrongkien", subdirectory: nil) {
+            for u in urls { foundDict[u.lastPathComponent.lowercased()] = u }
+        }
+
+        // Strategy 2: Bundle.main.paths
+        let paths3105 = Bundle.main.paths(forResourcesOfType: "3105", inDirectory: nil)
+        for p in paths3105 {
+            let u = URL(fileURLWithPath: p)
+            foundDict[u.lastPathComponent.lowercased()] = u
+        }
+
+        // Strategy 3: Enumerate Bundle directories
+        let searchDirectories = [Bundle.main.resourceURL, Bundle.main.bundleURL].compactMap { $0 }
+        for dir in searchDirectories {
+            if let urls = try? fileManager.contentsOfDirectory(
+                at: dir,
+                includingPropertiesForKeys: [.fileSizeKey],
+                options: [.skipsHiddenFiles]
+            ) {
+                for url in urls where isSupportedExtension(url.pathExtension) {
+                    foundDict[url.lastPathComponent.lowercased()] = url
+                }
+            }
+        }
+
+        // Strategy 4: Explicit known names
+        let knownFiles = [
+            "Aim Body.3105",
+            "Aim Drag.3105",
+            "Aim Chest.3105",
+            "Aim Magic.3105",
+            "Aim Neck.3105",
+            "Modskin.3105"
+        ]
+        for filename in knownFiles {
+            let base = (filename as NSString).deletingPathExtension
+            let ext = (filename as NSString).pathExtension
+            if let u = Bundle.main.url(forResource: base, withExtension: ext) {
+                foundDict[filename.lowercased()] = u
+            }
+            if let u = Bundle.main.url(forResource: filename, withExtension: nil) {
+                foundDict[filename.lowercased()] = u
+            }
+            let directBundle = Bundle.main.bundleURL.appendingPathComponent(filename)
+            if fileManager.fileExists(atPath: directBundle.path) {
+                foundDict[filename.lowercased()] = directBundle
+            }
+        }
+
+        return Array(foundDict.values)
+    }
+
     static func load(fileManager: FileManager = .default) -> [PatchLibraryItem] {
         guard let root = try? packageRootURL(fileManager: fileManager) else { return [] }
 
-        // Automatically load and copy bundled .3105 and .hoanghatrongkien files
-        var bundledURLs: [URL] = []
-        if let urls3105 = Bundle.main.urls(forResourcesWithExtension: "3105", subdirectory: nil) {
-            bundledURLs.append(contentsOf: urls3105)
-        }
-        if let urlsHHTK = Bundle.main.urls(forResourcesWithExtension: "hoanghatrongkien", subdirectory: nil) {
-            bundledURLs.append(contentsOf: urlsHHTK)
-        }
-
+        // 1. Copy all bundled package URLs to root
+        let bundledURLs = findBundledPackageURLs(fileManager: fileManager)
         for bundledURL in bundledURLs {
             let destURL = root.appendingPathComponent(bundledURL.lastPathComponent)
             if !fileManager.fileExists(atPath: destURL.path) {
@@ -67,46 +120,99 @@ enum PatchProjectLibrary {
             }
         }
 
-        guard let urls = try? fileManager.contentsOfDirectory(
-                at: root,
-                includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey],
-                options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
-              ) else { return [] }
+        // 2. Discover all package URLs in root + bundle
+        var allCandidateURLs: [URL] = []
+        if let localURLs = try? fileManager.contentsOfDirectory(
+            at: root,
+            includingPropertiesForKeys: [.contentModificationDateKey, .fileSizeKey],
+            options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants]
+        ) {
+            allCandidateURLs.append(contentsOf: localURLs.filter { isSupportedExtension($0.pathExtension) })
+        }
 
-        var byID: [UUID: PatchLibraryItem] = [:]
-        for url in urls where isSupportedExtension(url.pathExtension) {
-            do {
-                let data = try readPackage(at: url)
-                let summary = try PatchPackageCodec.inspect(data)
-                let decoded: DecodedPatchPackage?
-                if let contentKey = try PatchKeyStore.load(for: summary) {
-                    decoded = try PatchPackageCodec.decode(data, contentKey: contentKey)
-                } else if summary.isPasswordProtected {
-                    decoded = nil
-                } else {
-                    decoded = try PatchPackageCodec.decode(data, password: nil)
-                }
-                let item = PatchLibraryItem(
-                    summary: summary,
-                    project: decoded?.project,
-                    contentKey: decoded?.contentKey,
-                    packageURL: url
-                )
-                if summary.schemaVersion >= 2, let project = decoded?.project {
-                    do {
-                        _ = try PatchWorkspaceService.ensureWorkspace(for: project)
-                    } catch {
-                        log("patch: workspace unavailable for \(project.id.uuidString)")
-                    }
-                }
-                byID[summary.packageID] = item
-            } catch {
-                log("patch: skipped invalid local package \(url.lastPathComponent)")
+        // Also add bundled URLs directly in case copying failed or had permission issues
+        for bURL in bundledURLs {
+            if !allCandidateURLs.contains(where: { $0.lastPathComponent.lowercased() == bURL.lastPathComponent.lowercased() }) {
+                allCandidateURLs.append(bURL)
             }
         }
-        return byID.values.sorted {
-            ($0.project?.updatedAt ?? .distantPast) > ($1.project?.updatedAt ?? .distantPast)
+
+        var itemsByFilename: [String: PatchLibraryItem] = [:]
+        for url in allCandidateURLs {
+            if let item = parseItem(from: url, fileManager: fileManager) {
+                itemsByFilename[url.lastPathComponent.lowercased()] = item
+            }
         }
+
+        return Array(itemsByFilename.values).sorted {
+            $0.packageURL.lastPathComponent < $1.packageURL.lastPathComponent
+        }
+    }
+
+    static func parseItem(from url: URL, fileManager: FileManager = .default) -> PatchLibraryItem? {
+        do {
+            let data = try readPackage(at: url)
+            let summary = try PatchPackageCodec.inspect(data)
+            let decoded: DecodedPatchPackage?
+            if let contentKey = try PatchKeyStore.load(for: summary) {
+                decoded = try PatchPackageCodec.decode(data, contentKey: contentKey)
+            } else if summary.isPasswordProtected {
+                decoded = nil
+            } else {
+                decoded = try PatchPackageCodec.decode(data, password: nil)
+            }
+            let item = PatchLibraryItem(
+                summary: summary,
+                project: decoded?.project,
+                contentKey: decoded?.contentKey,
+                packageURL: url
+            )
+            if summary.schemaVersion >= 2, let project = decoded?.project {
+                do {
+                    _ = try PatchWorkspaceService.ensureWorkspace(for: project)
+                } catch {
+                    log("patch: workspace unavailable for \(project.id.uuidString)")
+                }
+            }
+            return item
+        } catch {
+            log("patch: error parsing package \(url.lastPathComponent): \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    static func loadItem(forFilename filename: String, fileManager: FileManager = .default) -> PatchLibraryItem? {
+        let cleanName = filename.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+
+        // 1. Check in root
+        if let root = try? packageRootURL(fileManager: fileManager) {
+            let rootCandidate = root.appendingPathComponent(filename)
+            if fileManager.fileExists(atPath: rootCandidate.path),
+               let item = parseItem(from: rootCandidate, fileManager: fileManager) {
+                return item
+            }
+
+            // Check case-insensitive match in root
+            if let urls = try? fileManager.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) {
+                for u in urls where u.lastPathComponent.lowercased() == cleanName || u.lastPathComponent.lowercased().contains(cleanName) {
+                    if let item = parseItem(from: u, fileManager: fileManager) {
+                        return item
+                    }
+                }
+            }
+        }
+
+        // 2. Check in Bundle
+        let bundled = findBundledPackageURLs(fileManager: fileManager)
+        for bURL in bundled {
+            if bURL.lastPathComponent.lowercased() == cleanName || bURL.lastPathComponent.lowercased().contains(cleanName) {
+                if let item = parseItem(from: bURL, fileManager: fileManager) {
+                    return item
+                }
+            }
+        }
+
+        return nil
     }
 
     static func readPackage(at url: URL) throws -> Data {
