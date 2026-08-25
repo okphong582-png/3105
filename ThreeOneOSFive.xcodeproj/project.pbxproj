@@ -78,7 +78,7 @@
 		3105MLG2 /* MultiLayerSecurityGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105MLG1; };
 		3105MFM2 /* ModFeatureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105MFM1; };
 		3105AIM2 /* Aim Body.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105AIM1; };
-		3105HOLO2 /* HOLO.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105HOLO1; };
+		3105GUN2 /* Gun Trắng + Magic Cân Rank.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105GUN1; };
 		3105A211 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3105A031; };
 /* End PBXBuildFile section */
 
@@ -162,7 +162,7 @@
 		3105MLG1 /* MultiLayerSecurityGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiLayerSecurityGateView.swift; sourceTree = "<group>"; };
 		3105MFM1 /* ModFeatureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModFeatureManager.swift; sourceTree = "<group>"; };
 		3105AIM1 /* Aim Body.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Body.3105"; sourceTree = "<group>"; };
-		3105HOLO1 /* HOLO.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "HOLO.3105"; sourceTree = "<group>"; };
+		3105GUN1 /* Gun Trắng + Magic Cân Rank.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Gun Trắng + Magic Cân Rank.3105"; sourceTree = "<group>"; };
 		3105F106 /* WallpaperLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLabView.swift; sourceTree = "<group>"; };
 		3105F108 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		3105G100 /* ZIPArchiveWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZIPArchiveWriter.swift; sourceTree = "<group>"; };
@@ -209,7 +209,7 @@
 				3105A406 /* kexploit */,
 				3105A120 /* Localizable.strings */,
 				3105AIM1 /* Aim Body.3105 */,
-				3105HOLO1 /* HOLO.3105 */,
+				3105GUN1 /* Gun Trắng + Magic Cân Rank.3105 */,
 				3105A031 /* Assets.xcassets */,
 			);
 			path = ThreeOneOSFive;
@@ -390,7 +390,7 @@
 				3105A211,
 				3105A228,
 				3105AIM2,
-				3105HOLO2,
+				3105GUN2,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

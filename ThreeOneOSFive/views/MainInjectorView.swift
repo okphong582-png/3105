@@ -41,10 +41,10 @@ struct MainInjectorView: View {
                         }
 
                         featureToggleCard(
-                            title: "ĐỊNH VỊ (HOLO)",
-                            subtitle: "Định vị vị trí và phát hiện kẻ địch (ESP Holo)",
-                            filename: "HOLO.3105",
-                            icon: "viewfinder.circle.fill",
+                            title: "GUN TRẮNG + MAGIC",
+                            subtitle: "Gun trắng, đạn ma thuật (Magic Bullet) cân rank",
+                            filename: "Gun Trắng + Magic Cân Rank.3105",
+                            icon: "wand.and.stars",
                             isEnabled: modManager.isHoloEnabled,
                             isProcessing: modManager.isProcessingHolo,
                             accentColor: AppTheme.goldAccent

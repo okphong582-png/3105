@@ -72,10 +72,13 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func injectFeature(isAim: Bool, store: PatchProjectStore) {
-        let featureName = isAim ? "Aim Body" : "Định Vị Holo"
+        let featureName = isAim ? "Aim Body" : "Gun Trắng + Magic"
         let project = isAim
             ? (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") })?.project ?? store.items.first?.project)
-            : (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("HOLO") })?.project ?? store.items.last?.project)
+            : (store.items.first(where: {
+                let name = $0.packageURL.lastPathComponent.localizedLowercase
+                return name.contains("gun") || name.contains("magic") || name.contains("rank") || name.contains("holo")
+            })?.project ?? store.items.last?.project)
 
         guard let proj = project else {
             triggerToast("Không tìm thấy file gói mod \(featureName)!")
@@ -138,10 +141,13 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func restoreFeature(isAim: Bool, store: PatchProjectStore) {
-        let featureName = isAim ? "Aim Body" : "Định Vị Holo"
+        let featureName = isAim ? "Aim Body" : "Gun Trắng + Magic"
         let project = isAim
             ? (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") })?.project ?? store.items.first?.project)
-            : (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("HOLO") })?.project ?? store.items.last?.project)
+            : (store.items.first(where: {
+                let name = $0.packageURL.lastPathComponent.localizedLowercase
+                return name.contains("gun") || name.contains("magic") || name.contains("rank") || name.contains("holo")
+            })?.project ?? store.items.last?.project)
 
         let receiptToRestore = project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
 
