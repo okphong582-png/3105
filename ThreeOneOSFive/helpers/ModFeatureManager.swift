@@ -90,10 +90,11 @@ final class ModFeatureManager: ObservableObject {
         for i in 0..<adapted.rules.count {
             adapted.rules[i].bundleID = currentBundle
         }
+        let projectToApply = adapted
 
         Task.detached(priority: .userInitiated) {
             do {
-                _ = try DevicePatchService.apply(project: adapted)
+                _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
                     if isAim {
                         ModFeatureManager.shared.isProcessingAim = false
@@ -142,14 +143,14 @@ final class ModFeatureManager: ObservableObject {
             ? (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") })?.project ?? store.items.first?.project)
             : (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("HOLO") })?.project ?? store.items.last?.project)
 
-        let receipt = project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
+        let receiptToRestore = project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
 
         if isAim { isProcessingAim = true } else { isProcessingHolo = true }
 
         Task.detached(priority: .userInitiated) {
-            if let receipt {
+            if let receiptToRestore {
                 do {
-                    try DevicePatchService.restore(receipt: receipt)
+                    try DevicePatchService.restore(receipt: receiptToRestore)
                 } catch {
                     log("restore error: \(error.localizedDescription)")
                 }
