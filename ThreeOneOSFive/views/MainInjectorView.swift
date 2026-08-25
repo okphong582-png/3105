@@ -10,6 +10,7 @@ struct MainInjectorView: View {
     @AppStorage("oni_akuma_has_shown_welcome_v2") private var hasShownWelcome = false
     @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "cyan"
 
+    @State private var selectedTab: Int = 0 // 0: Aim Bot, 1: Mod Skin
     @State private var showSettings = false
     @State private var showLogs = false
     @State private var showWelcomeDialog = false
@@ -26,40 +27,13 @@ struct MainInjectorView: View {
 
                     gameSelectorCard
 
-                    // 4 Aim Mod Features Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("TÍNH NĂNG AIM BOT (4 CHẾ ĐỘ)")
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .foregroundStyle(.secondary)
-                                .tracking(1.0)
+                    // Segmented Tab Switcher (Aim Bot vs Mod Skin)
+                    tabSwitcherSection
 
-                            Spacer()
-
-                            Text("4 GÓI MOD")
-                                .font(.system(size: 10, weight: .black, design: .monospaced))
-                                .foregroundStyle(activeTheme.primaryColor)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(activeTheme.primaryColor.opacity(0.12).cornerRadius(6))
-                        }
-                        .padding(.horizontal, 4)
-
-                        VStack(spacing: 12) {
-                            ForEach(AimModType.allCases) { aimType in
-                                featureToggleCard(
-                                    title: aimType.title,
-                                    subtitle: aimType.subtitle,
-                                    filename: aimType.filename,
-                                    icon: aimType.icon,
-                                    isEnabled: modManager.isAimModEnabled(aimType),
-                                    isProcessing: modManager.isAimModProcessing(aimType),
-                                    accentColor: aimType.accentColor
-                                ) {
-                                    modManager.toggleAimMod(aimType, store: store)
-                                }
-                            }
-                        }
+                    if selectedTab == 0 {
+                        aimBotSection
+                    } else {
+                        modSkinSection
                     }
 
                     // Open Game Button
@@ -254,7 +228,275 @@ struct MainInjectorView: View {
             )
         }
         .buttonStyle(.plain)
-        .disabled(!modManager.processingAimMods.isEmpty)
+        .disabled(!modManager.processingAimMods.isEmpty || modManager.isProcessingModSkin)
+    }
+
+    // MARK: - Tab Switcher Section (Aim Bot vs Mod Skin)
+    private var tabSwitcherSection: some View {
+        HStack(spacing: 8) {
+            tabButton(index: 0, title: "AIM BOT (5 CHẾ ĐỘ)", icon: "scope")
+            tabButton(index: 1, title: "MOD SKIN (MP40)", icon: "wand.and.stars")
+        }
+        .padding(4)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(AppTheme.cardBackgroundElevated)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(AppTheme.borderSubtle, lineWidth: 1)
+                )
+        )
+    }
+
+    @ViewBuilder
+    private func tabButton(index: Int, title: String, icon: String) -> some View {
+        let isSelected = selectedTab == index
+        Button {
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+                selectedTab = index
+            }
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.impactOccurred()
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .bold))
+
+                Text(title)
+                    .font(.system(size: 12, weight: .black, design: .rounded))
+            }
+            .foregroundStyle(isSelected ? .white : .secondary)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(isSelected ? activeTheme.primaryColor : Color.clear)
+                    .shadow(color: isSelected ? activeTheme.primaryColor.opacity(0.35) : .clear, radius: 6, y: 2)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Tab 1: Aim Bot Section (5 Chế Độ)
+    private var aimBotSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("TÍNH NĂNG AIM BOT")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .tracking(1.0)
+
+                Spacer()
+
+                Text("5 CHẾ ĐỘ")
+                    .font(.system(size: 10, weight: .black, design: .monospaced))
+                    .foregroundStyle(activeTheme.primaryColor)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(activeTheme.primaryColor.opacity(0.12).cornerRadius(6))
+            }
+            .padding(.horizontal, 4)
+
+            VStack(spacing: 12) {
+                ForEach(AimModType.allCases) { aimType in
+                    featureToggleCard(
+                        title: aimType.title,
+                        subtitle: aimType.subtitle,
+                        filename: aimType.filename,
+                        icon: aimType.icon,
+                        isEnabled: modManager.isAimModEnabled(aimType),
+                        isProcessing: modManager.isAimModProcessing(aimType),
+                        accentColor: aimType.accentColor
+                    ) {
+                        modManager.toggleAimMod(aimType, store: store)
+                    }
+                }
+            }
+        }
+        .transition(.opacity.combined(with: .move(edge: .leading)))
+    }
+
+    // MARK: - Tab 2: Mod Skin Section (MP40 Mãng Xà từ Phong Xà)
+    private var modSkinSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("VŨ KHÍ TIẾN HÓA CẤP TỐI THƯỢNG")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .tracking(1.0)
+
+                Spacer()
+
+                Text("LV.7 MAX")
+                    .font(.system(size: 10, weight: .black, design: .monospaced))
+                    .foregroundStyle(Color.yellow)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.yellow.opacity(0.15).cornerRadius(6))
+            }
+            .padding(.horizontal, 4)
+
+            // Mod Skin Feature Card
+            VStack(spacing: 14) {
+                // Header of skin
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                modManager.isModSkinEnabled
+                                    ? Color.yellow.opacity(0.2)
+                                    : Color.white.opacity(0.06)
+                            )
+                            .frame(width: 54, height: 54)
+
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundStyle(
+                                modManager.isModSkinEnabled
+                                    ? LinearGradient(colors: [.yellow, .orange, .red], startPoint: .top, endPoint: .bottom)
+                                    : LinearGradient(colors: [.secondary, .secondary.opacity(0.5)], startPoint: .top, endPoint: .bottom)
+                            )
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text("MP40 MÃNG XÀ (DRACO)")
+                                .font(.system(size: 16, weight: .black))
+                                .foregroundStyle(modManager.isModSkinEnabled ? Color.yellow : .white)
+
+                            Circle()
+                                .fill(modManager.isModSkinEnabled ? Color.green : Color.red.opacity(0.8))
+                                .frame(width: 7, height: 7)
+
+                            Text(modManager.isModSkinEnabled ? "ĐÃ BẬT" : "TẮT")
+                                .font(.caption2.weight(.black))
+                                .foregroundStyle(modManager.isModSkinEnabled ? Color.green : .secondary)
+                        }
+
+                        Text("Thay thế hiệu ứng tia lửa & ngoại hình MP40")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+
+                        Text("File: Modskin.3105 (5.03 MB)")
+                            .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(modManager.isModSkinEnabled ? Color.yellow.opacity(0.9) : .secondary.opacity(0.6))
+                    }
+
+                    Spacer()
+                }
+
+                // Weapon Attribute Badges
+                HStack(spacing: 8) {
+                    attributeBadge(label: "SÁT THƯƠNG", value: "+2", color: .red)
+                    attributeBadge(label: "TỐC BẮN", value: "+1", color: .orange)
+                    attributeBadge(label: "THAY ĐẠN", value: "-1", color: .gray)
+                }
+
+                // Important Note Box
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.yellow)
+
+                        Text("GHI CHÚ QUAN TRỌNG")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .foregroundStyle(Color.yellow)
+                    }
+
+                    Text("Chỉ khi tài khoản của bạn sở hữu skin Phong Xà mới đổi thành công sang MP40 Mãng Xà!")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Color.white.opacity(0.9))
+                        .lineSpacing(3)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.yellow.opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.yellow.opacity(0.25), lineWidth: 1)
+                        )
+                )
+
+                // Activation Button
+                Button {
+                    modManager.toggleModSkin(store: store)
+                } label: {
+                    HStack(spacing: 10) {
+                        if modManager.isProcessingModSkin {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Image(systemName: modManager.isModSkinEnabled ? "checkmark.circle.fill" : "power")
+                                .font(.system(size: 16, weight: .bold))
+                        }
+
+                        Text(modManager.isModSkinEnabled ? "ĐANG BẬT MOD SKIN (BẤM ĐỂ TẮT)" : "KÍCH HOẠT MOD SKIN MP40")
+                            .font(.system(size: 14, weight: .black, design: .rounded))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(
+                                modManager.isModSkinEnabled
+                                    ? LinearGradient(colors: [Color.green, Color(red: 0.1, green: 0.6, blue: 0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    : LinearGradient(colors: [Color.yellow, Color.orange], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
+                            .shadow(
+                                color: (modManager.isModSkinEnabled ? Color.green : Color.orange).opacity(0.4),
+                                radius: 8,
+                                y: 3
+                            )
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(modManager.isProcessingModSkin)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(AppTheme.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(
+                                modManager.isModSkinEnabled ? Color.yellow.opacity(0.5) : AppTheme.borderSubtle,
+                                lineWidth: modManager.isModSkinEnabled ? 1.5 : 1
+                            )
+                    )
+                    .shadow(
+                        color: modManager.isModSkinEnabled ? Color.yellow.opacity(0.15) : Color.clear,
+                        radius: 10,
+                        y: 3
+                    )
+            )
+        }
+        .transition(.opacity.combined(with: .move(edge: .trailing)))
+    }
+
+    @ViewBuilder
+    private func attributeBadge(label: String, value: String, color: Color) -> some View {
+        HStack(spacing: 4) {
+            Text(label)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundStyle(.secondary)
+
+            Text(value)
+                .font(.system(size: 10, weight: .black, design: .monospaced))
+                .foregroundStyle(color)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.white.opacity(0.04))
+                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(Color.white.opacity(0.08), lineWidth: 1))
+        )
     }
 
     // MARK: - Individual Feature Toggle Card
@@ -367,78 +609,78 @@ struct MainInjectorView: View {
             HStack(spacing: 12) {
                 Image(systemName: "arrowtriangle.right.circle.fill")
                     .font(.title2.weight(.bold))
-                    .foregroundStyle(.white)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("MỞ GAME NGAY (\(modManager.gameShortName))")
+                    Text("MỞ \(modManager.gameShortName.uppercased()) NGAY")
                         .font(.headline.weight(.black))
-                        .foregroundStyle(.white)
 
-                    Text("Khởi chạy nhanh \(modManager.selectedBundle)")
+                    Text("Khởi chạy game để tận hưởng cấu hình")
                         .font(.caption2)
-                        .foregroundStyle(Color.white.opacity(0.8))
+                        .opacity(0.85)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
                     .font(.subheadline.weight(.bold))
-                    .foregroundStyle(Color.white.opacity(0.8))
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 15)
+            .foregroundStyle(.black)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .frame(maxWidth: .infinity)
             .background(
-                LinearGradient(
-                    colors: [
-                        activeTheme.primaryColor,
-                        activeTheme.primaryColor.opacity(0.75)
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [activeTheme.primaryColor, activeTheme.primaryColor.opacity(0.8)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .shadow(color: activeTheme.primaryColor.opacity(0.45), radius: 12, y: 4)
             )
-            .cornerRadius(18)
-            .shadow(color: activeTheme.primaryColor.opacity(0.35), radius: 10, y: 4)
         }
         .buttonStyle(.plain)
     }
 
     // MARK: - System Status Card
     private var systemStatusCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label {
-                Text("THÔNG TIN HỆ THỐNG")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(activeTheme.primaryColor)
-            } icon: {
-                Image(systemName: "info.circle.fill")
-                    .foregroundStyle(activeTheme.primaryColor)
+        VStack(spacing: 12) {
+            HStack {
+                Label {
+                    Text("TRẠNG THÁI HỆ THỐNG")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(activeTheme.primaryColor)
+                } icon: {
+                    Image(systemName: "shield.checkered")
+                        .foregroundStyle(activeTheme.primaryColor)
+                }
+
+                Spacer()
+
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 8, height: 8)
+                    Text("SẴN SÀNG")
+                        .font(.caption2.weight(.black))
+                        .foregroundStyle(Color.green)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(Color.green.opacity(0.12).cornerRadius(6))
             }
+
+            Divider().background(AppTheme.borderSubtle)
 
             VStack(spacing: 8) {
-                statusRow(
-                    label: "Target Bundle",
-                    value: modManager.selectedBundle,
-                    icon: "app.badge.checkmark",
-                    color: .white
-                )
-
-                statusRow(
-                    label: "Thiết Bị / iOS",
-                    value: "\(AppInfo.displayMachineName) (iOS \(AppInfo.osVersion))",
-                    icon: "iphone",
-                    color: .secondary
-                )
-
-                statusRow(
-                    label: "Khai Thác Lỗ Hổng",
-                    value: "Exploit Kernel By 3105",
-                    icon: "shield.lefthalf.filled",
-                    color: appState.isSupported ? .green : activeTheme.primaryColor
-                )
+                statusRow(title: "Bảo Vệ Đa Tầng", value: "Hoạt động", isOk: true)
+                statusRow(title: "Chống Anti-Cheat", value: "Bảo vệ tối đa", isOk: true)
+                statusRow(title: "Khai Thác Nhân (Kernel)", value: "Kexploit Opa334", isOk: true)
+                statusRow(title: "Target Bundle", value: modManager.selectedBundle, isOk: true)
             }
         }
-        .padding(14)
+        .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(AppTheme.cardBackground)
@@ -450,156 +692,43 @@ struct MainInjectorView: View {
     }
 
     @ViewBuilder
-    private func statusRow(label: String, value: String, icon: String, color: Color) -> some View {
+    private func statusRow(title: String, value: String, isOk: Bool) -> some View {
         HStack {
-            Image(systemName: icon)
-                .font(.system(size: 13))
-                .foregroundStyle(activeTheme.primaryColor)
-                .frame(width: 18)
-
-            Text(label)
-                .font(.subheadline)
+            Text(title)
+                .font(.caption)
                 .foregroundStyle(.secondary)
 
             Spacer()
 
             Text(value)
-                .font(.subheadline.weight(.semibold).monospaced())
-                .foregroundStyle(color)
-                .lineLimit(1)
+                .font(.caption.weight(.semibold).monospaced())
+                .foregroundStyle(isOk ? .white : .secondary)
         }
     }
 
     // MARK: - Credits Badge
     private var creditsBadge: some View {
-        VStack(spacing: 4) {
-            Text("Phát triển & Tùy biến bởi HoangHaMod & TrongKien")
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
+        VStack(spacing: 6) {
+            Text("Phiên bản OniAkuma 1.1.1 (Build 7)")
+                .font(.caption2)
+                .foregroundStyle(.secondary.opacity(0.7))
 
-            Text("Exploit Kernel By 3105 • OniAkuma v1.1.1")
-                .font(.caption2.monospaced())
-                .foregroundStyle(.secondary.opacity(0.6))
+            Text("Phát triển bởi HoangHaMod & TrongKien")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.secondary.opacity(0.5))
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 6)
+        .padding(.vertical, 8)
     }
 
-    // MARK: - Open Target Game via URL Scheme
-    private func openTargetGame() {
-        let generator = UIImpactFeedbackGenerator(style: .heavy)
-        generator.impactOccurred()
-
-        var candidateURLs: [URL] = []
-        if modManager.selectedBundle == "com.dts.freefiremax" {
-            if let u = URL(string: "freefiremax://") { candidateURLs.append(u) }
-        } else {
-            if let u1 = URL(string: "freefireth://") { candidateURLs.append(u1) }
-            if let u2 = URL(string: "freefire://") { candidateURLs.append(u2) }
-        }
-
-        var didOpen = false
-        for candidate in candidateURLs {
-            if UIApplication.shared.canOpenURL(candidate) {
-                UIApplication.shared.open(candidate, options: [:]) { success in
-                    if !success {
-                        modManager.triggerToast("Chưa cài đặt \(modManager.gameShortName) trên thiết bị!")
-                    }
-                }
-                didOpen = true
-                break
-            }
-        }
-
-        if !didOpen {
-            if let first = candidateURLs.first {
-                UIApplication.shared.open(first, options: [:]) { success in
-                    if !success {
-                        modManager.triggerToast("Chưa cài đặt \(modManager.gameShortName) trên máy! Vui lòng tải game trước.")
-                    }
-                }
-            } else {
-                modManager.triggerToast("Chưa cài đặt \(modManager.gameShortName) trên thiết bị!")
-            }
-        }
-    }
-
-    // MARK: - Welcome Dialog
-    private var welcomeDialogOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.7)
-                .ignoresSafeArea()
-                .transition(.opacity)
-
-            VStack(spacing: 20) {
-                AppLogo(size: 76)
-
-                VStack(spacing: 8) {
-                    Text("OniAkuma Mod")
-                        .font(.system(size: 22, weight: .black, design: .rounded))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.white, activeTheme.primaryColor],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-
-                    Text("Chúc mọi người chơi game vui vẻ!")
-                        .font(.headline.weight(.bold))
-                        .foregroundStyle(.white)
-
-                    Text("Bản mod Free Fire cao cấp được phát triển và tối ưu bởi HoangHaMod & TrongKien.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 16)
-                }
-
-                Button {
-                    let generator = UIImpactFeedbackGenerator(style: .medium)
-                    generator.impactOccurred()
-                    hasShownWelcome = true
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                        showWelcomeDialog = false
-                    }
-                } label: {
-                    Text("Bắt Đầu Ngay")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            LinearGradient(
-                                colors: [activeTheme.primaryColor, activeTheme.primaryColor.opacity(0.8)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .cornerRadius(14)
-                        .shadow(color: activeTheme.primaryColor.opacity(0.4), radius: 8, y: 3)
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(24)
-            .background(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .fill(AppTheme.cardBackground)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(activeTheme.primaryColor.opacity(0.4), lineWidth: 1.5)
-                    )
-                    .shadow(color: .black.opacity(0.8), radius: 24, y: 12)
-            )
-            .padding(.horizontal, 32)
-            .transition(.scale(scale: 0.85).combined(with: .opacity))
-        }
-    }
-
+    // MARK: - Toast View
+    @ViewBuilder
     private func toastView(message: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(activeTheme.primaryColor)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(Color.green)
+
             Text(message)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.white)
@@ -608,9 +737,140 @@ struct MainInjectorView: View {
         .padding(.vertical, 12)
         .background(
             Capsule()
-                .fill(Color(red: 0.12, green: 0.14, blue: 0.18))
-                .overlay(Capsule().stroke(activeTheme.primaryColor.opacity(0.4), lineWidth: 1))
-                .shadow(color: .black.opacity(0.4), radius: 10, y: 5)
+                .fill(Color(red: 0.1, green: 0.12, blue: 0.16).opacity(0.95))
+                .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
+                .shadow(color: .black.opacity(0.5), radius: 12, y: 4)
         )
+    }
+
+    // MARK: - Welcome Dialog Overlay
+    private var welcomeDialogOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.75)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    dismissWelcomeDialog()
+                }
+
+            VStack(spacing: 20) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [activeTheme.primaryColor.opacity(0.4), Color.clear],
+                                center: .center,
+                                startRadius: 10,
+                                endRadius: 50
+                            )
+                        )
+                        .frame(width: 90, height: 90)
+
+                    AppLogo(size: 64)
+                }
+
+                VStack(spacing: 8) {
+                    Text("Chào mừng đến OniAkuma")
+                        .font(.title3.weight(.black))
+                        .foregroundStyle(.white)
+
+                    Text("Công cụ hỗ trợ Free Fire tối thượng phát triển bởi HoangHaMod & TrongKien.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    welcomeFeatureRow(icon: "scope", title: "5 Chế Độ Aim Bot", desc: "Khóa thân, cân tâm, khóa ngực, ma thuật & khóa cổ.")
+                    welcomeFeatureRow(icon: "flame.fill", title: "Mod Skin MP40 Mãng Xà", desc: "Tự động đổi từ skin Phong Xà sang MP40 Mãng Xà.")
+                    welcomeFeatureRow(icon: "shield.checkered", title: "Bảo Mật Cực Cao", desc: "Bảo vệ đa lớp chống ban, an toàn tuyệt đối.")
+                }
+                .padding(14)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(AppTheme.cardBackgroundElevated)
+                )
+
+                Button {
+                    dismissWelcomeDialog()
+                } label: {
+                    Text("BẮT ĐẦU NGAY")
+                        .font(.headline.weight(.black))
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(activeTheme.primaryColor)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(24)
+            .background(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .fill(Color(red: 0.08, green: 0.1, blue: 0.14))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(activeTheme.primaryColor.opacity(0.4), lineWidth: 1.5)
+                    )
+                    .shadow(color: activeTheme.primaryColor.opacity(0.3), radius: 25)
+            )
+            .padding(.horizontal, 28)
+            .transition(.scale(scale: 0.9).combined(with: .opacity))
+        }
+    }
+
+    @ViewBuilder
+    private func welcomeFeatureRow(icon: String, title: String, desc: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(activeTheme.primaryColor)
+                .frame(width: 28)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white)
+
+                Text(desc)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func dismissWelcomeDialog() {
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            showWelcomeDialog = false
+            hasShownWelcome = true
+        }
+    }
+
+    // MARK: - Open Game
+    private func openTargetGame() {
+        let bundleID = modManager.selectedBundle
+        let schemes = bundleID == "com.dts.freefiremax"
+            ? ["freefiremax://", "ffmax://"]
+            : ["freefireth://", "freefire://"]
+
+        for schemeStr in schemes {
+            if let url = URL(string: schemeStr), UIApplication.shared.canOpenURL(url) {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                modManager.triggerToast("Đang mở \(modManager.gameShortName)...")
+                return
+            }
+        }
+
+        if let fallbackURL = URL(string: "\(schemes[0])") {
+            UIApplication.shared.open(fallbackURL, options: [:]) { success in
+                if success {
+                    modManager.triggerToast("Đang mở \(modManager.gameShortName)...")
+                } else {
+                    modManager.triggerToast("Không thể tự mở game. Vui lòng mở game từ màn hình chính!")
+                }
+            }
+        }
     }
 }
