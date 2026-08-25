@@ -5,33 +5,17 @@ struct MainInjectorView: View {
     @Environment(\.appLanguage) private var language
     @EnvironmentObject private var appState: AppState
     @StateObject private var store = PatchProjectStore()
+    @ObservedObject private var modManager = ModFeatureManager.shared
 
-    @AppStorage("selectedGameBundle") private var selectedBundle = "com.dts.freefireth"
-    @AppStorage("oni_akuma_aim_enabled") private var isAimEnabled = false
-    @AppStorage("oni_akuma_holo_enabled") private var isHoloEnabled = false
     @AppStorage("oni_akuma_has_shown_welcome_v2") private var hasShownWelcome = false
     @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "cyan"
 
-    @State private var isProcessingAim = false
-    @State private var isProcessingHolo = false
-    @State private var toastMessage: String? = nil
-    @State private var showToast = false
     @State private var showSettings = false
     @State private var showLogs = false
     @State private var showWelcomeDialog = false
 
     private var activeTheme: AppColorTheme {
         AppColorTheme(rawValue: currentThemeRaw) ?? .cyan
-    }
-
-    private var aimProject: PatchProject? {
-        store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") })?.project
-            ?? store.items.first?.project
-    }
-
-    private var holoProject: PatchProject? {
-        store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("HOLO") })?.project
-            ?? store.items.last?.project
     }
 
     var body: some View {
@@ -49,11 +33,11 @@ struct MainInjectorView: View {
                             subtitle: "Tự động ghim tâm vào thân đối thủ",
                             filename: "Aim Body.3105",
                             icon: "scope",
-                            isEnabled: isAimEnabled,
-                            isProcessing: isProcessingAim,
+                            isEnabled: modManager.isAimEnabled,
+                            isProcessing: modManager.isProcessingAim,
                             accentColor: activeTheme.primaryColor
                         ) {
-                            handleToggleAim()
+                            modManager.toggleAim(store: store)
                         }
 
                         featureToggleCard(
@@ -61,11 +45,11 @@ struct MainInjectorView: View {
                             subtitle: "Định vị vị trí và phát hiện kẻ địch (ESP Holo)",
                             filename: "HOLO.3105",
                             icon: "viewfinder.circle.fill",
-                            isEnabled: isHoloEnabled,
-                            isProcessing: isProcessingHolo,
+                            isEnabled: modManager.isHoloEnabled,
+                            isProcessing: modManager.isProcessingHolo,
                             accentColor: AppTheme.goldAccent
                         ) {
-                            handleToggleHolo()
+                            modManager.toggleHolo(store: store)
                         }
                     }
 
@@ -116,7 +100,7 @@ struct MainInjectorView: View {
                 }
             }
             .overlay(alignment: .bottom) {
-                if showToast, let toastMessage {
+                if modManager.showToast, let toastMessage = modManager.toastMessage {
                     toastView(message: toastMessage)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         .padding(.bottom, 20)
@@ -213,10 +197,10 @@ struct MainInjectorView: View {
 
     @ViewBuilder
     private func gameOptionButton(title: String, bundleID: String, icon: String) -> some View {
-        let isSelected = selectedBundle == bundleID
+        let isSelected = modManager.selectedBundle == bundleID
         Button {
             withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
-                selectedBundle = bundleID
+                modManager.selectedBundle = bundleID
             }
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
@@ -258,7 +242,7 @@ struct MainInjectorView: View {
             )
         }
         .buttonStyle(.plain)
-        .disabled(isProcessingAim || isProcessingHolo)
+        .disabled(modManager.isProcessingAim || modManager.isProcessingHolo)
     }
 
     // MARK: - Individual Feature Toggle Card
@@ -345,18 +329,18 @@ struct MainInjectorView: View {
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(AppTheme.cardBackground)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(
-                                isEnabled ? accentColor.opacity(0.5) : AppTheme.borderSubtle,
-                                lineWidth: isEnabled ? 1.5 : 1
-                            )
-                    )
-                    .shadow(
-                        color: isEnabled ? accentColor.opacity(0.15) : Color.clear,
-                        radius: 10,
-                        y: 3
-                    )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(
+                            isEnabled ? accentColor.opacity(0.5) : AppTheme.borderSubtle,
+                            lineWidth: isEnabled ? 1.5 : 1
+                        )
+                )
+                .shadow(
+                    color: isEnabled ? accentColor.opacity(0.15) : Color.clear,
+                    radius: 10,
+                    y: 3
+                )
             )
         }
         .buttonStyle(.plain)
@@ -374,11 +358,11 @@ struct MainInjectorView: View {
                     .foregroundStyle(.white)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("MỞ GAME NGAY (\(gameShortName))")
+                    Text("MỞ GAME NGAY (\(modManager.gameShortName))")
                         .font(.headline.weight(.black))
                         .foregroundStyle(.white)
 
-                    Text("Khởi chạy nhanh \(selectedBundle)")
+                    Text("Khởi chạy nhanh \(modManager.selectedBundle)")
                         .font(.caption2)
                         .foregroundStyle(Color.white.opacity(0.8))
                 }
@@ -422,7 +406,7 @@ struct MainInjectorView: View {
             VStack(spacing: 8) {
                 statusRow(
                     label: "Target Bundle",
-                    value: selectedBundle,
+                    value: modManager.selectedBundle,
                     icon: "app.badge.checkmark",
                     color: .white
                 )
@@ -489,17 +473,13 @@ struct MainInjectorView: View {
         .padding(.vertical, 6)
     }
 
-    private var gameShortName: String {
-        selectedBundle == "com.dts.freefiremax" ? "FF MAX" : "Free Fire"
-    }
-
     // MARK: - Open Target Game via URL Scheme
     private func openTargetGame() {
         let generator = UIImpactFeedbackGenerator(style: .heavy)
         generator.impactOccurred()
 
         var candidateURLs: [URL] = []
-        if selectedBundle == "com.dts.freefiremax" {
+        if modManager.selectedBundle == "com.dts.freefiremax" {
             if let u = URL(string: "freefiremax://") { candidateURLs.append(u) }
         } else {
             if let u1 = URL(string: "freefireth://") { candidateURLs.append(u1) }
@@ -511,7 +491,7 @@ struct MainInjectorView: View {
             if UIApplication.shared.canOpenURL(candidate) {
                 UIApplication.shared.open(candidate, options: [:]) { success in
                     if !success {
-                        self.triggerToast("Chưa cài đặt \(self.gameShortName) trên thiết bị!")
+                        modManager.triggerToast("Chưa cài đặt \(modManager.gameShortName) trên thiết bị!")
                     }
                 }
                 didOpen = true
@@ -520,15 +500,14 @@ struct MainInjectorView: View {
         }
 
         if !didOpen {
-            // Attempt direct open if canOpenURL was restricted
             if let first = candidateURLs.first {
                 UIApplication.shared.open(first, options: [:]) { success in
                     if !success {
-                        self.triggerToast("Chưa cài đặt \(self.gameShortName) trên máy! Vui lòng tải game trước.")
+                        modManager.triggerToast("Chưa cài đặt \(modManager.gameShortName) trên máy! Vui lòng tải game trước.")
                     }
                 }
             } else {
-                triggerToast("Chưa cài đặt \(gameShortName) trên thiết bị!")
+                modManager.triggerToast("Chưa cài đặt \(modManager.gameShortName) trên thiết bị!")
             }
         }
     }
@@ -602,128 +581,6 @@ struct MainInjectorView: View {
             )
             .padding(.horizontal, 32)
             .transition(.scale(scale: 0.85).combined(with: .opacity))
-        }
-    }
-
-    // MARK: - Toggle Actions
-    private func handleToggleAim() {
-        if isAimEnabled {
-            restoreFeature(featureName: "Aim Body", isAim: true)
-        } else {
-            injectFeature(project: aimProject, featureName: "Aim Body", isAim: true)
-        }
-    }
-
-    private func handleToggleHolo() {
-        if isHoloEnabled {
-            restoreFeature(featureName: "Định Vị Holo", isAim: false)
-        } else {
-            injectFeature(project: holoProject, featureName: "Định Vị Holo", isAim: false)
-        }
-    }
-
-    private func injectFeature(project: PatchProject?, featureName: String, isAim: Bool) {
-        guard let proj = project else {
-            triggerToast("Không tìm thấy file \(featureName)!")
-            return
-        }
-
-        if isAim { isProcessingAim = true } else { isProcessingHolo = true }
-
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
-
-        let bundleID = selectedBundle
-        let targetName = gameShortName
-
-        Task.detached(priority: .userInitiated) {
-            var adaptedProject = proj
-            for i in 0..<adaptedProject.rules.count {
-                adaptedProject.rules[i].bundleID = bundleID
-            }
-
-            do {
-                _ = try DevicePatchService.apply(project: adaptedProject)
-                await MainActor.run {
-                    if isAim {
-                        self.isProcessingAim = false
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                            self.isAimEnabled = true
-                        }
-                    } else {
-                        self.isProcessingHolo = false
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                            self.isHoloEnabled = true
-                        }
-                    }
-                    let notif = UINotificationFeedbackGenerator()
-                    notif.notificationOccurred(.success)
-                    self.triggerToast("Đã bật \(featureName) trên \(targetName)!")
-                }
-            } catch let error as PatchPackageError {
-                await MainActor.run {
-                    if isAim { self.isProcessingAim = false } else { self.isProcessingHolo = false }
-                    let notif = UINotificationFeedbackGenerator()
-                    notif.notificationOccurred(.error)
-                    self.triggerToast(error.localizationKey)
-                }
-            } catch {
-                await MainActor.run {
-                    if isAim { self.isProcessingAim = false } else { self.isProcessingHolo = false }
-                    let notif = UINotificationFeedbackGenerator()
-                    notif.notificationOccurred(.error)
-                    self.triggerToast("Lỗi khi bật \(featureName): \(error.localizedDescription)")
-                }
-            }
-        }
-    }
-
-    private func restoreFeature(featureName: String, isAim: Bool) {
-        if isAim { isProcessingAim = true } else { isProcessingHolo = true }
-
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
-
-        let targetProj = isAim ? aimProject : holoProject
-        let receipt = targetProj.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
-
-        Task.detached(priority: .userInitiated) {
-            if let receipt {
-                do {
-                    try DevicePatchService.restore(receipt: receipt)
-                } catch {
-                    log("restore error: \(error.localizedDescription)")
-                }
-            }
-
-            await MainActor.run {
-                if isAim {
-                    self.isProcessingAim = false
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                        self.isAimEnabled = false
-                    }
-                } else {
-                    self.isProcessingHolo = false
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                        self.isHoloEnabled = false
-                    }
-                }
-                let notif = UINotificationFeedbackGenerator()
-                notif.notificationOccurred(.success)
-                self.triggerToast("Đã tắt \(featureName)!")
-            }
-        }
-    }
-
-    private func triggerToast(_ message: String) {
-        toastMessage = message
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) {
-            showToast = true
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-            withAnimation(.easeInOut(duration: 0.25)) {
-                showToast = false
-            }
         }
     }
 
