@@ -38,21 +38,32 @@ enum PatchProjectLibrary {
         return root
     }
 
+    static func isSupportedExtension(_ ext: String) -> Bool {
+        let clean = ext.trimmingCharacters(in: CharacterSet(charactersIn: ".")).lowercased()
+        return clean == "3105" || clean == "hoanghatrongkien"
+    }
+
     static func load(fileManager: FileManager = .default) -> [PatchLibraryItem] {
         guard let root = try? packageRootURL(fileManager: fileManager) else { return [] }
 
-        // Automatically load and copy bundled .3105 files (e.g. Aim Body.3105, Gun Trắng + Magic Cân Rank.3105)
-        if let bundledURLs = Bundle.main.urls(forResourcesWithExtension: "3105", subdirectory: nil) {
-            for bundledURL in bundledURLs {
-                let destURL = root.appendingPathComponent(bundledURL.lastPathComponent)
-                if !fileManager.fileExists(atPath: destURL.path) {
-                    try? fileManager.copyItem(at: bundledURL, to: destURL)
-                } else if let bundledSize = try? bundledURL.resourceValues(forKeys: [.fileSizeKey]).fileSize,
-                          let destSize = try? destURL.resourceValues(forKeys: [.fileSizeKey]).fileSize,
-                          bundledSize != destSize {
-                    try? fileManager.removeItem(at: destURL)
-                    try? fileManager.copyItem(at: bundledURL, to: destURL)
-                }
+        // Automatically load and copy bundled .3105 and .hoanghatrongkien files
+        var bundledURLs: [URL] = []
+        if let urls3105 = Bundle.main.urls(forResourcesWithExtension: "3105", subdirectory: nil) {
+            bundledURLs.append(contentsOf: urls3105)
+        }
+        if let urlsHHTK = Bundle.main.urls(forResourcesWithExtension: "hoanghatrongkien", subdirectory: nil) {
+            bundledURLs.append(contentsOf: urlsHHTK)
+        }
+
+        for bundledURL in bundledURLs {
+            let destURL = root.appendingPathComponent(bundledURL.lastPathComponent)
+            if !fileManager.fileExists(atPath: destURL.path) {
+                try? fileManager.copyItem(at: bundledURL, to: destURL)
+            } else if let bundledSize = try? bundledURL.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+                      let destSize = try? destURL.resourceValues(forKeys: [.fileSizeKey]).fileSize,
+                      bundledSize != destSize {
+                try? fileManager.removeItem(at: destURL)
+                try? fileManager.copyItem(at: bundledURL, to: destURL)
             }
         }
 
@@ -63,7 +74,7 @@ enum PatchProjectLibrary {
               ) else { return [] }
 
         var byID: [UUID: PatchLibraryItem] = [:]
-        for url in urls where url.pathExtension.lowercased() == "3105" {
+        for url in urls where isSupportedExtension(url.pathExtension) {
             do {
                 let data = try readPackage(at: url)
                 let summary = try PatchPackageCodec.inspect(data)
@@ -112,6 +123,7 @@ enum PatchProjectLibrary {
         data: Data,
         projectName: String,
         existingURL: URL? = nil,
+        preferredExtension: String = "hoanghatrongkien",
         fileManager: FileManager = .default
     ) throws -> URL {
         let destination: URL
@@ -120,10 +132,10 @@ enum PatchProjectLibrary {
         } else {
             let root = try packageRootURL(fileManager: fileManager)
             let baseName = sanitizedFilename(projectName)
-            var candidate = root.appendingPathComponent(baseName).appendingPathExtension("3105")
+            var candidate = root.appendingPathComponent(baseName).appendingPathExtension(preferredExtension)
             var suffix = 2
             while fileManager.fileExists(atPath: candidate.path) {
-                candidate = root.appendingPathComponent("\(baseName)-\(suffix)").appendingPathExtension("3105")
+                candidate = root.appendingPathComponent("\(baseName)-\(suffix)").appendingPathExtension(preferredExtension)
                 suffix += 1
             }
             destination = candidate

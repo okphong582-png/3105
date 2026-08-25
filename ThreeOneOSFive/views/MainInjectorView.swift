@@ -26,30 +26,39 @@ struct MainInjectorView: View {
 
                     gameSelectorCard
 
-                    // Feature Toggles Section
-                    VStack(spacing: 14) {
-                        featureToggleCard(
-                            title: "AIM BODY",
-                            subtitle: "Tự động ghim tâm vào thân đối thủ",
-                            filename: "Aim Body.3105",
-                            icon: "scope",
-                            isEnabled: modManager.isAimEnabled,
-                            isProcessing: modManager.isProcessingAim,
-                            accentColor: activeTheme.primaryColor
-                        ) {
-                            modManager.toggleAim(store: store)
-                        }
+                    // 4 Aim Mod Features Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("TÍNH NĂNG AIM BOT (4 CHẾ ĐỘ)")
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                .foregroundStyle(.secondary)
+                                .tracking(1.0)
 
-                        featureToggleCard(
-                            title: "CHẤM XANH NHÂN VẬT",
-                            subtitle: "Hiện chấm xanh định vị vị trí kẻ địch (ESP)",
-                            filename: "CHAM XANH NHÂN VẬT.3105",
-                            icon: "person.fill.viewfinder",
-                            isEnabled: modManager.isHoloEnabled,
-                            isProcessing: modManager.isProcessingHolo,
-                            accentColor: Color.green
-                        ) {
-                            modManager.toggleHolo(store: store)
+                            Spacer()
+
+                            Text("4 GÓI MOD")
+                                .font(.system(size: 10, weight: .black, design: .monospaced))
+                                .foregroundStyle(activeTheme.primaryColor)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(activeTheme.primaryColor.opacity(0.12).cornerRadius(6))
+                        }
+                        .padding(.horizontal, 4)
+
+                        VStack(spacing: 12) {
+                            ForEach(AimModType.allCases) { aimType in
+                                featureToggleCard(
+                                    title: aimType.title,
+                                    subtitle: aimType.subtitle,
+                                    filename: aimType.filename,
+                                    icon: aimType.icon,
+                                    isEnabled: modManager.isAimModEnabled(aimType),
+                                    isProcessing: modManager.isAimModProcessing(aimType),
+                                    accentColor: aimType.accentColor
+                                ) {
+                                    modManager.toggleAimMod(aimType, store: store)
+                                }
+                            }
                         }
                     }
 
@@ -245,7 +254,7 @@ struct MainInjectorView: View {
             )
         }
         .buttonStyle(.plain)
-        .disabled(modManager.isProcessingAim || modManager.isProcessingHolo)
+        .disabled(!modManager.processingAimMods.isEmpty)
     }
 
     // MARK: - Individual Feature Toggle Card

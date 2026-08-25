@@ -24,7 +24,7 @@
     <array>
         <dict>
             <key>CFBundleTypeName</key>
-            <string>3105 Patch Package</string>
+            <string>3105 &amp; HoangHaTrongKien Package</string>
             <key>CFBundleTypeRole</key>
             <string>Editor</string>
             <key>LSHandlerRank</key>
@@ -32,6 +32,7 @@
             <key>LSItemContentTypes</key>
             <array>
                 <string>com.yangjiii.3105.patch-package</string>
+                <string>com.hoanghatrongkien.patch-package</string>
             </array>
         </dict>
     </array>
@@ -65,6 +66,25 @@
                 </array>
                 <key>public.mime-type</key>
                 <string>application/x-3105-patch</string>
+            </dict>
+        </dict>
+        <dict>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeDescription</key>
+            <string>HoangHaTrongKien Mod Package</string>
+            <key>UTTypeIdentifier</key>
+            <string>com.hoanghatrongkien.patch-package</string>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>hoanghatrongkien</string>
+                </array>
+                <key>public.mime-type</key>
+                <string>application/x-hoanghatrongkien</string>
             </dict>
         </dict>
     </array>

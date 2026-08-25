@@ -2,25 +2,72 @@ import Foundation
 import SwiftUI
 import Combine
 
+// MARK: - Aim Mod Types
+enum AimModType: String, CaseIterable, Identifiable {
+    case drag = "drag"
+    case chest = "chest"
+    case magic = "magic"
+    case neck = "neck"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .drag: return "AIM DRAG (CÂN TÂM)"
+        case .chest: return "AIM CHEST (KHÓA NGỰC)"
+        case .magic: return "AIM MAGIC (MA THUẬT)"
+        case .neck: return "AIM NECK (KHÓA CỔ)"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .drag: return "Kéo tâm mượt mà, check tâm chuẩn xác"
+        case .chest: return "Tự động ghim tâm vào thân và ngực đối thủ"
+        case .magic: return "Bắn trên cao hoặc chệch góc vẫn trúng đích"
+        case .neck: return "Ghim tâm vùng cổ cận đầu, tỷ lệ headshot cực cao"
+        }
+    }
+
+    var filename: String {
+        switch self {
+        case .drag: return "Aim Drag.3105"
+        case .chest: return "Aim Chest.3105"
+        case .magic: return "Aim Magic.3105"
+        case .neck: return "Aim Neck.3105"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .drag: return "scope"
+        case .chest: return "shield.lefthalf.filled"
+        case .magic: return "wand.and.stars"
+        case .neck: return "flame.circle.fill"
+        }
+    }
+
+    var accentColor: Color {
+        switch self {
+        case .drag: return Color(red: 0.0, green: 0.85, blue: 1.0) // Cyan Neon
+        case .chest: return Color(red: 1.0, green: 0.6, blue: 0.1) // Warm Orange
+        case .magic: return Color(red: 0.75, green: 0.35, blue: 1.0) // Magic Purple
+        case .neck: return Color(red: 1.0, green: 0.25, blue: 0.35) // Crimson Red
+        }
+    }
+}
+
 // MARK: - Mod Feature State Manager
 @MainActor
 final class ModFeatureManager: ObservableObject {
     static let shared = ModFeatureManager()
 
-    private let aimStorageKey = "oni_akuma_aim_enabled_v3"
-    private let holoStorageKey = "oni_akuma_holo_enabled_v3"
-    private let targetBundleKey = "oni_akuma_target_game_bundle_v3"
+    private let enabledAimModsKey = "oni_akuma_enabled_aim_mods_v4"
+    private let targetBundleKey = "oni_akuma_target_game_bundle_v4"
 
-    @Published var isAimEnabled: Bool {
+    @Published var enabledAimMods: Set<String> {
         didSet {
-            UserDefaults.standard.set(isAimEnabled, forKey: aimStorageKey)
-            UserDefaults.standard.synchronize()
-        }
-    }
-
-    @Published var isHoloEnabled: Bool {
-        didSet {
-            UserDefaults.standard.set(isHoloEnabled, forKey: holoStorageKey)
+            UserDefaults.standard.set(Array(enabledAimMods), forKey: enabledAimModsKey)
             UserDefaults.standard.synchronize()
         }
     }
@@ -32,14 +79,13 @@ final class ModFeatureManager: ObservableObject {
         }
     }
 
-    @Published var isProcessingAim: Bool = false
-    @Published var isProcessingHolo: Bool = false
+    @Published var processingAimMods: Set<String> = []
     @Published var toastMessage: String? = nil
     @Published var showToast: Bool = false
 
     private init() {
-        self.isAimEnabled = UserDefaults.standard.bool(forKey: aimStorageKey)
-        self.isHoloEnabled = UserDefaults.standard.bool(forKey: holoStorageKey)
+        let savedAimMods = UserDefaults.standard.stringArray(forKey: enabledAimModsKey) ?? []
+        self.enabledAimMods = Set(savedAimMods)
         self.selectedBundle = UserDefaults.standard.string(forKey: targetBundleKey) ?? "com.dts.freefireth"
     }
 
@@ -47,56 +93,54 @@ final class ModFeatureManager: ObservableObject {
         selectedBundle == "com.dts.freefiremax" ? "FF MAX" : "Free Fire"
     }
 
-    func toggleAim(store: PatchProjectStore) {
-        guard !isProcessingAim else { return }
+    func isAimModEnabled(_ type: AimModType) -> Bool {
+        enabledAimMods.contains(type.rawValue)
+    }
+
+    func isAimModProcessing(_ type: AimModType) -> Bool {
+        processingAimMods.contains(type.rawValue)
+    }
+
+    // MARK: - Toggle Aim Mod
+    func toggleAimMod(_ type: AimModType, store: PatchProjectStore) {
+        guard !processingAimMods.contains(type.rawValue) else { return }
+
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.impactOccurred()
 
-        if isAimEnabled {
-            restoreFeature(isAim: true, store: store)
+        if isAimModEnabled(type) {
+            restoreAimMod(type, store: store)
         } else {
-            injectFeature(isAim: true, store: store)
+            injectAimMod(type, store: store)
         }
     }
 
-    func toggleHolo(store: PatchProjectStore) {
-        guard !isProcessingHolo else { return }
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
+    private func injectAimMod(_ type: AimModType, store: PatchProjectStore) {
+        let featureName = type.title
+        let typeKey = type.rawValue
 
-        if isHoloEnabled {
-            restoreFeature(isAim: false, store: store)
-        } else {
-            injectFeature(isAim: false, store: store)
-        }
-    }
-
-    private func injectFeature(isAim: Bool, store: PatchProjectStore) {
-        let featureName = isAim ? "Aim Body" : "Chấm Xanh Nhân Vật"
-        let targetItem = isAim
-            ? (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") }) ?? store.items.first)
-            : (store.items.first(where: {
-                let name = $0.packageURL.lastPathComponent.localizedLowercase
-                return name.contains("cham") || name.contains("xanh") || name.contains("nhan") || name.contains("gun") || name.contains("holo")
-            }) ?? store.items.last)
+        let targetItem = store.items.first(where: {
+            $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains(type.rawValue) ||
+            $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains(type.filename)
+        })
 
         guard let item = targetItem else {
-            triggerToast("Không tìm thấy file gói mod \(featureName)!")
+            triggerToast("Không tìm thấy file \(type.filename)!")
             return
         }
 
         if item.isLocked {
             store.requestUnlock(for: item)
-            triggerToast("Gói mod \(featureName) yêu cầu nhập mật khẩu!")
+            triggerToast("Gói \(type.filename) yêu cầu nhập mật khẩu!")
             return
         }
 
         guard let proj = item.project else {
-            triggerToast("Không tìm thấy dữ liệu cấu hình \(featureName)!")
+            triggerToast("Không tìm thấy dữ liệu cấu hình \(type.filename)!")
             return
         }
 
-        if isAim { isProcessingAim = true } else { isProcessingHolo = true }
+        processingAimMods.insert(typeKey)
         let currentBundle = selectedBundle
         let targetName = gameShortName
 
@@ -110,39 +154,24 @@ final class ModFeatureManager: ObservableObject {
             do {
                 _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
-                    if isAim {
-                        ModFeatureManager.shared.isProcessingAim = false
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                            ModFeatureManager.shared.isAimEnabled = true
-                        }
-                    } else {
-                        ModFeatureManager.shared.isProcessingHolo = false
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                            ModFeatureManager.shared.isHoloEnabled = true
-                        }
+                    ModFeatureManager.shared.processingAimMods.remove(typeKey)
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                        ModFeatureManager.shared.enabledAimMods.insert(typeKey)
                     }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
-                    ModFeatureManager.shared.triggerToast("Đã bật \(featureName) trên \(targetName)!")
+                    ModFeatureManager.shared.triggerToast("Đã bật \(type.filename) trên \(targetName)!")
                 }
             } catch let error as PatchPackageError {
                 await MainActor.run {
-                    if isAim {
-                        ModFeatureManager.shared.isProcessingAim = false
-                    } else {
-                        ModFeatureManager.shared.isProcessingHolo = false
-                    }
+                    ModFeatureManager.shared.processingAimMods.remove(typeKey)
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
                     ModFeatureManager.shared.triggerToast(error.localizationKey)
                 }
             } catch {
                 await MainActor.run {
-                    if isAim {
-                        ModFeatureManager.shared.isProcessingAim = false
-                    } else {
-                        ModFeatureManager.shared.isProcessingHolo = false
-                    }
+                    ModFeatureManager.shared.processingAimMods.remove(typeKey)
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
                     ModFeatureManager.shared.triggerToast("Lỗi khi bật: \(error.localizedDescription)")
@@ -151,43 +180,34 @@ final class ModFeatureManager: ObservableObject {
         }
     }
 
-    private func restoreFeature(isAim: Bool, store: PatchProjectStore) {
-        let featureName = isAim ? "Aim Body" : "Chấm Xanh Nhân Vật"
-        let project = isAim
-            ? (store.items.first(where: { $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains("Aim") })?.project ?? store.items.first?.project)
-            : (store.items.first(where: {
-                let name = $0.packageURL.lastPathComponent.localizedLowercase
-                return name.contains("cham") || name.contains("xanh") || name.contains("nhan") || name.contains("gun") || name.contains("holo")
-            })?.project ?? store.items.last?.project)
+    private func restoreAimMod(_ type: AimModType, store: PatchProjectStore) {
+        let typeKey = type.rawValue
+        let targetItem = store.items.first(where: {
+            $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains(type.rawValue) ||
+            $0.packageURL.lastPathComponent.localizedCaseInsensitiveContains(type.filename)
+        })
 
-        let receiptToRestore = project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
+        let receiptToRestore = targetItem?.project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
 
-        if isAim { isProcessingAim = true } else { isProcessingHolo = true }
+        processingAimMods.insert(typeKey)
 
         Task.detached(priority: .userInitiated) {
             if let receiptToRestore {
                 do {
                     try DevicePatchService.restore(receipt: receiptToRestore)
                 } catch {
-                    log("restore error: \(error.localizedDescription)")
+                    log("restore aim mod error: \(error.localizedDescription)")
                 }
             }
 
             await MainActor.run {
-                if isAim {
-                    ModFeatureManager.shared.isProcessingAim = false
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                        ModFeatureManager.shared.isAimEnabled = false
-                    }
-                } else {
-                    ModFeatureManager.shared.isProcessingHolo = false
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                        ModFeatureManager.shared.isHoloEnabled = false
-                    }
+                ModFeatureManager.shared.processingAimMods.remove(typeKey)
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                    ModFeatureManager.shared.enabledAimMods.remove(typeKey)
                 }
                 let notif = UINotificationFeedbackGenerator()
                 notif.notificationOccurred(.success)
-                ModFeatureManager.shared.triggerToast("Đã tắt \(featureName)!")
+                ModFeatureManager.shared.triggerToast("Đã tắt \(type.filename)!")
             }
         }
     }

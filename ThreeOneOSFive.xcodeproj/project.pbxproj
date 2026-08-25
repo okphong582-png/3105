@@ -77,8 +77,10 @@
 		3105MLS2 /* MultiLayerSecurityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105MLS1; };
 		3105MLG2 /* MultiLayerSecurityGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105MLG1; };
 		3105MFM2 /* ModFeatureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105MFM1; };
-		3105AIM2 /* Aim Body.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105AIM1; };
-		3105CXN2 /* CHAM XANH NHÂN VẬT.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105CXN1; };
+		3105ADR2 /* Aim Drag.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105ADR1; };
+		3105ACH2 /* Aim Chest.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105ACH1; };
+		3105AMG2 /* Aim Magic.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105AMG1; };
+		3105ANE2 /* Aim Neck.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105ANE1; };
 		3105A211 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3105A031; };
 /* End PBXBuildFile section */
 
@@ -161,8 +163,10 @@
 		3105MLS1 /* MultiLayerSecurityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiLayerSecurityService.swift; sourceTree = "<group>"; };
 		3105MLG1 /* MultiLayerSecurityGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiLayerSecurityGateView.swift; sourceTree = "<group>"; };
 		3105MFM1 /* ModFeatureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModFeatureManager.swift; sourceTree = "<group>"; };
-		3105AIM1 /* Aim Body.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Body.3105"; sourceTree = "<group>"; };
-		3105CXN1 /* CHAM XANH NHÂN VẬT.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "CHAM XANH NHÂN VẬT.3105"; sourceTree = "<group>"; };
+		3105ADR1 /* Aim Drag.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Drag.3105"; sourceTree = "<group>"; };
+		3105ACH1 /* Aim Chest.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Chest.3105"; sourceTree = "<group>"; };
+		3105AMG1 /* Aim Magic.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Magic.3105"; sourceTree = "<group>"; };
+		3105ANE1 /* Aim Neck.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Neck.3105"; sourceTree = "<group>"; };
 		3105F106 /* WallpaperLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLabView.swift; sourceTree = "<group>"; };
 		3105F108 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		3105G100 /* ZIPArchiveWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZIPArchiveWriter.swift; sourceTree = "<group>"; };
@@ -208,8 +212,10 @@
 				3105A405 /* helpers */,
 				3105A406 /* kexploit */,
 				3105A120 /* Localizable.strings */,
-				3105AIM1 /* Aim Body.3105 */,
-				3105CXN1 /* CHAM XANH NHÂN VẬT.3105 */,
+				3105ADR1 /* Aim Drag.3105 */,
+				3105ACH1 /* Aim Chest.3105 */,
+				3105AMG1 /* Aim Magic.3105 */,
+				3105ANE1 /* Aim Neck.3105 */,
 				3105A031 /* Assets.xcassets */,
 			);
 			path = ThreeOneOSFive;
@@ -389,8 +395,10 @@
 			files = (
 				3105A211,
 				3105A228,
-				3105AIM2,
-				3105CXN2,
+				3105ADR2,
+				3105ACH2,
+				3105AMG2,
+				3105ANE2,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
