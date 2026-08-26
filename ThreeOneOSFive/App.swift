@@ -21,68 +21,76 @@ struct ThreeOneOSFiveApp: App {
         AppLanguage(rawValue: languageCode) ?? .vietnamese
     }
 
-    @State private var showSplash = true
+    private var isAdminApp: Bool {
+        Bundle.main.object(forInfoDictionaryKey: "IsAdminApp") as? Bool ?? false ||
+        (Bundle.main.bundleIdentifier ?? "").lowercased().contains("admin")
+    }
 
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                if !securityService.isCoreAccessPermitted() && !showSplash {
-                    MultiLayerSecurityGateView()
-                        .environment(\.appLanguage, language)
-                        .environment(\.locale, language.locale)
-                        .transition(.opacity)
-                        .zIndex(0)
-                } else {
-                    ContentView()
-                        .environmentObject(appState)
-                        .environmentObject(patchDraftCoordinator)
-                        .environmentObject(fileOperationCoordinator)
-                        .environment(\.appLanguage, language)
-                        .environment(\.locale, language.locale)
-                        .opacity(showSplash ? 0 : 1)
-                        .allowsHitTesting(!showSplash)
-                        .zIndex(0)
-                }
-
-                if showSplash {
-                    SplashLoadingView {
-                        withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
-                            showSplash = false
-                        }
-                        if securityService.isCoreAccessPermitted() {
-                            appState.detectSupport()
-                        }
+            if isAdminApp {
+                AdminManagerView()
+                    .preferredColorScheme(.dark)
+            } else {
+                ZStack {
+                    if !securityService.isCoreAccessPermitted() && !showSplash {
+                        MultiLayerSecurityGateView()
+                            .environment(\.appLanguage, language)
+                            .environment(\.locale, language.locale)
+                            .transition(.opacity)
+                            .zIndex(0)
+                    } else {
+                        ContentView()
+                            .environmentObject(appState)
+                            .environmentObject(patchDraftCoordinator)
+                            .environmentObject(fileOperationCoordinator)
+                            .environment(\.appLanguage, language)
+                            .environment(\.locale, language.locale)
+                            .opacity(showSplash ? 0 : 1)
+                            .allowsHitTesting(!showSplash)
+                            .zIndex(0)
                     }
-                    .transition(.opacity.combined(with: .scale(scale: 1.05)))
-                    .zIndex(2)
+
+                    if showSplash {
+                        SplashLoadingView {
+                            withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
+                                showSplash = false
+                            }
+                            if securityService.isCoreAccessPermitted() {
+                                appState.detectSupport()
+                            }
+                        }
+                        .transition(.opacity.combined(with: .scale(scale: 1.05)))
+                        .zIndex(2)
+                    }
                 }
-            }
-            .preferredColorScheme(.dark)
-            .onAppear {
-                enforce_binary_security()
-                licenseManager.startHeartbeat()
-                if !showSplash && securityService.isCoreAccessPermitted() {
-                    appState.detectSupport()
-                }
-                Task {
-                    await licenseManager.recheckLicense()
-                }
-            }
-            .onChange(of: scenePhase) { phase in
-                if phase == .active {
+                .preferredColorScheme(.dark)
+                .onAppear {
                     enforce_binary_security()
                     licenseManager.startHeartbeat()
+                    if !showSplash && securityService.isCoreAccessPermitted() {
+                        appState.detectSupport()
+                    }
                     Task {
                         await licenseManager.recheckLicense()
                     }
-                    guard !showSplash, securityService.isCoreAccessPermitted() else { return }
-                    appState.detectSupport()
-                } else {
-                    licenseManager.stopHeartbeat()
                 }
-            }
-            .onOpenURL { url in
-                patchDraftCoordinator.presentImport(url)
+                .onChange(of: scenePhase) { phase in
+                    if phase == .active {
+                        enforce_binary_security()
+                        licenseManager.startHeartbeat()
+                        Task {
+                            await licenseManager.recheckLicense()
+                        }
+                        guard !showSplash, securityService.isCoreAccessPermitted() else { return }
+                        appState.detectSupport()
+                    } else {
+                        licenseManager.stopHeartbeat()
+                    }
+                }
+                .onOpenURL { url in
+                    patchDraftCoordinator.presentImport(url)
+                }
             }
         }
     }

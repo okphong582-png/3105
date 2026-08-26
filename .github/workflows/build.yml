@@ -2,15 +2,11 @@ name: Build iOS IPA & TIPA
 
 on:
   push:
-    branches: [ "**" ]
-    tags: [ "v*" ]
-  pull_request:
-    branches: [ "**" ]
+    branches:
+      - '**'
+    tags:
+      - 'v*'
   workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -65,9 +61,20 @@ jobs:
           zip -r9 OniAkuma_Client_Bundle.ipa Payload_Client
           mv OniAkuma_Client_Bundle.ipa OniAkuma_Client.ipa 2>/dev/null || true
 
-          # 2. Package Admin Server Manager .tipa (TrollStore) and .ipa
+          # 2. Package Dedicated Admin Server Manager .tipa (TrollStore) and .ipa
           mkdir -p Payload_Admin
           cp -r "$APP_PATH" Payload_Admin/
+          
+          # Customize Admin App Info.plist
+          ADMIN_PLIST=$(find Payload_Admin -name "Info.plist" | head -n 1)
+          if [ -f "$ADMIN_PLIST" ]; then
+            echo "Customizing Admin Info.plist at $ADMIN_PLIST"
+            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 'OniAkuma Admin'" "$ADMIN_PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string 'OniAkuma Admin'" "$ADMIN_PLIST"
+            /usr/libexec/PlistBuddy -c "Set :CFBundleName 'OniAkuma Admin'" "$ADMIN_PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleName string 'OniAkuma Admin'" "$ADMIN_PLIST"
+            /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier 'com.oniakuma.admin'" "$ADMIN_PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string 'com.oniakuma.admin'" "$ADMIN_PLIST"
+            /usr/libexec/PlistBuddy -c "Add :IsAdminApp bool true" "$ADMIN_PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :IsAdminApp true" "$ADMIN_PLIST"
+          fi
+
           zip -r9 OniAkuma_Admin_Manager.ipa Payload_Admin
           cp OniAkuma_Admin_Manager.ipa OniAkuma_Admin_Manager.tipa
 
