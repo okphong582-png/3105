@@ -416,7 +416,7 @@ struct KeyAuthView: View {
         gen.impactOccurred()
 
         Task {
-            let result = await licenseManager.verifyKey(cleanKey)
+            let result = await licenseManager.activateKey(cleanKey)
             await MainActor.run {
                 if result.success {
                     let notif = UINotificationFeedbackGenerator()
@@ -440,13 +440,17 @@ struct KeyAuthView: View {
         Task {
             // Check Firebase config for dynamic bypass link
             let bypassURLStr = await fetchServerBypassLink()
-            guard let url = URL(string: bypassURLStr), UIApplication.shared.canOpenURL(url) else {
+            guard let url = URL(string: bypassURLStr) else {
                 if let fallback = URL(string: "https://link4m.co") {
-                    UIApplication.shared.open(fallback)
+                    await MainActor.run {
+                        UIApplication.shared.open(fallback, options: [:], completionHandler: nil)
+                    }
                 }
                 return
             }
-            UIApplication.shared.open(url)
+            await MainActor.run {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            }
         }
     }
 

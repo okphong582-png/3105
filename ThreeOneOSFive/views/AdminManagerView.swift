@@ -349,130 +349,10 @@ struct AdminManagerView: View {
         let isBypass = (key.note ?? "").lowercased().contains("vượt link") || key.key.hasPrefix("PASS-")
 
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                // Key String
-                Button {
-                    UIPasteboard.general.string = key.key
-                    let gen = UINotificationFeedbackGenerator()
-                    gen.notificationOccurred(.success)
-                    triggerToast("Đã copy key: \(key.key)")
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "key.fill")
-                            .font(.system(size: 12))
-                            .foregroundStyle(isBanned ? Color.red : (isBypass ? Color.orange : Color(red: 0.0, green: 0.85, blue: 1.0)))
-
-                        Text(key.key)
-                            .font(.system(size: 14, weight: .black, design: .monospaced))
-                            .foregroundStyle(.white)
-
-                        Image(systemName: "doc.on.doc")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .buttonStyle(.plain)
-
-                Spacer()
-
-                // Status Pill
-                if isBanned {
-                    Text("BANNED")
-                        .font(.system(size: 9, weight: .black))
-                        .foregroundStyle(Color.red)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color.red.opacity(0.15).cornerRadius(4))
-                } else if isExpired {
-                    Text("HẾT HẠN")
-                        .font(.system(size: 9, weight: .black))
-                        .foregroundStyle(Color.gray)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color.white.opacity(0.08).cornerRadius(4))
-                } else {
-                    Text("ACTIVE")
-                        .font(.system(size: 9, weight: .black))
-                        .foregroundStyle(Color.green)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color.green.opacity(0.15).cornerRadius(4))
-                }
-            }
-
-            // Info rows
-            HStack(spacing: 12) {
-                Label(key.durationFormatted, systemImage: "clock.fill")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(.secondary)
-
-                Label(key.deviceUsageFormatted, systemImage: "iphone")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(key.usedDevices.isEmpty ? .secondary : Color(red: 0.0, green: 0.85, blue: 1.0))
-
-                if let note = key.note, !note.isEmpty {
-                    Label(note, systemImage: "note.text")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                }
-            }
-
+            keyHeaderRow(key: key, isBanned: isBanned, isExpired: isExpired, isBypass: isBypass)
+            keyDetailsRow(key: key)
             Divider().background(Color.white.opacity(0.06))
-
-            // Action Buttons Bar
-            HStack(spacing: 8) {
-                // Ban / Unban
-                Button {
-                    Task {
-                        let newStatus = isBanned ? "active" : "banned"
-                        let ok = await adminService.setKeyStatus(key: key.key, status: newStatus)
-                        if ok { triggerToast(isBanned ? "Đã mở khóa key!" : "Đã khóa key!") }
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: isBanned ? "lock.open.fill" : "lock.fill")
-                        Text(isBanned ? "Mở Khóa" : "Khóa")
-                    }
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(isBanned ? Color.green : Color.orange)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background((isBanned ? Color.green : Color.orange).opacity(0.12).cornerRadius(8))
-                }
-
-                // Reset HWID
-                Button {
-                    Task {
-                        let ok = await adminService.resetHWID(key: key.key)
-                        if ok { triggerToast("Đã Reset HWID thiết bị cho key!") }
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.counterclockwise")
-                        Text("Reset HWID")
-                    }
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Color(red: 0.0, green: 0.85, blue: 1.0))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color(red: 0.0, green: 0.85, blue: 1.0).opacity(0.12).cornerRadius(8))
-                }
-
-                Spacer()
-
-                // Delete Button
-                Button {
-                    keyToDelete = key
-                    showDeleteConfirm = true
-                } label: {
-                    Image(systemName: "trash.fill")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Color.red)
-                        .padding(7)
-                        .background(Color.red.opacity(0.12).cornerRadius(8))
-                }
-            }
+            keyActionsRow(key: key, isBanned: isBanned)
         }
         .padding(14)
         .background(
@@ -483,6 +363,131 @@ struct AdminManagerView: View {
                         .stroke(isBanned ? Color.red.opacity(0.3) : (isBypass ? Color.orange.opacity(0.3) : Color.white.opacity(0.08)), lineWidth: 1)
                 )
         )
+    }
+
+    @ViewBuilder
+    private func keyHeaderRow(key: LicenseInfo, isBanned: Bool, isExpired: Bool, isBypass: Bool) -> some View {
+        HStack {
+            Button {
+                UIPasteboard.general.string = key.key
+                let gen = UINotificationFeedbackGenerator()
+                gen.notificationOccurred(.success)
+                triggerToast("Đã copy key: \(key.key)")
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "key.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(isBanned ? Color.red : (isBypass ? Color.orange : Color(red: 0.0, green: 0.85, blue: 1.0)))
+
+                    Text(key.key)
+                        .font(.system(size: 14, weight: .black, design: .monospaced))
+                        .foregroundStyle(.white)
+
+                    Image(systemName: "doc.on.doc")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            if isBanned {
+                Text("BANNED")
+                    .font(.system(size: 9, weight: .black))
+                    .foregroundStyle(Color.red)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Color.red.opacity(0.15).cornerRadius(4))
+            } else if isExpired {
+                Text("HẾT HẠN")
+                    .font(.system(size: 9, weight: .black))
+                    .foregroundStyle(Color.gray)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Color.white.opacity(0.08).cornerRadius(4))
+            } else {
+                Text("ACTIVE")
+                    .font(.system(size: 9, weight: .black))
+                    .foregroundStyle(Color.green)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(Color.green.opacity(0.15).cornerRadius(4))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func keyDetailsRow(key: LicenseInfo) -> some View {
+        HStack(spacing: 12) {
+            Label(key.durationFormatted, systemImage: "clock.fill")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            Label(key.deviceUsageFormatted, systemImage: "iphone")
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(key.usedDevices.isEmpty ? .secondary : Color(red: 0.0, green: 0.85, blue: 1.0))
+
+            if let note = key.note, !note.isEmpty {
+                Label(note, systemImage: "note.text")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func keyActionsRow(key: LicenseInfo, isBanned: Bool) -> some View {
+        HStack(spacing: 8) {
+            Button {
+                Task {
+                    let newStatus = isBanned ? "active" : "banned"
+                    let ok = await adminService.setKeyStatus(key: key.key, status: newStatus)
+                    if ok { triggerToast(isBanned ? "Đã mở khóa key!" : "Đã khóa key!") }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: isBanned ? "lock.open.fill" : "lock.fill")
+                    Text(isBanned ? "Mở Khóa" : "Khóa")
+                }
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(isBanned ? Color.green : Color.orange)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background((isBanned ? Color.green : Color.orange).opacity(0.12).cornerRadius(8))
+            }
+
+            Button {
+                Task {
+                    let ok = await adminService.resetHWID(key: key.key)
+                    if ok { triggerToast("Đã Reset HWID thiết bị cho key!") }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.counterclockwise")
+                    Text("Reset HWID")
+                }
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(Color(red: 0.0, green: 0.85, blue: 1.0))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color(red: 0.0, green: 0.85, blue: 1.0).opacity(0.12).cornerRadius(8))
+            }
+
+            Spacer()
+
+            Button {
+                keyToDelete = key
+                showDeleteConfirm = true
+            } label: {
+                Image(systemName: "trash.fill")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Color.red)
+                    .padding(7)
+                    .background(Color.red.opacity(0.12).cornerRadius(8))
+            }
+        }
     }
 
     // MARK: - Tab 2: Create Standard Key

@@ -198,7 +198,7 @@ struct MainInjectorView: View {
                         Image(systemName: "clock.fill")
                             .font(.system(size: 9))
                             .foregroundStyle(Color.green)
-                        Text("Hạn Key: \(lic.remainingFormatted)")
+                        Text("Hạn Key: \(lic.remainingTimeFormatted)")
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundStyle(Color.green)
                     }

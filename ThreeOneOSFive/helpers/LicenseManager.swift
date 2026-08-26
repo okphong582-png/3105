@@ -206,6 +206,10 @@ struct LicenseInfo: Codable {
         return "\(current)/\(maxDevices) thiết bị"
     }
 
+    var durationFormatted: String {
+        formatDurationString(durationSeconds)
+    }
+
     private func formatDurationString(_ seconds: Int64) -> String {
         if seconds == -1 { return "Vĩnh Viễn" }
         let days = seconds / 86400
