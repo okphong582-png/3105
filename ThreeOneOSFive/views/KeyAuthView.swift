@@ -7,26 +7,48 @@ struct KeyAuthView: View {
     @State private var showSuccessToast = false
     @State private var successToastMessage = ""
     @State private var showHWIDCopied = false
+    @State private var showBypassToast = false
+    @State private var showAdminSheet = false
+    @State private var logoTapCount = 0
     @FocusState private var isFieldFocused: Bool
+
+    @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "cyan"
+    private var activeTheme: AppColorTheme {
+        AppColorTheme(rawValue: currentThemeRaw) ?? .cyan
+    }
 
     var body: some View {
         ZStack {
-            AppTheme.pageBackground.ignoresSafeArea()
+            Color(red: 0.04, green: 0.05, blue: 0.07).ignoresSafeArea()
 
-            // Ambient background glow
+            // Ambient background multi-color glows
             VStack {
                 Circle()
-                    .fill(AppTheme.accent.opacity(0.18))
-                    .frame(width: 260, height: 260)
+                    .fill(
+                        RadialGradient(
+                            colors: [activeTheme.primaryColor.opacity(0.22), Color.clear],
+                            center: .center,
+                            startRadius: 20,
+                            endRadius: 160
+                        )
+                    )
+                    .frame(width: 320, height: 320)
                     .blur(radius: 80)
-                    .offset(y: -100)
+                    .offset(y: -80)
+
                 Spacer()
+
+                Circle()
+                    .fill(Color.orange.opacity(0.12))
+                    .frame(width: 260, height: 260)
+                    .blur(radius: 70)
+                    .offset(y: 80)
             }
             .ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 24) {
-                    Spacer(minLength: 20)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 20) {
+                    Spacer(minLength: 16)
 
                     // Hero Branding
                     VStack(spacing: 12) {
@@ -34,32 +56,52 @@ struct KeyAuthView: View {
                             Circle()
                                 .fill(
                                     RadialGradient(
-                                        colors: [AppTheme.accent.opacity(0.4), Color.clear],
+                                        colors: [activeTheme.primaryColor.opacity(0.4), Color.clear],
                                         center: .center,
                                         startRadius: 10,
-                                        endRadius: 70
+                                        endRadius: 75
                                     )
                                 )
-                                .frame(width: 130, height: 130)
+                                .frame(width: 140, height: 140)
 
                             AppLogo(size: 88)
+                                .onTapGesture {
+                                    logoTapCount += 1
+                                    if logoTapCount >= 5 {
+                                        logoTapCount = 0
+                                        showAdminSheet = true
+                                        let gen = UINotificationFeedbackGenerator()
+                                        gen.notificationOccurred(.success)
+                                    }
+                                }
                         }
 
                         VStack(spacing: 4) {
                             Text("OniAkuma")
-                                .font(.system(size: 30, weight: .black, design: .rounded))
+                                .font(.system(size: 32, weight: .black, design: .rounded))
                                 .foregroundStyle(
                                     LinearGradient(
-                                        colors: [.white, Color(red: 0.8, green: 0.95, blue: 1.0)],
+                                        colors: [.white, Color(red: 0.85, green: 0.95, blue: 1.0)],
                                         startPoint: .top,
                                         endPoint: .bottom
                                     )
                                 )
-                                .shadow(color: AppTheme.accent.opacity(0.6), radius: 10, x: 0, y: 2)
+                                .shadow(color: activeTheme.primaryColor.opacity(0.6), radius: 12, x: 0, y: 3)
 
-                            Text("HoangHaMod & TrongKien")
-                                .font(.caption.weight(.bold).monospaced())
-                                .foregroundStyle(AppTheme.accent)
+                            HStack(spacing: 6) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 10, weight: .bold))
+                                Text("HoangHaMod & TrongKien")
+                                    .font(.caption.weight(.black).monospaced())
+                            }
+                            .foregroundStyle(activeTheme.primaryColor)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 4)
+                            .background(
+                                Capsule()
+                                    .fill(activeTheme.primaryColor.opacity(0.12))
+                                    .overlay(Capsule().stroke(activeTheme.primaryColor.opacity(0.35), lineWidth: 1))
+                            )
                         }
                     }
 
@@ -68,50 +110,73 @@ struct KeyAuthView: View {
                         VStack(spacing: 6) {
                             Label {
                                 Text("XÁC THỰC BẢN QUYỀN")
-                                    .font(.subheadline.weight(.black))
+                                    .font(.system(size: 15, weight: .black, design: .rounded))
                                     .foregroundStyle(.white)
                             } icon: {
                                 Image(systemName: "key.fill")
-                                    .foregroundStyle(AppTheme.accent)
+                                    .foregroundStyle(activeTheme.primaryColor)
                             }
 
-                            Text("Vui lòng nhập License Key để kích hoạt ứng dụng")
+                            Text("Nhập License Key hoặc bấm Vượt Link bên dưới để kích hoạt")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .multilineTextAlignment(.center)
                         }
 
-                        // Key Input Field
-                        HStack(spacing: 10) {
-                            Image(systemName: "lock.shield.fill")
-                                .foregroundStyle(isFieldFocused ? AppTheme.accent : .secondary)
+                        // Key Input Field & Paste Button
+                        VStack(spacing: 8) {
+                            HStack(spacing: 10) {
+                                Image(systemName: "lock.shield.fill")
+                                    .foregroundStyle(isFieldFocused ? activeTheme.primaryColor : .secondary)
 
-                            TextField("Nhập mã key tại đây...", text: $inputKey)
-                                .font(.system(size: 15, weight: .bold, design: .monospaced))
-                                .autocapitalization(.allCharacters)
-                                .disableAutocorrection(true)
-                                .focused($isFieldFocused)
-                                .submitLabel(.done)
+                                TextField("Nhập mã key tại đây...", text: $inputKey)
+                                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                    .autocapitalization(.allCharacters)
+                                    .disableAutocorrection(true)
+                                    .focused($isFieldFocused)
+                                    .submitLabel(.done)
 
-                            if !inputKey.isEmpty {
+                                if !inputKey.isEmpty {
+                                    Button {
+                                        inputKey = ""
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+
+                                // Quick Paste Button
                                 Button {
-                                    inputKey = ""
+                                    if let clip = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines), !clip.isEmpty {
+                                        inputKey = clip.uppercased()
+                                        let gen = UIImpactFeedbackGenerator(style: .light)
+                                        gen.impactOccurred()
+                                    }
                                 } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundStyle(.secondary)
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "doc.on.clipboard.fill")
+                                        Text("Dán")
+                                    }
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(.black)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        Capsule().fill(activeTheme.primaryColor)
+                                    )
                                 }
                             }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(Color(red: 0.10, green: 0.12, blue: 0.16))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .stroke(isFieldFocused ? activeTheme.primaryColor : Color.white.opacity(0.1), lineWidth: 1.5)
+                                    )
+                            )
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(AppTheme.cardBackgroundElevated)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .stroke(isFieldFocused ? AppTheme.accent : AppTheme.borderSubtle, lineWidth: 1.5)
-                                )
-                        )
 
                         // Error Banner if any
                         if let error = licenseManager.lastErrorMessage {
@@ -138,30 +203,88 @@ struct KeyAuthView: View {
                                         .tint(.black)
                                         .controlSize(.small)
                                     Text("Đang kiểm tra...")
-                                        .font(.headline.weight(.bold))
+                                        .font(.headline.weight(.black))
                                 } else {
                                     Image(systemName: "checkmark.seal.fill")
                                         .font(.headline.weight(.bold))
-                                    Text("KÍCH HOẠT NGAY")
-                                        .font(.headline.weight(.bold))
+                                    Text("KÍCH HOẠT ỨNG DỤNG")
+                                        .font(.headline.weight(.black))
                                 }
                             }
                             .foregroundStyle(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
-                            .background(AppTheme.accentGradient)
+                            .background(
+                                LinearGradient(
+                                    colors: [activeTheme.primaryColor, activeTheme.primaryColor.opacity(0.85)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                            .shadow(color: AppTheme.accent.opacity(0.4), radius: 10, y: 4)
+                            .shadow(color: activeTheme.primaryColor.opacity(0.4), radius: 10, y: 4)
                         }
                         .disabled(licenseManager.isVerifying)
+
+                        Divider().background(Color.white.opacity(0.08))
+
+                        // FREE BYPASS LINK BUTTON (VƯỢT LINK LẤY KEY)
+                        Button {
+                            openBypassLink()
+                        } label: {
+                            VStack(spacing: 6) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "link.badge.plus")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundStyle(Color.orange)
+
+                                    Text("Bạn không có key? Nhấn vô đây để vượt link")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundStyle(.white)
+
+                                    Image(systemName: "arrow.up.right.circle.fill")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundStyle(Color.orange)
+                                }
+
+                                Text("Vượt link nhanh nhận ngay Key miễn phí 100%")
+                                    .font(.caption2)
+                                    .foregroundStyle(Color.orange.opacity(0.9))
+                            }
+                            .padding(14)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.orange.opacity(0.18), Color.yellow.opacity(0.08)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .stroke(
+                                                LinearGradient(
+                                                    colors: [Color.orange.opacity(0.6), Color.yellow.opacity(0.3)],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                ),
+                                                lineWidth: 1.5
+                                            )
+                                    )
+                                    .shadow(color: Color.orange.opacity(0.2), radius: 8, y: 2)
+                            )
+                        }
+                        .buttonStyle(.plain)
                     }
                     .padding(20)
                     .background(
                         RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(AppTheme.cardBackground)
+                            .fill(Color(red: 0.08, green: 0.09, blue: 0.13))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                    .stroke(AppTheme.borderSubtle, lineWidth: 1)
+                                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
                             )
                     )
 
@@ -170,15 +293,15 @@ struct KeyAuthView: View {
                         Label {
                             Text("MÃ THIẾT BỊ (HWID)")
                                 .font(.caption.weight(.bold))
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(activeTheme.primaryColor)
                         } icon: {
                             Image(systemName: "iphone.smartbatterycase.gen2")
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(activeTheme.primaryColor)
                         }
 
                         HStack {
                             Text(licenseManager.deviceHWID)
-                                .font(.system(size: 11, weight: .regular, design: .monospaced))
+                                .font(.system(size: 11, weight: .semibold, design: .monospaced))
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
@@ -200,26 +323,26 @@ struct KeyAuthView: View {
                                     Text(showHWIDCopied ? "Đã chép" : "Sao chép")
                                         .font(.caption2.weight(.bold))
                                 }
-                                .foregroundStyle(showHWIDCopied ? .green : AppTheme.accent)
+                                .foregroundStyle(showHWIDCopied ? .green : activeTheme.primaryColor)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
-                                .background(AppTheme.cardBackgroundElevated.cornerRadius(8))
+                                .background(Color.white.opacity(0.06).cornerRadius(8))
                             }
                         }
                     }
                     .padding(16)
                     .background(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(AppTheme.cardBackground)
+                            .fill(Color(red: 0.08, green: 0.09, blue: 0.13))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .stroke(AppTheme.borderSubtle, lineWidth: 1)
+                                    .stroke(Color.white.opacity(0.06), lineWidth: 1)
                             )
                     )
 
-                    // Contact / Support
+                    // Contact / Support Links
                     VStack(spacing: 10) {
-                        Text("Chưa có Key bản quyền?")
+                        Text("Cần Mua Key VIP Hoặc Hỗ Trợ Kỹ Thuật?")
                             .font(.caption)
                             .foregroundStyle(.secondary)
 
@@ -227,7 +350,7 @@ struct KeyAuthView: View {
                             Link(destination: URL(string: "https://zalo.me/0866445455")!) {
                                 HStack(spacing: 6) {
                                     Image(systemName: "phone.fill")
-                                    Text("Mua Key (Zalo: 0866445455)")
+                                    Text("Zalo: 0866445455")
                                 }
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(Color.white)
@@ -239,75 +362,68 @@ struct KeyAuthView: View {
                             Link(destination: URL(string: "https://t.me/+1fstsksh_dMxNjE1")!) {
                                 HStack(spacing: 6) {
                                     Image(systemName: "paperplane.fill")
-                                    Text("Nhóm Cộng Đồng")
+                                    Text("Nhóm Telegram")
                                 }
                                 .font(.caption.weight(.bold))
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(activeTheme.primaryColor)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 8)
-                                .background(AppTheme.accent.opacity(0.15).cornerRadius(10))
-                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.accent.opacity(0.4), lineWidth: 1))
+                                .background(activeTheme.primaryColor.opacity(0.15).cornerRadius(10))
+                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(activeTheme.primaryColor.opacity(0.4), lineWidth: 1))
                             }
                         }
                     }
-                    .padding(.top, 8)
-
-                    Spacer(minLength: 30)
+                    .padding(.top, 4)
                 }
-                .padding(.horizontal, AppTheme.pageInset)
-            }
-        }
-        .overlay(alignment: .top) {
-            if showSuccessToast {
-                HStack(spacing: 10) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title3)
-                        .foregroundStyle(Color.green)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Kích Hoạt Thành Công!")
-                            .font(.subheadline.weight(.black))
-                            .foregroundStyle(.white)
-
-                        Text(successToastMessage)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.horizontal, 18)
-                .padding(.vertical, 14)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color(red: 0.10, green: 0.14, blue: 0.18))
-                        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.green.opacity(0.5), lineWidth: 1.5))
-                        .shadow(color: Color.green.opacity(0.3), radius: 12, y: 6)
-                )
-                .padding(.top, 50)
                 .padding(.horizontal, 20)
-                .transition(.move(edge: .top).combined(with: .opacity))
+                .padding(.bottom, 32)
+            }
+            .sheet(isPresented: $showAdminSheet) {
+                AdminManagerView()
+            }
+            .overlay(alignment: .bottom) {
+                if showSuccessToast {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                        Text(successToastMessage)
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(.white)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 14)
+                    .background(
+                        Capsule()
+                            .fill(Color(red: 0.1, green: 0.12, blue: 0.16).opacity(0.95))
+                            .overlay(Capsule().stroke(Color.green.opacity(0.4), lineWidth: 1))
+                            .shadow(color: .black.opacity(0.5), radius: 10)
+                    )
+                    .padding(.bottom, 24)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
         }
     }
 
     private func submitKey() {
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
-        isFieldFocused = false
+        let cleanKey = inputKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanKey.isEmpty else {
+            licenseManager.lastErrorMessage = "Vui lòng nhập License Key hợp lệ!"
+            return
+        }
+
+        let gen = UIImpactFeedbackGenerator(style: .medium)
+        gen.impactOccurred()
 
         Task {
-            let result = await LicenseManager.shared.activateKey(inputKey)
+            let result = await licenseManager.verifyKey(cleanKey)
             await MainActor.run {
                 if result.success {
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
-                    successToastMessage = "Thời hạn: \(result.remaining) • Đã liên kết: \(result.devices)"
+                    successToastMessage = result.message
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         showSuccessToast = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                        withAnimation {
-                            showSuccessToast = false
-                        }
                     }
                 } else {
                     let notif = UINotificationFeedbackGenerator()
@@ -315,5 +431,35 @@ struct KeyAuthView: View {
                 }
             }
         }
+    }
+
+    private func openBypassLink() {
+        let gen = UIImpactFeedbackGenerator(style: .light)
+        gen.impactOccurred()
+
+        Task {
+            // Check Firebase config for dynamic bypass link
+            let bypassURLStr = await fetchServerBypassLink()
+            guard let url = URL(string: bypassURLStr), UIApplication.shared.canOpenURL(url) else {
+                if let fallback = URL(string: "https://link4m.co") {
+                    UIApplication.shared.open(fallback)
+                }
+                return
+            }
+            UIApplication.shared.open(url)
+        }
+    }
+
+    private func fetchServerBypassLink() async -> String {
+        let urlStr = "https://ewrergdf-default-rtdb.firebaseio.com/config/bypass_link.json"
+        guard let url = URL(string: urlStr) else { return "https://link4m.co" }
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            if let http = response as? HTTPURLResponse, http.statusCode == 200,
+               let link = try? JSONDecoder().decode(String.self, from: data), !link.isEmpty {
+                return link
+            }
+        } catch {}
+        return "https://link4m.co"
     }
 }

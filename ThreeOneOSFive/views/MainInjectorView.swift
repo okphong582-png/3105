@@ -6,6 +6,7 @@ struct MainInjectorView: View {
     @EnvironmentObject private var appState: AppState
     @StateObject private var store = PatchProjectStore()
     @ObservedObject private var modManager = ModFeatureManager.shared
+    @ObservedObject private var licenseManager = LicenseManager.shared
 
     @AppStorage("oni_akuma_has_shown_welcome_v2") private var hasShownWelcome = false
     @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "cyan"
@@ -13,6 +14,7 @@ struct MainInjectorView: View {
     @State private var selectedTab: Int = 0 // 0: Aim Bot, 1: Mod Skin, 2: Mod Đồ
     @State private var showSettings = false
     @State private var showLogs = false
+    @State private var showAdminManager = false
     @State private var showWelcomeDialog = false
 
     private var activeTheme: AppColorTheme {
@@ -21,35 +23,71 @@ struct MainInjectorView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 18) {
-                    heroHeader
+            ZStack {
+                // Cyberpunk Obsidian Gradient Background
+                Color(red: 0.04, green: 0.05, blue: 0.07).ignoresSafeArea()
 
-                    gameSelectorCard
+                // Ambient Radial Glows
+                VStack {
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [activeTheme.primaryColor.opacity(0.18), Color.clear],
+                                center: .center,
+                                startRadius: 10,
+                                endRadius: 180
+                            )
+                        )
+                        .frame(width: 350, height: 350)
+                        .blur(radius: 90)
+                        .offset(y: -90)
 
-                    // Segmented Tab Switcher (Aim Bot vs Mod Skin vs Mod Đồ)
-                    tabSwitcherSection
+                    Spacer()
 
-                    if selectedTab == 0 {
-                        aimBotSection
-                    } else if selectedTab == 1 {
-                        modSkinSection
-                    } else {
-                        modOutfitSection
-                    }
-
-                    // Open Game Button
-                    openGameButton
-
-                    systemStatusCard
-
-                    creditsBadge
+                    Circle()
+                        .fill(
+                            RadialGradient(
+                                colors: [Color.purple.opacity(0.12), Color.clear],
+                                center: .center,
+                                startRadius: 10,
+                                endRadius: 160
+                            )
+                        )
+                        .frame(width: 300, height: 300)
+                        .blur(radius: 80)
+                        .offset(y: 90)
                 }
-                .padding(.horizontal, AppTheme.pageInset)
-                .padding(.top, 8)
-                .padding(.bottom, 32)
+                .ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 18) {
+                        heroHeader
+
+                        gameSelectorCard
+
+                        // Segmented Tab Switcher (Aim Bot vs Mod Skin vs Mod Đồ)
+                        tabSwitcherSection
+
+                        if selectedTab == 0 {
+                            aimBotSection
+                        } else if selectedTab == 1 {
+                            modSkinSection
+                        } else {
+                            modOutfitSection
+                        }
+
+                        // Open Game Button
+                        openGameButton
+
+                        systemStatusCard
+
+                        creditsBadge
+                    }
+                    .padding(.horizontal, AppTheme.pageInset)
+                    .padding(.top, 6)
+                    .padding(.bottom, 36)
+                }
             }
-            .background(AppTheme.pageBackground.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -60,15 +98,25 @@ struct MainInjectorView: View {
                     .accessibilityLabel(language.text("accessibility.open_logs"))
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showSettings = true } label: {
-                        Image(systemName: "gearshape.fill")
-                            .foregroundStyle(activeTheme.primaryColor)
+                    HStack(spacing: 12) {
+                        // Admin Server Manager Button
+                        Button { showAdminManager = true } label: {
+                            Image(systemName: "server.rack")
+                                .foregroundStyle(activeTheme.primaryColor)
+                        }
+                        .accessibilityLabel("Admin Server Key")
+
+                        Button { showSettings = true } label: {
+                            Image(systemName: "gearshape.fill")
+                                .foregroundStyle(activeTheme.primaryColor)
+                        }
+                        .accessibilityLabel(language.text("accessibility.open_settings"))
                     }
-                    .accessibilityLabel(language.text("accessibility.open_settings"))
                 }
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showLogs) { LogView() }
+            .sheet(isPresented: $showAdminManager) { AdminManagerView() }
             .sheet(item: $store.passwordRequest, onDismiss: store.cancelUnlock) { _ in
                 PatchUnlockView(store: store)
             }
@@ -99,25 +147,27 @@ struct MainInjectorView: View {
 
     // MARK: - Hero Header
     private var heroHeader: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             ZStack {
+                // Outer glowing pulse ring
                 Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [activeTheme.primaryColor.opacity(0.35), Color.clear],
-                            center: .center,
-                            startRadius: 10,
-                            endRadius: 55
-                        )
+                    .stroke(
+                        LinearGradient(
+                            colors: [activeTheme.primaryColor.opacity(0.6), activeTheme.primaryColor.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 2
                     )
-                    .frame(width: 100, height: 100)
+                    .frame(width: 86, height: 86)
+                    .shadow(color: activeTheme.primaryColor.opacity(0.5), radius: 10)
 
                 AppLogo(size: 72)
             }
 
             VStack(spacing: 4) {
                 Text("OniAkuma")
-                    .font(.system(size: 26, weight: .black, design: .rounded))
+                    .font(.system(size: 28, weight: .black, design: .rounded))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [.white, Color(red: 0.85, green: 0.95, blue: 1.0)],
@@ -131,19 +181,35 @@ struct MainInjectorView: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 10, weight: .bold))
                     Text("HoangHaMod & TrongKien")
-                        .font(.caption2.weight(.bold).monospaced())
+                        .font(.caption2.weight(.black).monospaced())
                 }
                 .foregroundStyle(activeTheme.primaryColor)
                 .padding(.horizontal, 10)
-                .padding(.vertical, 4)
+                .padding(.vertical, 3)
                 .background(
                     Capsule()
                         .fill(activeTheme.primaryColor.opacity(0.12))
-                        .overlay(Capsule().stroke(activeTheme.primaryColor.opacity(0.3), lineWidth: 1))
+                        .overlay(Capsule().stroke(activeTheme.primaryColor.opacity(0.35), lineWidth: 1))
                 )
+
+                // License duration badge
+                if let lic = licenseManager.currentLicense {
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock.fill")
+                            .font(.system(size: 9))
+                            .foregroundStyle(Color.green)
+                        Text("Hạn Key: \(lic.remainingFormatted)")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Color.green)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(Color.green.opacity(0.12).cornerRadius(6))
+                    .padding(.top, 2)
+                }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 2)
     }
 
     // MARK: - Game Selector Card
@@ -151,7 +217,7 @@ struct MainInjectorView: View {
         VStack(alignment: .leading, spacing: 10) {
             Label {
                 Text("BẢN GAME ĐÍCH")
-                    .font(.caption.weight(.bold))
+                    .font(.caption.weight(.black))
                     .foregroundStyle(activeTheme.primaryColor)
             } icon: {
                 Image(systemName: "gamecontroller.fill")
@@ -175,10 +241,10 @@ struct MainInjectorView: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(AppTheme.cardBackground)
+                .fill(Color(red: 0.08, green: 0.09, blue: 0.13))
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(AppTheme.borderSubtle, lineWidth: 1)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
                 )
         )
     }
@@ -207,26 +273,27 @@ struct MainInjectorView: View {
                 }
 
                 Text(title)
-                    .font(.subheadline.weight(.bold))
+                    .font(.subheadline.weight(.black))
                     .foregroundStyle(isSelected ? .white : .secondary)
 
                 Text(bundleID)
-                    .font(.system(size: 9, weight: .regular, design: .monospaced))
-                    .foregroundStyle(isSelected ? activeTheme.primaryColor.opacity(0.8) : .secondary.opacity(0.6))
+                    .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                    .foregroundStyle(isSelected ? activeTheme.primaryColor.opacity(0.85) : .secondary.opacity(0.6))
                     .lineLimit(1)
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(isSelected ? activeTheme.primaryColor.opacity(0.12) : AppTheme.cardBackgroundElevated)
+                    .fill(isSelected ? activeTheme.primaryColor.opacity(0.14) : Color(red: 0.11, green: 0.13, blue: 0.17))
                     .overlay(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .stroke(
-                                isSelected ? activeTheme.primaryColor : AppTheme.borderSubtle,
+                                isSelected ? activeTheme.primaryColor : Color.white.opacity(0.06),
                                 lineWidth: isSelected ? 1.5 : 1
                             )
                     )
+                    .shadow(color: isSelected ? activeTheme.primaryColor.opacity(0.2) : .clear, radius: 8)
             )
         }
         .buttonStyle(.plain)
@@ -243,10 +310,10 @@ struct MainInjectorView: View {
         .padding(4)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(AppTheme.cardBackgroundElevated)
+                .fill(Color(red: 0.08, green: 0.09, blue: 0.13))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(AppTheme.borderSubtle, lineWidth: 1)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
                 )
         )
     }
@@ -268,13 +335,13 @@ struct MainInjectorView: View {
                 Text(title)
                     .font(.system(size: 11, weight: .black, design: .rounded))
             }
-            .foregroundStyle(isSelected ? .white : .secondary)
+            .foregroundStyle(isSelected ? .black : .secondary)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(isSelected ? activeTheme.primaryColor : Color.clear)
-                    .shadow(color: isSelected ? activeTheme.primaryColor.opacity(0.35) : .clear, radius: 6, y: 2)
+                    .shadow(color: isSelected ? activeTheme.primaryColor.opacity(0.4) : .clear, radius: 8, y: 2)
             )
         }
         .buttonStyle(.plain)
@@ -285,7 +352,7 @@ struct MainInjectorView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("TÍNH NĂNG AIM BOT")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .font(.system(size: 11, weight: .black, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .tracking(1.0)
 
@@ -324,7 +391,7 @@ struct MainInjectorView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("VŨ KHÍ TIẾN HÓA CẤP TỐI THƯỢNG")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .font(.system(size: 11, weight: .black, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .tracking(1.0)
 
@@ -463,11 +530,11 @@ struct MainInjectorView: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(AppTheme.cardBackground)
+                    .fill(Color(red: 0.08, green: 0.09, blue: 0.13))
                     .overlay(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .stroke(
-                                modManager.isModSkinEnabled ? Color.yellow.opacity(0.5) : AppTheme.borderSubtle,
+                                modManager.isModSkinEnabled ? Color.yellow.opacity(0.5) : Color.white.opacity(0.08),
                                 lineWidth: modManager.isModSkinEnabled ? 1.5 : 1
                             )
                     )
@@ -486,7 +553,7 @@ struct MainInjectorView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text("BỘ TRANG PHỤC ĐẶC BIỆT")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .font(.system(size: 11, weight: .black, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .tracking(1.0)
 
@@ -625,11 +692,11 @@ struct MainInjectorView: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(AppTheme.cardBackground)
+                    .fill(Color(red: 0.08, green: 0.09, blue: 0.13))
                     .overlay(
                         RoundedRectangle(cornerRadius: 18, style: .continuous)
                             .stroke(
-                                modManager.isModOutfitEnabled ? Color.cyan.opacity(0.5) : AppTheme.borderSubtle,
+                                modManager.isModOutfitEnabled ? Color.cyan.opacity(0.5) : Color.white.opacity(0.08),
                                 lineWidth: modManager.isModOutfitEnabled ? 1.5 : 1
                             )
                     )
@@ -719,7 +786,7 @@ struct MainInjectorView: View {
 
                         Text("File: \(filename)")
                             .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(isEnabled ? accentColor.opacity(0.8) : .secondary.opacity(0.6))
+                            .foregroundStyle(isEnabled ? accentColor.opacity(0.85) : .secondary.opacity(0.6))
                     }
 
                     Spacer()
@@ -747,11 +814,11 @@ struct MainInjectorView: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(AppTheme.cardBackground)
+                    .fill(Color(red: 0.08, green: 0.09, blue: 0.13))
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .stroke(
-                            isEnabled ? accentColor.opacity(0.5) : AppTheme.borderSubtle,
+                            isEnabled ? accentColor.opacity(0.55) : Color.white.opacity(0.08),
                             lineWidth: isEnabled ? 1.5 : 1
                         )
                 )
@@ -797,7 +864,7 @@ struct MainInjectorView: View {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [activeTheme.primaryColor, activeTheme.primaryColor.opacity(0.8)],
+                            colors: [activeTheme.primaryColor, activeTheme.primaryColor.opacity(0.85)],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -814,7 +881,7 @@ struct MainInjectorView: View {
             HStack {
                 Label {
                     Text("TRẠNG THÁI HỆ THỐNG")
-                        .font(.caption.weight(.bold))
+                        .font(.caption.weight(.black))
                         .foregroundStyle(activeTheme.primaryColor)
                 } icon: {
                     Image(systemName: "shield.checkered")
@@ -836,7 +903,7 @@ struct MainInjectorView: View {
                 .background(Color.green.opacity(0.12).cornerRadius(6))
             }
 
-            Divider().background(AppTheme.borderSubtle)
+            Divider().background(Color.white.opacity(0.08))
 
             VStack(spacing: 8) {
                 statusRow(title: "Bảo Vệ Đa Tầng", value: "Hoạt động", isOk: true)
@@ -848,10 +915,10 @@ struct MainInjectorView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(AppTheme.cardBackground)
+                .fill(Color(red: 0.08, green: 0.09, blue: 0.13))
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(AppTheme.borderSubtle, lineWidth: 1)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
                 )
         )
     }
@@ -954,7 +1021,7 @@ struct MainInjectorView: View {
                 .padding(14)
                 .background(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(AppTheme.cardBackgroundElevated)
+                        .fill(Color(red: 0.11, green: 0.13, blue: 0.17))
                 )
 
                 Button {

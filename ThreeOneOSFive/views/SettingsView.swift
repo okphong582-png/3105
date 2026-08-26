@@ -132,6 +132,32 @@ struct SettingsView: View {
                     }
                 }
 
+                // Admin Server Key Manager Entry
+                Section("QUẢN TRỊ VIÊN (ADMIN SERVER)") {
+                    NavigationLink {
+                        AdminManagerView()
+                    } label: {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color(red: 0.0, green: 0.85, blue: 1.0).opacity(0.15))
+                                    .frame(width: 32, height: 32)
+                                Image(systemName: "server.rack")
+                                    .foregroundStyle(Color(red: 0.0, green: 0.85, blue: 1.0))
+                            }
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Quản Lý Server Key (.tipa)")
+                                    .font(.subheadline.weight(.bold))
+                                    .foregroundStyle(.white)
+                                Text("Tạo key, quản lý vượt link & cấu hình")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+
                 Section("HỖ TRỢ & CỘNG ĐỒNG") {
                     creditsRow(
                         name: "Mua Key / Hỗ Trợ Zalo",
