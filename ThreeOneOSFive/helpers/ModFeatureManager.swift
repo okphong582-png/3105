@@ -70,6 +70,7 @@ final class ModFeatureManager: ObservableObject {
 
     private let enabledAimModsKey = "oni_akuma_enabled_aim_mods_v5"
     private let modSkinKey = "oni_akuma_modskin_enabled_v5"
+    private let modOutfitKey = "oni_akuma_modoutfit_enabled_v5"
     private let targetBundleKey = "oni_akuma_target_game_bundle_v5"
 
     @Published var enabledAimMods: Set<String> {
@@ -86,6 +87,13 @@ final class ModFeatureManager: ObservableObject {
         }
     }
 
+    @Published var isModOutfitEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isModOutfitEnabled, forKey: modOutfitKey)
+            UserDefaults.standard.synchronize()
+        }
+    }
+
     @Published var selectedBundle: String {
         didSet {
             UserDefaults.standard.set(selectedBundle, forKey: targetBundleKey)
@@ -95,6 +103,7 @@ final class ModFeatureManager: ObservableObject {
 
     @Published var processingAimMods: Set<String> = []
     @Published var isProcessingModSkin: Bool = false
+    @Published var isProcessingModOutfit: Bool = false
     @Published var toastMessage: String? = nil
     @Published var showToast: Bool = false
 
@@ -102,6 +111,7 @@ final class ModFeatureManager: ObservableObject {
         let savedAimMods = UserDefaults.standard.stringArray(forKey: enabledAimModsKey) ?? []
         self.enabledAimMods = Set(savedAimMods)
         self.isModSkinEnabled = UserDefaults.standard.bool(forKey: modSkinKey)
+        self.isModOutfitEnabled = UserDefaults.standard.bool(forKey: modOutfitKey)
         self.selectedBundle = UserDefaults.standard.string(forKey: targetBundleKey) ?? "com.dts.freefireth"
     }
 
@@ -346,6 +356,106 @@ final class ModFeatureManager: ObservableObject {
                 let notif = UINotificationFeedbackGenerator()
                 notif.notificationOccurred(.success)
                 ModFeatureManager.shared.triggerToast("Đã tắt Mod Skin!")
+            }
+        }
+    }
+
+    // MARK: - Toggle Mod Đồ (Chỉ sử dụng nhân vật Ignis)
+    func toggleModOutfit(store: PatchProjectStore) {
+        guard !isProcessingModOutfit else { return }
+
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+
+        if isModOutfitEnabled {
+            restoreModOutfit(store: store)
+        } else {
+            injectModOutfit(store: store)
+        }
+    }
+
+    private func injectModOutfit(store: PatchProjectStore) {
+        let outfitFilename = "Mod đồ chỉ sử dụng nhân vật Ignis.3105"
+        guard let item = findItem(forFilename: outfitFilename, altKey: "ignis", store: store) else {
+            triggerToast("Không tìm thấy file Mod đồ Ignis!")
+            return
+        }
+
+        if item.isLocked {
+            store.requestUnlock(for: item)
+            triggerToast("Gói Mod đồ Ignis yêu cầu nhập mật khẩu!")
+            return
+        }
+
+        guard let proj = item.project else {
+            triggerToast("Không tìm thấy cấu hình Mod đồ Ignis!")
+            return
+        }
+
+        isProcessingModOutfit = true
+        let currentBundle = selectedBundle
+        let targetName = gameShortName
+
+        var adapted = proj
+        for i in 0..<adapted.rules.count {
+            adapted.rules[i].bundleID = currentBundle
+        }
+        let projectToApply = adapted
+
+        Task.detached(priority: .userInitiated) {
+            do {
+                _ = try DevicePatchService.apply(project: projectToApply)
+                await MainActor.run {
+                    ModFeatureManager.shared.isProcessingModOutfit = false
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                        ModFeatureManager.shared.isModOutfitEnabled = true
+                    }
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.success)
+                    ModFeatureManager.shared.triggerToast("Đã kích hoạt Mod Đồ Nhân Vật Ignis trên \(targetName)!")
+                }
+            } catch let error as PatchPackageError {
+                await MainActor.run {
+                    ModFeatureManager.shared.isProcessingModOutfit = false
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.error)
+                    ModFeatureManager.shared.triggerToast(error.localizationKey)
+                }
+            } catch {
+                await MainActor.run {
+                    ModFeatureManager.shared.isProcessingModOutfit = false
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.error)
+                    ModFeatureManager.shared.triggerToast("Lỗi khi kích hoạt Mod đồ: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func restoreModOutfit(store: PatchProjectStore) {
+        let outfitFilename = "Mod đồ chỉ sử dụng nhân vật Ignis.3105"
+        let targetItem = findItem(forFilename: outfitFilename, altKey: "ignis", store: store)
+        let receiptToRestore = targetItem?.project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
+
+        isProcessingModOutfit = true
+
+        Task.detached(priority: .userInitiated) {
+            if let receiptToRestore {
+                do {
+                    try DevicePatchService.restore(receipt: receiptToRestore)
+                } catch {
+                    log("restore mod outfit error: \(error.localizedDescription)")
+                }
+            }
+
+            await MainActor.run {
+                ModFeatureManager.shared.isProcessingModOutfit = false
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                    ModFeatureManager.shared.isModOutfitEnabled = false
+                }
+                let notif = UINotificationFeedbackGenerator()
+                notif.notificationOccurred(.success)
+                ModFeatureManager.shared.triggerToast("Đã tắt Mod Đồ Ignis!")
             }
         }
     }

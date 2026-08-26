@@ -10,7 +10,7 @@ struct MainInjectorView: View {
     @AppStorage("oni_akuma_has_shown_welcome_v2") private var hasShownWelcome = false
     @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "cyan"
 
-    @State private var selectedTab: Int = 0 // 0: Aim Bot, 1: Mod Skin
+    @State private var selectedTab: Int = 0 // 0: Aim Bot, 1: Mod Skin, 2: Mod Đồ
     @State private var showSettings = false
     @State private var showLogs = false
     @State private var showWelcomeDialog = false
@@ -27,13 +27,15 @@ struct MainInjectorView: View {
 
                     gameSelectorCard
 
-                    // Segmented Tab Switcher (Aim Bot vs Mod Skin)
+                    // Segmented Tab Switcher (Aim Bot vs Mod Skin vs Mod Đồ)
                     tabSwitcherSection
 
                     if selectedTab == 0 {
                         aimBotSection
-                    } else {
+                    } else if selectedTab == 1 {
                         modSkinSection
+                    } else {
+                        modOutfitSection
                     }
 
                     // Open Game Button
@@ -228,14 +230,15 @@ struct MainInjectorView: View {
             )
         }
         .buttonStyle(.plain)
-        .disabled(!modManager.processingAimMods.isEmpty || modManager.isProcessingModSkin)
+        .disabled(!modManager.processingAimMods.isEmpty || modManager.isProcessingModSkin || modManager.isProcessingModOutfit)
     }
 
-    // MARK: - Tab Switcher Section (Aim Bot vs Mod Skin)
+    // MARK: - Tab Switcher Section (3 Tabs)
     private var tabSwitcherSection: some View {
-        HStack(spacing: 8) {
-            tabButton(index: 0, title: "AIM BOT (5 CHẾ ĐỘ)", icon: "scope")
-            tabButton(index: 1, title: "MOD SKIN (MP40)", icon: "wand.and.stars")
+        HStack(spacing: 6) {
+            tabButton(index: 0, title: "AIM BOT", icon: "scope")
+            tabButton(index: 1, title: "MOD SKIN", icon: "flame.fill")
+            tabButton(index: 2, title: "MOD ĐỒ", icon: "tshirt.fill")
         }
         .padding(4)
         .background(
@@ -258,12 +261,12 @@ struct MainInjectorView: View {
             let generator = UIImpactFeedbackGenerator(style: .light)
             generator.impactOccurred()
         } label: {
-            HStack(spacing: 6) {
+            HStack(spacing: 5) {
                 Image(systemName: icon)
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.system(size: 12, weight: .bold))
 
                 Text(title)
-                    .font(.system(size: 12, weight: .black, design: .rounded))
+                    .font(.system(size: 11, weight: .black, design: .rounded))
             }
             .foregroundStyle(isSelected ? .white : .secondary)
             .padding(.vertical, 10)
@@ -470,6 +473,168 @@ struct MainInjectorView: View {
                     )
                     .shadow(
                         color: modManager.isModSkinEnabled ? Color.yellow.opacity(0.15) : Color.clear,
+                        radius: 10,
+                        y: 3
+                    )
+            )
+        }
+        .transition(.opacity.combined(with: .move(edge: .trailing)))
+    }
+
+    // MARK: - Tab 3: Mod Đồ Section (Chỉ sử dụng nhân vật Ignis)
+    private var modOutfitSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text("BỘ TRANG PHỤC ĐẶC BIỆT")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .tracking(1.0)
+
+                Spacer()
+
+                Text("IGNIS ONLY")
+                    .font(.system(size: 10, weight: .black, design: .monospaced))
+                    .foregroundStyle(Color.cyan)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Color.cyan.opacity(0.15).cornerRadius(6))
+            }
+            .padding(.horizontal, 4)
+
+            // Mod Outfit Feature Card
+            VStack(spacing: 14) {
+                // Header of outfit
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                modManager.isModOutfitEnabled
+                                    ? Color.cyan.opacity(0.2)
+                                    : Color.white.opacity(0.06)
+                            )
+                            .frame(width: 54, height: 54)
+
+                        Image(systemName: "tshirt.fill")
+                            .font(.system(size: 26, weight: .bold))
+                            .foregroundStyle(
+                                modManager.isModOutfitEnabled
+                                    ? LinearGradient(colors: [.cyan, .blue, .teal], startPoint: .top, endPoint: .bottom)
+                                    : LinearGradient(colors: [.secondary, .secondary.opacity(0.5)], startPoint: .top, endPoint: .bottom)
+                            )
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Text("MOD ĐỒ NHÂN VẬT IGNIS")
+                                .font(.system(size: 15, weight: .black))
+                                .foregroundStyle(modManager.isModOutfitEnabled ? Color.cyan : .white)
+
+                            Circle()
+                                .fill(modManager.isModOutfitEnabled ? Color.green : Color.red.opacity(0.8))
+                                .frame(width: 7, height: 7)
+
+                            Text(modManager.isModOutfitEnabled ? "ĐÃ BẬT" : "TẮT")
+                                .font(.caption2.weight(.black))
+                                .foregroundStyle(modManager.isModOutfitEnabled ? Color.green : .secondary)
+                        }
+
+                        Text("Thay đổi ngoại hình & bộ trang phục đặc biệt")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+
+                        Text("File: Mod đồ chỉ sử dụng nhân vật Ignis.3105 (2.62 MB)")
+                            .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(modManager.isModOutfitEnabled ? Color.cyan.opacity(0.9) : .secondary.opacity(0.6))
+                    }
+
+                    Spacer()
+                }
+
+                // Outfit Attribute Badges
+                HStack(spacing: 8) {
+                    attributeBadge(label: "NHÂN VẬT", value: "IGNIS", color: .cyan)
+                    attributeBadge(label: "HIỆU ỨNG", value: "FULL SET", color: .teal)
+                    attributeBadge(label: "TỐC ĐỘ", value: "MƯỢT 100%", color: .green)
+                }
+
+                // Important Note Box
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.yellow)
+
+                        Text("GHI CHÚ QUAN TRỌNG")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .foregroundStyle(Color.yellow)
+                    }
+
+                    Text("Mod đồ CHỈ hoạt động khi bạn chọn và sử dụng nhân vật IGNIS trong game Free Fire!")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Color.white.opacity(0.9))
+                        .lineSpacing(3)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.yellow.opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.yellow.opacity(0.25), lineWidth: 1)
+                        )
+                )
+
+                // Activation Button
+                Button {
+                    modManager.toggleModOutfit(store: store)
+                } label: {
+                    HStack(spacing: 10) {
+                        if modManager.isProcessingModOutfit {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Image(systemName: modManager.isModOutfitEnabled ? "checkmark.circle.fill" : "power")
+                                .font(.system(size: 16, weight: .bold))
+                        }
+
+                        Text(modManager.isModOutfitEnabled ? "ĐANG BẬT MOD ĐỒ IGNIS (BẤM ĐỂ TẮT)" : "KÍCH HOẠT MOD ĐỒ IGNIS")
+                            .font(.system(size: 14, weight: .black, design: .rounded))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(
+                                modManager.isModOutfitEnabled
+                                    ? LinearGradient(colors: [Color.green, Color(red: 0.1, green: 0.6, blue: 0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    : LinearGradient(colors: [Color.cyan, Color.blue], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
+                            .shadow(
+                                color: (modManager.isModOutfitEnabled ? Color.green : Color.cyan).opacity(0.4),
+                                radius: 8,
+                                y: 3
+                            )
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(modManager.isProcessingModOutfit)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(AppTheme.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(
+                                modManager.isModOutfitEnabled ? Color.cyan.opacity(0.5) : AppTheme.borderSubtle,
+                                lineWidth: modManager.isModOutfitEnabled ? 1.5 : 1
+                            )
+                    )
+                    .shadow(
+                        color: modManager.isModOutfitEnabled ? Color.cyan.opacity(0.15) : Color.clear,
                         radius: 10,
                         y: 3
                     )
@@ -783,6 +948,7 @@ struct MainInjectorView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     welcomeFeatureRow(icon: "scope", title: "5 Chế Độ Aim Bot", desc: "Khóa thân, cân tâm, khóa ngực, ma thuật & khóa cổ.")
                     welcomeFeatureRow(icon: "flame.fill", title: "Mod Skin MP40 Mãng Xà", desc: "Tự động đổi từ skin Phong Xà sang MP40 Mãng Xà.")
+                    welcomeFeatureRow(icon: "tshirt.fill", title: "Mod Đồ Nhân Vật Ignis", desc: "Full bộ trang phục đặc biệt cho nhân vật Ignis.")
                     welcomeFeatureRow(icon: "shield.checkered", title: "Bảo Mật Cực Cao", desc: "Bảo vệ đa lớp chống ban, an toàn tuyệt đối.")
                 }
                 .padding(14)
