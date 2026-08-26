@@ -21,6 +21,8 @@ struct ThreeOneOSFiveApp: App {
         AppLanguage(rawValue: languageCode) ?? .vietnamese
     }
 
+    @State private var showSplash = true
+
     private var isAdminApp: Bool {
         Bundle.main.object(forInfoDictionaryKey: "IsAdminApp") as? Bool ?? false ||
         (Bundle.main.bundleIdentifier ?? "").lowercased().contains("admin")

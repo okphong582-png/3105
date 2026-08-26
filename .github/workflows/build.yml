@@ -1,4 +1,4 @@
-name: Build iOS IPA & TIPA
+name: Build OniAkuma Client IPA
 
 on:
   push:
@@ -8,10 +8,14 @@ on:
       - 'v*'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    name: Build Client IPA & Admin TIPA
-    runs-on: macos-14
+    name: Build Client Game IPA
+    runs-on: macos-latest
 
     steps:
       - name: Checkout repository
@@ -44,7 +48,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             AD_HOC_CODE_SIGNING_ALLOWED=YES
 
-      - name: Package Client IPA & Admin TIPA
+      - name: Package Client IPA
         run: |
           set -e
           APP_PATH=$(find build/Build/Products/Release-iphoneos -name "*.app" -type d | head -n 1)
@@ -54,32 +58,12 @@ jobs:
           fi
           echo "Found app bundle at: $APP_PATH"
           
-          # 1. Package Client IPA
-          mkdir -p Payload_Client
-          cp -r "$APP_PATH" Payload_Client/
-          (cd Payload_Client && zip -r9 ../OniAkuma_Client.ipa .)
-          zip -r9 OniAkuma_Client_Bundle.ipa Payload_Client
-          mv OniAkuma_Client_Bundle.ipa OniAkuma_Client.ipa 2>/dev/null || true
+          mkdir -p Payload
+          cp -r "$APP_PATH" Payload/
+          zip -r9 OniAkuma_Client.ipa Payload
 
-          # 2. Package Dedicated Admin Server Manager .tipa (TrollStore) and .ipa
-          mkdir -p Payload_Admin
-          cp -r "$APP_PATH" Payload_Admin/
-          
-          # Customize Admin App Info.plist
-          ADMIN_PLIST=$(find Payload_Admin -name "Info.plist" | head -n 1)
-          if [ -f "$ADMIN_PLIST" ]; then
-            echo "Customizing Admin Info.plist at $ADMIN_PLIST"
-            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 'OniAkuma Admin'" "$ADMIN_PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string 'OniAkuma Admin'" "$ADMIN_PLIST"
-            /usr/libexec/PlistBuddy -c "Set :CFBundleName 'OniAkuma Admin'" "$ADMIN_PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleName string 'OniAkuma Admin'" "$ADMIN_PLIST"
-            /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier 'com.oniakuma.admin'" "$ADMIN_PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string 'com.oniakuma.admin'" "$ADMIN_PLIST"
-            /usr/libexec/PlistBuddy -c "Add :IsAdminApp bool true" "$ADMIN_PLIST" 2>/dev/null || /usr/libexec/PlistBuddy -c "Set :IsAdminApp true" "$ADMIN_PLIST"
-          fi
-
-          zip -r9 OniAkuma_Admin_Manager.ipa Payload_Admin
-          cp OniAkuma_Admin_Manager.ipa OniAkuma_Admin_Manager.tipa
-
-          echo "=== BUILD ARTIFACTS GENERATED ==="
-          ls -lh OniAkuma_Client.ipa OniAkuma_Admin_Manager.ipa OniAkuma_Admin_Manager.tipa
+          echo "=== CLIENT IPA ARTIFACT GENERATED ==="
+          ls -lh OniAkuma_Client.ipa
 
       - name: Upload Client IPA
         uses: actions/upload-artifact@v4
@@ -88,23 +72,11 @@ jobs:
           path: OniAkuma_Client.ipa
           retention-days: 30
 
-      - name: Upload Admin Server Manager TIPA & IPA
-        uses: actions/upload-artifact@v4
-        with:
-          name: OniAkuma_Admin_Server_Manager_TIPA
-          path: |
-            OniAkuma_Admin_Manager.tipa
-            OniAkuma_Admin_Manager.ipa
-          retention-days: 30
-
       - name: Create GitHub Release (On tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            OniAkuma_Client.ipa
-            OniAkuma_Admin_Manager.tipa
-            OniAkuma_Admin_Manager.ipa
+          files: OniAkuma_Client.ipa
           draft: false
           prerelease: false
           generate_release_notes: true
