@@ -14,9 +14,10 @@ struct LicenseInfo: Codable {
     var activatedAt: Int64?
     var expiresAt: Int64?
     var note: String?
+    var tier: String? // "bypass" or "premium"
 
     enum CodingKeys: String, CodingKey {
-        case key, status, duration, durationSeconds, maxDevices, usedDevices, createdAt, activatedAt, expiresAt, note
+        case key, status, duration, durationSeconds, maxDevices, usedDevices, createdAt, activatedAt, expiresAt, note, tier
     }
 
     init(
@@ -29,7 +30,8 @@ struct LicenseInfo: Codable {
         createdAt: Int64 = Int64(Date().timeIntervalSince1970 * 1000),
         activatedAt: Int64? = nil,
         expiresAt: Int64? = nil,
-        note: String? = nil
+        note: String? = nil,
+        tier: String? = nil
     ) {
         self.key = key
         self.status = status
@@ -41,6 +43,7 @@ struct LicenseInfo: Codable {
         self.activatedAt = activatedAt
         self.expiresAt = expiresAt
         self.note = note
+        self.tier = tier
     }
 
     init(from decoder: Decoder) throws {
@@ -101,6 +104,7 @@ struct LicenseInfo: Codable {
         }
 
         self.note = try? container.decode(String.self, forKey: .note)
+        self.tier = try? container.decode(String.self, forKey: .tier)
     }
 
     init(dict: [String: Any], fallbackKey: String) {
@@ -165,6 +169,7 @@ struct LicenseInfo: Codable {
         }
 
         self.note = dict["note"] as? String
+        self.tier = dict["tier"] as? String
     }
 
     var isLifetime: Bool {
@@ -177,6 +182,18 @@ struct LicenseInfo: Codable {
         let now = Int64(Date().timeIntervalSince1970 * 1000)
         return now > exp
     }
+
+    var isBypassTier: Bool {
+        if let t = tier?.lowercased(), t == "bypass" { return true }
+        if let t = tier?.lowercased(), t == "premium" { return false }
+        return key.uppercased().hasPrefix("PASS-") ||
+               (note ?? "").lowercased().contains("vượt link") ||
+               (note ?? "").lowercased().contains("link4m")
+    }
+
+    var isPremiumTier: Bool { !isBypassTier }
+    var canUseMods: Bool { isPremiumTier }
+    var tierBadgeText: String { isPremiumTier ? "👑 PREMIUM VIP" : "⚡ FREE VƯỢT LINK" }
 
     var remainingTimeFormatted: String {
         if isLifetime { return "Vĩnh Viễn" }
@@ -235,6 +252,8 @@ final class LicenseManager: ObservableObject {
     @Published var currentLicense: LicenseInfo? = nil
     @Published var isVerifying: Bool = false
     @Published var lastErrorMessage: String? = nil
+    @Published var isSystemMaintenance: Bool = false
+    @Published var maintenanceMessage: String = "Hệ thống đang tạm ngắt kết nối / bảo trì bởi Quản Trị Viên. Vui lòng quay lại sau!"
 
     private let storageKey = "oni_akuma_active_license_v2"
     private let savedKeyStringKey = "oni_akuma_saved_raw_key"
@@ -246,6 +265,13 @@ final class LicenseManager: ObservableObject {
         let part1 = "https://"
         let part2 = "ewrergdf-default-rtdb"
         let part3 = ".firebaseio.com/keys"
+        return "\(part1)\(part2)\(part3)"
+    }
+
+    private var configEndpoint: String {
+        let part1 = "https://"
+        let part2 = "ewrergdf-default-rtdb"
+        let part3 = ".firebaseio.com/config.json"
         return "\(part1)\(part2)\(part3)"
     }
 
@@ -267,12 +293,39 @@ final class LicenseManager: ObservableObject {
         startHeartbeat()
     }
 
-    // MARK: - Realtime Heartbeat Monitoring (Instant Kickout on Delete/Expire)
+    // MARK: - Check System Maintenance (Kill Switch)
+    @MainActor
+    func checkSystemMaintenance() async -> Bool {
+        guard let url = URL(string: configEndpoint) else { return false }
+        do {
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.timeoutInterval = 6.0
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
+                  let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                return isSystemMaintenance
+            }
+
+            let isMaint = (dict["is_maintenance"] as? Bool) ?? (dict["app_killed"] as? Bool) ?? false
+            if let msg = dict["maintenance_message"] as? String, !msg.isEmpty {
+                self.maintenanceMessage = msg
+            }
+            self.isSystemMaintenance = isMaint
+            return isMaint
+        } catch {
+            return isSystemMaintenance
+        }
+    }
+
+    // MARK: - Realtime Heartbeat Monitoring (Instant Kickout on Delete/Expire/Maintenance)
     func startHeartbeat() {
         stopHeartbeat()
         DispatchQueue.main.async { [weak self] in
             self?.heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
                 Task { @MainActor [weak self] in
+                    _ = await self?.checkSystemMaintenance()
                     _ = await self?.recheckLicense()
                 }
             }
@@ -309,6 +362,14 @@ final class LicenseManager: ObservableObject {
         let cleaned = rawKey.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         guard !cleaned.isEmpty else {
             let msg = "Vui lòng nhập mã bản quyền (Key)!"
+            lastErrorMessage = msg
+            return ActivationResult(success: false, message: msg, remaining: "", devices: "")
+        }
+
+        // 1. Check Kill Switch / Maintenance
+        let isMaint = await checkSystemMaintenance()
+        if isMaint {
+            let msg = maintenanceMessage
             lastErrorMessage = msg
             return ActivationResult(success: false, message: msg, remaining: "", devices: "")
         }
@@ -415,7 +476,8 @@ final class LicenseManager: ObservableObject {
 
             let remain = license.remainingTimeFormatted
             let devs = license.deviceUsageFormatted
-            return ActivationResult(success: true, message: "Kích hoạt thành công!", remaining: remain, devices: devs)
+            let tierName = license.tierBadgeText
+            return ActivationResult(success: true, message: "Kích hoạt \(tierName) thành công!", remaining: remain, devices: devs)
 
         } catch {
             let msg = "Lỗi xác thực: \(error.localizedDescription)"
@@ -428,6 +490,12 @@ final class LicenseManager: ObservableObject {
     @MainActor
     @discardableResult
     func recheckLicense() async -> Bool {
+        // Check maintenance first
+        let isMaint = await checkSystemMaintenance()
+        if isMaint {
+            return false
+        }
+
         guard let savedRawKey = UserDefaults.standard.string(forKey: savedKeyStringKey),
               !savedRawKey.isEmpty else {
             logout(reason: "Chưa có Key bản quyền!")
@@ -454,7 +522,6 @@ final class LicenseManager: ObservableObject {
 
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-                // If offline or network error, check local expiry
                 if let cached = currentLicense, cached.isExpired {
                     logout(reason: "Key bản quyền đã hết hạn sử dụng!")
                     return false
@@ -464,7 +531,6 @@ final class LicenseManager: ObservableObject {
 
             let textContent = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
             if data.isEmpty || textContent == "null" || textContent == "{}" {
-                // Key removed on server by Admin
                 logout(reason: "Key không tồn tại hoặc đã bị xoá bởi Admin!")
                 return false
             }
@@ -500,7 +566,6 @@ final class LicenseManager: ObservableObject {
             return true
 
         } catch {
-            // If offline, enforce local expiration strictly
             if let cached = currentLicense, cached.isExpired {
                 logout(reason: "Key bản quyền đã hết hạn sử dụng!")
                 return false
@@ -522,11 +587,10 @@ final class LicenseManager: ObservableObject {
         }
     }
 
-    // MARK: - Helpers
     private func saveLicenseLocally(_ license: LicenseInfo, rawKey: String) {
+        UserDefaults.standard.set(rawKey, forKey: savedKeyStringKey)
         if let encoded = try? JSONEncoder().encode(license) {
             UserDefaults.standard.set(encoded, forKey: storageKey)
-            UserDefaults.standard.set(rawKey, forKey: savedKeyStringKey)
         }
     }
 
@@ -537,19 +601,22 @@ final class LicenseManager: ObservableObject {
 
     private func patchLicenseToFirebase(key: String, license: LicenseInfo) async throws {
         guard let url = URL(string: "\(databaseEndpoint)/\(key).json") else { return }
-        var request = URLRequest(url: url)
-        request.httpMethod = "PATCH"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 10.0
+        var req = URLRequest(url: url)
+        req.httpMethod = "PATCH"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let payload: [String: Any?] = [
+        let payload: [String: Any] = [
             "status": license.status,
-            "activatedAt": license.activatedAt,
-            "expiresAt": license.expiresAt,
-            "usedDevices": license.usedDevices
+            "activatedAt": license.activatedAt ?? NSNull(),
+            "expiresAt": license.expiresAt ?? NSNull(),
+            "usedDevices": license.usedDevices,
+            "tier": license.tier ?? (license.isBypassTier ? "bypass" : "premium")
         ]
-        request.httpBody = try JSONSerialization.data(withJSONObject: payload.compactMapValues { $0 })
 
-        _ = try await URLSession.shared.data(for: request)
+        req.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        let (_, response) = try await URLSession.shared.data(for: req)
+        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+            throw NSError(domain: "LicenseManager", code: 500, userInfo: [NSLocalizedDescriptionKey: "Cập nhật dữ liệu lên máy chủ thất bại"])
+        }
     }
 }

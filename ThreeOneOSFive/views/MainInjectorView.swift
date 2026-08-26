@@ -192,19 +192,29 @@ struct MainInjectorView: View {
                         .overlay(Capsule().stroke(activeTheme.primaryColor.opacity(0.35), lineWidth: 1))
                 )
 
-                // License duration badge
+                // License duration & Tier badge
                 if let lic = licenseManager.currentLicense {
-                    HStack(spacing: 4) {
-                        Image(systemName: "clock.fill")
-                            .font(.system(size: 9))
-                            .foregroundStyle(Color.green)
-                        Text("Hạn Key: \(lic.remainingTimeFormatted)")
-                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Color.green)
+                    HStack(spacing: 6) {
+                        // Tier badge
+                        Text(lic.tierBadgeText)
+                            .font(.system(size: 9, weight: .black, design: .monospaced))
+                            .foregroundStyle(lic.isPremiumTier ? Color.yellow : Color.orange)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background((lic.isPremiumTier ? Color.yellow : Color.orange).opacity(0.15).cornerRadius(4))
+
+                        HStack(spacing: 3) {
+                            Image(systemName: "clock.fill")
+                                .font(.system(size: 8))
+                                .foregroundStyle(Color.green)
+                            Text(lic.remainingTimeFormatted)
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundStyle(Color.green)
+                        }
                     }
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 2)
-                    .background(Color.green.opacity(0.12).cornerRadius(6))
+                    .padding(.vertical, 3)
+                    .background(Color.white.opacity(0.06).cornerRadius(6))
                     .padding(.top, 2)
                 }
             }
@@ -302,10 +312,11 @@ struct MainInjectorView: View {
 
     // MARK: - Tab Switcher Section (3 Tabs)
     private var tabSwitcherSection: some View {
+        let canUseMods = licenseManager.currentLicense?.canUseMods ?? false
         HStack(spacing: 6) {
-            tabButton(index: 0, title: "AIM BOT", icon: "scope")
-            tabButton(index: 1, title: "MOD SKIN", icon: "flame.fill")
-            tabButton(index: 2, title: "MOD ĐỒ", icon: "tshirt.fill")
+            tabButton(index: 0, title: "AIM BOT", icon: "scope", isLocked: false)
+            tabButton(index: 1, title: "MOD SKIN", icon: "flame.fill", isLocked: !canUseMods)
+            tabButton(index: 2, title: "MOD ĐỒ", icon: "tshirt.fill", isLocked: !canUseMods)
         }
         .padding(4)
         .background(
@@ -319,7 +330,7 @@ struct MainInjectorView: View {
     }
 
     @ViewBuilder
-    private func tabButton(index: Int, title: String, icon: String) -> some View {
+    private func tabButton(index: Int, title: String, icon: String, isLocked: Bool) -> some View {
         let isSelected = selectedTab == index
         Button {
             withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
@@ -328,20 +339,21 @@ struct MainInjectorView: View {
             let generator = UIImpactFeedbackGenerator(style: .light)
             generator.impactOccurred()
         } label: {
-            HStack(spacing: 5) {
-                Image(systemName: icon)
-                    .font(.system(size: 12, weight: .bold))
+            HStack(spacing: 4) {
+                Image(systemName: isLocked ? "lock.fill" : icon)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(isSelected ? .black : (isLocked ? Color.orange : .secondary))
 
                 Text(title)
-                    .font(.system(size: 11, weight: .black, design: .rounded))
+                    .font(.system(size: 10, weight: .black, design: .rounded))
             }
             .foregroundStyle(isSelected ? .black : .secondary)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(isSelected ? activeTheme.primaryColor : Color.clear)
-                    .shadow(color: isSelected ? activeTheme.primaryColor.opacity(0.4) : .clear, radius: 8, y: 2)
+                    .fill(isSelected ? (isLocked ? Color.orange : activeTheme.primaryColor) : Color.clear)
+                    .shadow(color: isSelected ? (isLocked ? Color.orange.opacity(0.4) : activeTheme.primaryColor.opacity(0.4)) : .clear, radius: 8, y: 2)
             )
         }
         .buttonStyle(.plain)
@@ -491,41 +503,64 @@ struct MainInjectorView: View {
                         )
                 )
 
-                // Activation Button
-                Button {
-                    modManager.toggleModSkin(store: store)
-                } label: {
-                    HStack(spacing: 10) {
-                        if modManager.isProcessingModSkin {
-                            ProgressView()
-                                .tint(.white)
-                        } else {
-                            Image(systemName: modManager.isModSkinEnabled ? "checkmark.circle.fill" : "power")
-                                .font(.system(size: 16, weight: .bold))
+                // Activation Button (or Premium Lock)
+                if !(licenseManager.currentLicense?.canUseMods ?? false) {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "lock.fill")
+                                .foregroundStyle(Color.orange)
+                            Text("TÍNH NĂNG DÀNH CHO KEY PREMIUM VIP")
+                                .font(.system(size: 11, weight: .black, design: .monospaced))
+                                .foregroundStyle(Color.orange)
                         }
-
-                        Text(modManager.isModSkinEnabled ? "ĐANG BẬT MOD SKIN (BẤM ĐỂ TẮT)" : "KÍCH HOẠT MOD SKIN MP40")
-                            .font(.system(size: 14, weight: .black, design: .rounded))
+                        Text("Bạn đang dùng Key Vượt Link (chỉ mở khóa Aim Bot). Vui lòng nâng cấp Key Premium VIP để sử dụng Mod Skin MP40!")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
                     }
-                    .foregroundStyle(.white)
+                    .padding(14)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(
-                                modManager.isModSkinEnabled
-                                    ? LinearGradient(colors: [Color.green, Color(red: 0.1, green: 0.6, blue: 0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                    : LinearGradient(colors: [Color.yellow, Color.orange], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
-                            .shadow(
-                                color: (modManager.isModSkinEnabled ? Color.green : Color.orange).opacity(0.4),
-                                radius: 8,
-                                y: 3
-                            )
+                    .background(Color.orange.opacity(0.1).cornerRadius(12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.orange.opacity(0.35), lineWidth: 1)
                     )
+                } else {
+                    Button {
+                        modManager.toggleModSkin(store: store)
+                    } label: {
+                        HStack(spacing: 10) {
+                            if modManager.isProcessingModSkin {
+                                ProgressView()
+                                    .tint(.white)
+                            } else {
+                                Image(systemName: modManager.isModSkinEnabled ? "checkmark.circle.fill" : "power")
+                                    .font(.system(size: 16, weight: .bold))
+                            }
+
+                            Text(modManager.isModSkinEnabled ? "ĐANG BẬT MOD SKIN (BẤM ĐỂ TẮT)" : "KÍCH HOẠT MOD SKIN MP40")
+                                .font(.system(size: 14, weight: .black, design: .rounded))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(
+                                    modManager.isModSkinEnabled
+                                        ? LinearGradient(colors: [Color.green, Color(red: 0.1, green: 0.6, blue: 0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                        : LinearGradient(colors: [Color.yellow, Color.orange], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
+                                .shadow(
+                                    color: (modManager.isModSkinEnabled ? Color.green : Color.orange).opacity(0.4),
+                                    radius: 8,
+                                    y: 3
+                                )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(modManager.isProcessingModSkin)
                 }
-                .buttonStyle(.plain)
-                .disabled(modManager.isProcessingModSkin)
             }
             .padding(16)
             .background(
@@ -653,41 +688,64 @@ struct MainInjectorView: View {
                         )
                 )
 
-                // Activation Button
-                Button {
-                    modManager.toggleModOutfit(store: store)
-                } label: {
-                    HStack(spacing: 10) {
-                        if modManager.isProcessingModOutfit {
-                            ProgressView()
-                                .tint(.white)
-                        } else {
-                            Image(systemName: modManager.isModOutfitEnabled ? "checkmark.circle.fill" : "power")
-                                .font(.system(size: 16, weight: .bold))
+                // Activation Button (or Premium Lock)
+                if !(licenseManager.currentLicense?.canUseMods ?? false) {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "lock.fill")
+                                .foregroundStyle(Color.orange)
+                            Text("TÍNH NĂNG DÀNH CHO KEY PREMIUM VIP")
+                                .font(.system(size: 11, weight: .black, design: .monospaced))
+                                .foregroundStyle(Color.orange)
                         }
-
-                        Text(modManager.isModOutfitEnabled ? "ĐANG BẬT MOD ĐỒ IGNIS (BẤM ĐỂ TẮT)" : "KÍCH HOẠT MOD ĐỒ IGNIS")
-                            .font(.system(size: 14, weight: .black, design: .rounded))
+                        Text("Bạn đang dùng Key Vượt Link (chỉ mở khóa Aim Bot). Vui lòng nâng cấp Key Premium VIP để sử dụng Mod Đồ Ignis!")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
                     }
-                    .foregroundStyle(.white)
+                    .padding(14)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(
-                                modManager.isModOutfitEnabled
-                                    ? LinearGradient(colors: [Color.green, Color(red: 0.1, green: 0.6, blue: 0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                    : LinearGradient(colors: [Color.cyan, Color.blue], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
-                            .shadow(
-                                color: (modManager.isModOutfitEnabled ? Color.green : Color.cyan).opacity(0.4),
-                                radius: 8,
-                                y: 3
-                            )
+                    .background(Color.orange.opacity(0.1).cornerRadius(12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.orange.opacity(0.35), lineWidth: 1)
                     )
+                } else {
+                    Button {
+                        modManager.toggleModOutfit(store: store)
+                    } label: {
+                        HStack(spacing: 10) {
+                            if modManager.isProcessingModOutfit {
+                                ProgressView()
+                                    .tint(.white)
+                            } else {
+                                Image(systemName: modManager.isModOutfitEnabled ? "checkmark.circle.fill" : "power")
+                                    .font(.system(size: 16, weight: .bold))
+                            }
+
+                            Text(modManager.isModOutfitEnabled ? "ĐANG BẬT MOD ĐỒ IGNIS (BẤM ĐỂ TẮT)" : "KÍCH HOẠT MOD ĐỒ IGNIS")
+                                .font(.system(size: 14, weight: .black, design: .rounded))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(
+                                    modManager.isModOutfitEnabled
+                                        ? LinearGradient(colors: [Color.green, Color(red: 0.1, green: 0.6, blue: 0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                        : LinearGradient(colors: [Color.cyan, Color.blue], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
+                                .shadow(
+                                    color: (modManager.isModOutfitEnabled ? Color.green : Color.cyan).opacity(0.4),
+                                    radius: 8,
+                                    y: 3
+                                )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(modManager.isProcessingModOutfit)
                 }
-                .buttonStyle(.plain)
-                .disabled(modManager.isProcessingModOutfit)
             }
             .padding(16)
             .background(

@@ -67,7 +67,7 @@
 
         /* Header */
         header {
-            background: rgba(15, 19, 26, 0.85);
+            background: rgba(15, 19, 26, 0.88);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
@@ -116,33 +116,43 @@
             font-weight: 700;
         }
 
-        .db-status {
+        .header-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            background: rgba(0, 245, 160, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(0, 245, 160, 0.3);
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
+            gap: 10px;
         }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--success);
-            box-shadow: 0 0 8px var(--success);
-            animation: pulse 2s infinite;
+        .kill-switch-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            transition: all 0.25s ease;
+        }
+
+        .kill-switch-btn.normal {
+            background: rgba(0, 245, 160, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(0, 245, 160, 0.4);
+        }
+
+        .kill-switch-btn.killed {
+            background: rgba(255, 56, 96, 0.25);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            box-shadow: 0 0 14px var(--danger-glow);
+            animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
-            0% { opacity: 0.4; }
+            0% { opacity: 0.7; }
             50% { opacity: 1; }
-            100% { opacity: 0.4; }
+            100% { opacity: 0.7; }
         }
 
         /* Container */
@@ -250,6 +260,12 @@
             background: linear-gradient(135deg, var(--orange), var(--gold));
             color: #000;
             box-shadow: 0 0 12px var(--orange-glow);
+        }
+
+        .tab-btn.active.tab-prem {
+            background: linear-gradient(135deg, var(--gold), #ff9100);
+            color: #000;
+            box-shadow: 0 0 12px var(--gold-glow);
         }
 
         /* Tab Panels */
@@ -375,9 +391,9 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--accent), #00a8ff);
+            background: linear-gradient(135deg, var(--gold), #ff9100);
             color: #000;
-            box-shadow: 0 4px 16px var(--accent-glow);
+            box-shadow: 0 4px 16px var(--gold-glow);
         }
 
         .btn-primary:active {
@@ -437,10 +453,10 @@
         }
 
         .preset-btn.selected {
-            border-color: var(--accent);
-            background: rgba(0, 240, 255, 0.15);
-            color: var(--accent);
-            box-shadow: 0 0 8px var(--accent-glow);
+            border-color: var(--gold);
+            background: rgba(255, 193, 7, 0.15);
+            color: var(--gold);
+            box-shadow: 0 0 8px var(--gold-glow);
         }
 
         .preset-btn.selected.preset-orange {
@@ -450,7 +466,7 @@
             box-shadow: 0 0 8px var(--orange-glow);
         }
 
-        /* Tables & Lists */
+        /* Search & Lists */
         .search-bar {
             display: flex;
             gap: 8px;
@@ -487,16 +503,16 @@
             transition: all 0.2s;
         }
 
-        .key-item:hover {
-            border-color: rgba(255, 255, 255, 0.18);
-        }
-
         .key-item.banned {
             border-color: rgba(255, 56, 96, 0.35);
         }
 
         .key-item.bypass {
             border-color: rgba(255, 159, 28, 0.35);
+        }
+
+        .key-item.premium {
+            border-color: rgba(255, 193, 7, 0.35);
         }
 
         .key-top {
@@ -515,10 +531,6 @@
             gap: 6px;
         }
 
-        .key-code:hover {
-            color: var(--accent);
-        }
-
         .badge {
             font-size: 10px;
             font-weight: 900;
@@ -528,9 +540,16 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .badge-active {
-            background: rgba(0, 245, 160, 0.15);
-            color: var(--success);
+        .badge-premium {
+            background: rgba(255, 193, 7, 0.15);
+            color: var(--gold);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .badge-bypass {
+            background: rgba(255, 159, 28, 0.15);
+            color: var(--orange);
+            border: 1px solid rgba(255, 159, 28, 0.3);
         }
 
         .badge-banned {
@@ -541,11 +560,6 @@
         .badge-expired {
             background: rgba(148, 163, 184, 0.15);
             color: var(--text-muted);
-        }
-
-        .badge-bypass {
-            background: rgba(255, 159, 28, 0.15);
-            color: var(--orange);
         }
 
         .key-details {
@@ -577,8 +591,9 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             display: none;
             align-items: center;
             justify-content: center;
@@ -588,6 +603,7 @@
 
         .modal-overlay.active {
             display: flex;
+            animation: fadeIn 0.2s ease;
         }
 
         .modal {
@@ -595,11 +611,11 @@
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             width: 100%;
-            max-width: 480px;
-            padding: 20px;
+            max-width: 440px;
+            padding: 22px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 16px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
         }
 
@@ -619,7 +635,7 @@
         }
 
         .toast {
-            background: rgba(15, 23, 42, 0.95);
+            background: rgba(15, 23, 42, 0.96);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             padding: 12px 16px;
@@ -636,6 +652,7 @@
         .toast.success { border-color: var(--success); }
         .toast.error { border-color: var(--danger); }
         .toast.orange { border-color: var(--orange); }
+        .toast.gold { border-color: var(--gold); }
 
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
@@ -649,17 +666,19 @@
     <header>
         <div class="brand">
             <div class="brand-logo">
-                <i class="fa-solid fa-server"></i>
+                <i class="fa-solid fa-crown" style="color: var(--gold);"></i>
             </div>
             <div class="brand-info">
-                <h1>OniAkuma Key Server</h1>
-                <p>By HoangHaMod & TrongKien</p>
+                <h1>OniAkuma Server Portal</h1>
+                <p>HoangHaMod & TrongKien</p>
             </div>
         </div>
 
-        <div class="db-status" id="dbStatus">
-            <div class="status-dot"></div>
-            <span>Firebase Online</span>
+        <div class="header-actions">
+            <button class="kill-switch-btn normal" id="killSwitchBtn" onclick="toggleKillSwitch()">
+                <i class="fa-solid fa-power-off"></i>
+                <span id="killSwitchText">App: Hoạt Động</span>
+            </button>
         </div>
     </header>
 
@@ -677,10 +696,10 @@
 
             <div class="stat-card">
                 <div>
-                    <div class="stat-label">Hoạt Động</div>
-                    <div class="stat-val" id="stat-active" style="color: var(--success);">0</div>
+                    <div class="stat-label">Premium VIP</div>
+                    <div class="stat-val" id="stat-premium" style="color: var(--gold);">0</div>
                 </div>
-                <i class="fa-solid fa-circle-check stat-icon" style="color: var(--success);"></i>
+                <i class="fa-solid fa-crown stat-icon" style="color: var(--gold);"></i>
             </div>
 
             <div class="stat-card">
@@ -688,12 +707,12 @@
                     <div class="stat-label">Vượt Link</div>
                     <div class="stat-val" id="stat-bypass" style="color: var(--orange);">0</div>
                 </div>
-                <i class="fa-solid fa-link stat-icon" style="color: var(--orange);"></i>
+                <i class="fa-solid fa-bolt stat-icon" style="color: var(--orange);"></i>
             </div>
 
             <div class="stat-card">
                 <div>
-                    <div class="stat-label">Bị Khóa</div>
+                    <div class="stat-label">Bị Khóa / Hết Hạn</div>
                     <div class="stat-val" id="stat-banned" style="color: var(--danger);">0</div>
                 </div>
                 <i class="fa-solid fa-ban stat-icon" style="color: var(--danger);"></i>
@@ -705,11 +724,11 @@
             <button class="tab-btn active" onclick="switchTab('tab-list')">
                 <i class="fa-solid fa-list-check"></i> Danh Sách
             </button>
-            <button class="tab-btn" onclick="switchTab('tab-create-std')">
-                <i class="fa-solid fa-plus-circle"></i> Tạo Thường
+            <button class="tab-btn tab-prem" onclick="switchTab('tab-create-prem')">
+                <i class="fa-solid fa-crown"></i> Tạo Key VIP
             </button>
             <button class="tab-btn tab-bypass" onclick="switchTab('tab-create-bypass')">
-                <i class="fa-solid fa-bolt"></i> Vượt Link
+                <i class="fa-solid fa-bolt"></i> Vượt Link (2 Ô)
             </button>
             <button class="tab-btn" onclick="switchTab('tab-config')">
                 <i class="fa-solid fa-gear"></i> Cấu Hình
@@ -735,8 +754,9 @@
                     <input type="text" id="searchInput" placeholder="Tìm theo mã key, ghi chú, HWID..." oninput="filterKeys()">
                     <select id="statusFilter" class="filter-select" onchange="filterKeys()">
                         <option value="all">Tất Cả Key</option>
-                        <option value="active">Đang Dùng</option>
-                        <option value="bypass">Vượt Link</option>
+                        <option value="premium">Key Premium VIP</option>
+                        <option value="bypass">Key Vượt Link</option>
+                        <option value="active">Đang Hoạt Động</option>
                         <option value="expired">Hết Hạn</option>
                         <option value="banned">Bị Khóa</option>
                     </select>
@@ -752,25 +772,25 @@
             </div>
         </div>
 
-        <!-- TAB 2: TẠO KEY THƯỜNG / VIP -->
-        <div id="tab-create-std" class="tab-panel">
-            <div class="card">
+        <!-- TAB 2: TẠO KEY PREMIUM (VIP) - FULL MOD & AIM -->
+        <div id="tab-create-prem" class="tab-panel">
+            <div class="card" style="border-color: rgba(255, 193, 7, 0.4);">
                 <div class="card-header">
-                    <div class="card-title">
-                        <i class="fa-solid fa-plus-circle"></i>
-                        <span>Tạo Key Thường / VIP</span>
+                    <div class="card-title" style="color: var(--gold);">
+                        <i class="fa-solid fa-crown" style="color: var(--gold);"></i>
+                        <span>TẠO KEY PREMIUM VIP (ĐẦY ĐỦ MOD SKIN, MOD ĐỒ & AIM)</span>
                     </div>
                 </div>
 
-                <form onsubmit="handleCreateStdKey(event)" style="display: flex; flex-direction: column; gap: 14px;">
+                <form onsubmit="handleCreatePremKey(event)" style="display: flex; flex-direction: column; gap: 14px;">
                     <div class="form-group">
                         <label>
                             <span>Mã Key (Để trống để tự sinh ngẫu nhiên)</span>
-                            <span class="tag">KEY VALUE</span>
+                            <span class="tag" style="background: rgba(255, 193, 7, 0.15); color: var(--gold);">PREMIUM VIP KEY</span>
                         </label>
                         <div class="input-group">
-                            <input type="text" id="stdKeyInput" class="mono" placeholder="VD: ONIAKUMA-VIP-2026">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="generateStdKey()">
+                            <input type="text" id="premKeyInput" class="mono" placeholder="VD: ONIAKUMA-VIP-2026">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="generatePremKey()">
                                 <i class="fa-solid fa-dice"></i> Sinh Mã
                             </button>
                         </div>
@@ -780,15 +800,15 @@
                     <div class="form-group">
                         <label>Chọn Thời Hạn Nhanh</label>
                         <div class="preset-grid">
-                            <div class="preset-btn selected" onclick="selectStdPreset(3600, '1 Giờ', this)">1 Giờ</div>
-                            <div class="preset-btn" onclick="selectStdPreset(7200, '2 Giờ', this)">2 Giờ</div>
-                            <div class="preset-btn" onclick="selectStdPreset(21600, '6 Giờ', this)">6 Giờ</div>
-                            <div class="preset-btn" onclick="selectStdPreset(43200, '12 Giờ', this)">12 Giờ</div>
-                            <div class="preset-btn" onclick="selectStdPreset(86400, '1 Ngày', this)">1 Ngày</div>
-                            <div class="preset-btn" onclick="selectStdPreset(259200, '3 Ngày', this)">3 Ngày</div>
-                            <div class="preset-btn" onclick="selectStdPreset(604800, '7 Ngày', this)">7 Ngày</div>
-                            <div class="preset-btn" onclick="selectStdPreset(2592000, '30 Ngày', this)">30 Ngày</div>
-                            <div class="preset-btn" onclick="selectStdPreset(-1, 'Vĩnh Viễn', this)">Vĩnh Viễn</div>
+                            <div class="preset-btn selected" onclick="selectPremPreset(3600, '1 Giờ', this)">1 Giờ</div>
+                            <div class="preset-btn" onclick="selectPremPreset(7200, '2 Giờ', this)">2 Giờ</div>
+                            <div class="preset-btn" onclick="selectPremPreset(21600, '6 Giờ', this)">6 Giờ</div>
+                            <div class="preset-btn" onclick="selectPremPreset(43200, '12 Giờ', this)">12 Giờ</div>
+                            <div class="preset-btn" onclick="selectPremPreset(86400, '1 Ngày', this)">1 Ngày</div>
+                            <div class="preset-btn" onclick="selectPremPreset(259200, '3 Ngày', this)">3 Ngày</div>
+                            <div class="preset-btn" onclick="selectPremPreset(604800, '7 Ngày', this)">7 Ngày</div>
+                            <div class="preset-btn" onclick="selectPremPreset(2592000, '30 Ngày', this)">30 Ngày</div>
+                            <div class="preset-btn" onclick="selectPremPreset(-1, 'Vĩnh Viễn', this)">Vĩnh Viễn</div>
                         </div>
                     </div>
 
@@ -796,35 +816,35 @@
                     <div class="form-group">
                         <label>Hoặc Nhập Số Giờ Tùy Chỉnh</label>
                         <div class="input-group">
-                            <input type="number" id="stdCustomHours" placeholder="VD: 5, 8, 48, 720 giờ..." oninput="handleStdCustomHours(this.value)">
+                            <input type="number" id="premCustomHours" placeholder="VD: 5, 8, 48, 720 giờ..." oninput="handlePremCustomHours(this.value)">
                             <span style="display: flex; align-items: center; padding: 0 10px; color: var(--text-muted); font-size: 13px; font-weight: 700;">Giờ</span>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label>Số Thiết Bị Tối Đa (Max Devices)</label>
-                        <input type="number" id="stdMaxDevices" min="1" max="100" value="1" required>
+                        <input type="number" id="premMaxDevices" min="1" max="100" value="1" required>
                     </div>
 
                     <div class="form-group">
                         <label>Ghi Chú Khách Hàng</label>
-                        <input type="text" id="stdNote" placeholder="VD: Khách VIP Facebook, Zalo...">
+                        <input type="text" id="premNote" placeholder="VD: Khách VIP Facebook, Telegram...">
                     </div>
 
                     <button type="submit" class="btn btn-primary" style="margin-top: 8px;">
-                        <i class="fa-solid fa-key"></i> Tạo & Lưu Key Lên Server
+                        <i class="fa-solid fa-crown"></i> Tạo & Lưu Key Premium VIP (Full Tính Năng)
                     </button>
                 </form>
             </div>
         </div>
 
-        <!-- TAB 3: TẠO KEY CHO NGƯỜI VƯỢT LINK (LINK4M) -->
+        <!-- TAB 3: TẠO KEY CHO NGƯỜI VƯỢT LINK (LINK4M - CHUẨN 2 Ô) -->
         <div id="tab-create-bypass" class="tab-panel">
             <div class="card" style="border-color: rgba(255, 159, 28, 0.4);">
                 <div class="card-header">
                     <div class="card-title" style="color: var(--orange);">
                         <i class="fa-solid fa-bolt" style="color: var(--orange);"></i>
-                        <span>Tạo Key Cho Người Vượt Link (Link4m)</span>
+                        <span>Tạo Key Cho Người Vượt Link (Chỉ Aim Bot)</span>
                     </div>
                 </div>
 
@@ -832,38 +852,24 @@
                     <!-- Ô 1: KEY THẬT -->
                     <div class="form-group">
                         <label>
-                            <span style="color: var(--accent); font-weight: 800;">Ô 1: KEY THẬT (Lưu Database Server)</span>
-                            <span class="tag" style="background: rgba(0, 240, 255, 0.2); color: var(--accent);">DATABASE KEY</span>
+                            <span style="color: var(--accent); font-weight: 800;">Ô 1: MÃ KEY THẬT (Lưu Database Server)</span>
+                            <span class="tag" style="background: rgba(0, 240, 255, 0.2); color: var(--accent);">REAL KEY</span>
                         </label>
                         <div class="input-group">
-                            <input type="text" id="bypassRealKey" class="mono" placeholder="PASS-XXXX-YYYY" required oninput="syncBypassDestination(this.value)">
+                            <input type="text" id="bypassRealKey" class="mono" placeholder="PASS-XXXX-YYYY" required>
                             <button type="button" class="btn btn-secondary btn-sm" onclick="generateBypassKey()">
                                 <i class="fa-solid fa-dice"></i> Đổi Mã
                             </button>
                         </div>
                     </div>
 
-                    <!-- Ô 2: LINK VƯỢT LINK4M -->
+                    <!-- Ô 2: LINK RÚT GỌN LINK4M -->
                     <div class="form-group">
                         <label>
-                            <span style="color: var(--orange); font-weight: 800;">Ô 2: LINK VƯỢT LINK4M (Để user nhấn vào)</span>
-                            <span class="tag" style="background: rgba(255, 159, 28, 0.2); color: var(--orange);">SHORT LINK</span>
+                            <span style="color: var(--orange); font-weight: 800;">Ô 2: LINK RÚT GỌN / LINK VƯỢT (Link4m)</span>
+                            <span class="tag" style="background: rgba(255, 159, 28, 0.2); color: var(--orange);">LINK4M SHORT URL</span>
                         </label>
                         <input type="text" id="bypassShortLink" placeholder="VD: https://link4m.co/abc123xyz" value="https://link4m.co/">
-                    </div>
-
-                    <!-- Ô 3: LINK ĐÍCH / KEY ĐỂ DÁN -->
-                    <div class="form-group">
-                        <label>
-                            <span style="color: var(--success); font-weight: 800;">Ô 3: LINK ĐÍCH / KEY ĐỂ DÁN (Cung cấp sau khi vượt)</span>
-                            <span class="tag" style="background: rgba(0, 245, 160, 0.2); color: var(--success);">KEY RESULT</span>
-                        </label>
-                        <div class="input-group">
-                            <input type="text" id="bypassDestination" class="mono" placeholder="Nội dung key/link dán cho user">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="copyBypassDest()">
-                                <i class="fa-solid fa-copy"></i>
-                            </button>
-                        </div>
                     </div>
 
                     <!-- Thời Hạn Sống Key Vượt Link -->
@@ -895,19 +901,36 @@
                     </label>
 
                     <button type="submit" class="btn btn-orange" style="margin-top: 8px;">
-                        <i class="fa-solid fa-bolt"></i> Tạo & Đồng Bộ Key Vượt Link
+                        <i class="fa-solid fa-bolt"></i> Tạo & Lưu Key Vượt Link
                     </button>
                 </form>
             </div>
         </div>
 
-        <!-- TAB 4: CẤU HÌNH SERVER -->
+        <!-- TAB 4: CẤU HÌNH SERVER & KILL SWITCH -->
         <div id="tab-config" class="tab-panel">
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
                         <i class="fa-solid fa-gear"></i>
-                        <span>Cấu Hình Hệ Thống & Link Vượt</span>
+                        <span>Cấu Hình Hệ Thống & Ngắt Kết Nối App</span>
+                    </div>
+                </div>
+
+                <!-- Kill Switch Box -->
+                <div style="background: rgba(255, 56, 96, 0.08); border: 1.5px solid rgba(255, 56, 96, 0.35); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 900; font-size: 14px; color: var(--danger); display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-shield-slash"></i> NGẮT KẾT NỐI TOÀN BỘ APP (KILL SWITCH)
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                                Khi bật, toàn bộ người dùng app client sẽ bị chặn lại ngay lập tức và không thể sử dụng mod.
+                            </div>
+                        </div>
+                        <button class="btn btn-danger btn-sm" id="killSwitchActionBtn" onclick="toggleKillSwitch()">
+                            Ngắt App Ngay
+                        </button>
                     </div>
                 </div>
 
@@ -918,8 +941,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Thông Báo Toàn Hệ Thống (Hiển thị trên App)</label>
-                        <input type="text" id="configAnnounceInput" placeholder="Chào mừng bạn đến với OniAkuma!">
+                        <label>Thông Báo Khi Ngắt Kết Nối / Bảo Trì App</label>
+                        <input type="text" id="configMaintenanceMsgInput" placeholder="Hệ thống đang tạm bảo trì. Vui lòng quay lại sau!">
                     </div>
 
                     <button type="submit" class="btn btn-primary">
@@ -928,9 +951,8 @@
                 </form>
 
                 <div style="border-top: 1px solid var(--border); padding-top: 14px; font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px;">
-                    <p><b>Firebase Database:</b> https://ewrergdf-default-rtdb.firebaseio.com</p>
-                    <p><b>Bản Quyền:</b> OniAkuma v1.1.1 (Build 7)</p>
-                    <p><b>Tác Giả:</b> HoangHaMod & TrongKien</p>
+                    <p><b>Database:</b> https://ewrergdf-default-rtdb.firebaseio.com</p>
+                    <p><b>Phân Loại Quyền:</b> Key VIP (Full Mod & Aim) | Key Vượt Link (Chỉ Aim)</p>
                 </div>
             </div>
         </div>
@@ -948,8 +970,29 @@
             </div>
             <div id="hwidModalContent" style="display: flex; flex-direction: column; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px;"></div>
             <button class="btn btn-danger btn-sm" id="modalResetHWIDBtn">
-                <i class="fa-solid fa-trash-can"></i> Reset Thiết Bị Này
+                <i class="fa-solid fa-trash-can"></i> Reset Thiết Bị Cho Key Này
             </button>
+        </div>
+    </div>
+
+    <!-- Custom Delete Confirmation Modal (Fixes WKWebView confirm bug) -->
+    <div class="modal-overlay" id="deleteConfirmModal">
+        <div class="modal" style="border-color: rgba(255, 56, 96, 0.4);">
+            <div class="card-header">
+                <div class="card-title" style="color: var(--danger);">
+                    <i class="fa-solid fa-triangle-exclamation" style="color: var(--danger);"></i>
+                    <span>Xác Nhận Xóa Key</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="closeDeleteConfirmModal()">✕</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text); line-height: 1.5;">
+                Bạn có chắc chắn muốn xóa vĩnh viễn key <b id="deleteTargetKeyName" style="color: var(--accent); font-family: 'JetBrains Mono', monospace;"></b> khỏi hệ thống Firebase không?
+            </p>
+            <p style="font-size: 11px; color: var(--danger);">Hành động này sẽ hủy quyền truy cập của người dùng ngay lập tức.</p>
+            <div style="display: flex; gap: 10px; margin-top: 6px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="closeDeleteConfirmModal()">HỦY BỎ</button>
+                <button class="btn btn-danger" style="flex: 1;" id="confirmDeleteBtn">XÓA VĨNH VIỄN</button>
+            </div>
         </div>
     </div>
 
@@ -976,9 +1019,10 @@
         const configRef = db.ref('config');
 
         let allKeys = {};
-        let currentStdSeconds = 3600;
+        let currentPremSeconds = 3600;
         let currentBypassSeconds = 7200;
-        let currentModalKey = null;
+        let isMaintenanceActive = false;
+        let keyPendingDelete = null;
 
         // Realtime Keys Listener
         keysRef.on('value', (snapshot) => {
@@ -989,23 +1033,26 @@
             showToast('Lỗi kết nối Firebase: ' + error.message, 'error');
         });
 
-        // Realtime Config Listener
+        // Realtime Config Listener (Kill Switch & Settings)
         configRef.on('value', (snapshot) => {
             const config = snapshot.val() || {};
+            isMaintenanceActive = !!(config.is_maintenance || config.app_killed);
+            updateKillSwitchUI(isMaintenanceActive);
+
             if (config.bypass_link) {
                 document.getElementById('configBypassLinkInput').value = config.bypass_link;
                 if (!document.getElementById('bypassShortLink').value || document.getElementById('bypassShortLink').value === 'https://link4m.co/') {
                     document.getElementById('bypassShortLink').value = config.bypass_link;
                 }
             }
-            if (config.announcement) {
-                document.getElementById('configAnnounceInput').value = config.announcement;
+            if (config.maintenance_message) {
+                document.getElementById('configMaintenanceMsgInput').value = config.maintenance_message;
             }
         });
 
         // Initialize Keys
         window.addEventListener('DOMContentLoaded', () => {
-            generateStdKey();
+            generatePremKey();
             generateBypassKey();
         });
 
@@ -1017,13 +1064,13 @@
             event.currentTarget.classList.add('active');
         }
 
-        // Generate Standard Key
-        function generateStdKey() {
+        // Generate Premium Key
+        function generatePremKey() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let p1 = '', p2 = '';
             for (let i = 0; i < 4; i++) p1 += chars.charAt(Math.floor(Math.random() * chars.length));
             for (let i = 0; i < 4; i++) p2 += chars.charAt(Math.floor(Math.random() * chars.length));
-            document.getElementById('stdKeyInput').value = `ONIAKUMA-${p1}-${p2}`;
+            document.getElementById('premKeyInput').value = `ONIAKUMA-${p1}-${p2}`;
         }
 
         // Generate Bypass Key
@@ -1032,43 +1079,30 @@
             let p1 = '', p2 = '';
             for (let i = 0; i < 4; i++) p1 += chars.charAt(Math.floor(Math.random() * chars.length));
             for (let i = 0; i < 4; i++) p2 += chars.charAt(Math.floor(Math.random() * chars.length));
-            const generated = `PASS-${p1}-${p2}`;
-            document.getElementById('bypassRealKey').value = generated;
-            document.getElementById('bypassDestination').value = generated;
+            document.getElementById('bypassRealKey').value = `PASS-${p1}-${p2}`;
         }
 
-        function syncBypassDestination(val) {
-            document.getElementById('bypassDestination').value = val;
-        }
-
-        function copyBypassDest() {
-            const val = document.getElementById('bypassDestination').value;
-            if (val) {
-                navigator.clipboard.writeText(val);
-                showToast('Đã copy Key đích vào Clipboard!', 'success');
-            }
-        }
-
-        // Preset Duration Selectors
-        function selectStdPreset(sec, label, el) {
-            currentStdSeconds = sec;
-            document.querySelectorAll('#tab-create-std .preset-btn').forEach(b => b.classList.remove('selected'));
+        // Preset Duration Selectors for Premium
+        function selectPremPreset(sec, label, el) {
+            currentPremSeconds = sec;
+            document.querySelectorAll('#tab-create-prem .preset-btn').forEach(b => b.classList.remove('selected'));
             el.classList.add('selected');
             if (sec > 0) {
-                document.getElementById('stdCustomHours').value = sec / 3600;
+                document.getElementById('premCustomHours').value = sec / 3600;
             } else {
-                document.getElementById('stdCustomHours').value = '';
+                document.getElementById('premCustomHours').value = '';
             }
         }
 
-        function handleStdCustomHours(hours) {
+        function handlePremCustomHours(hours) {
             const h = parseFloat(hours);
             if (h > 0) {
-                currentStdSeconds = Math.round(h * 3600);
-                document.querySelectorAll('#tab-create-std .preset-btn').forEach(b => b.classList.remove('selected'));
+                currentPremSeconds = Math.round(h * 3600);
+                document.querySelectorAll('#tab-create-prem .preset-btn').forEach(b => b.classList.remove('selected'));
             }
         }
 
+        // Preset Duration Selectors for Bypass
         function selectBypassPreset(sec, el) {
             currentBypassSeconds = sec;
             document.querySelectorAll('#tab-create-bypass .preset-btn').forEach(b => b.classList.remove('selected'));
@@ -1084,18 +1118,22 @@
             }
         }
 
-        // Handle Create Standard Key
-        function handleCreateStdKey(e) {
+        // Handle Create Premium Key
+        function handleCreatePremKey(e) {
             e.preventDefault();
-            let key = document.getElementById('stdKeyInput').value.trim().toUpperCase();
-            if (!key) key = document.getElementById('stdKeyInput').placeholder;
-            const maxDevices = parseInt(document.getElementById('stdMaxDevices').value) || 1;
-            const note = document.getElementById('stdNote').value.trim() || 'Tạo bởi Admin';
+            let key = document.getElementById('premKeyInput').value.trim().toUpperCase();
+            if (!key) key = document.getElementById('premKeyInput').placeholder;
+            const maxDevices = parseInt(document.getElementById('premMaxDevices').value) || 1;
+            const note = document.getElementById('premNote').value.trim() || 'Key Premium VIP';
 
-            createKeyInDatabase(key, currentStdSeconds, maxDevices, note, false);
+            createKeyInDatabase(key, currentPremSeconds, maxDevices, note, 'premium', () => {
+                navigator.clipboard.writeText(key);
+                showToast(`Đã tạo & Copy Key VIP: ${key}`, 'gold');
+                generatePremKey();
+            });
         }
 
-        // Handle Create Bypass Key
+        // Handle Create Bypass Key (2 Fields Only)
         function handleCreateBypassKey(e) {
             e.preventDefault();
             const realKey = document.getElementById('bypassRealKey').value.trim().toUpperCase();
@@ -1103,22 +1141,23 @@
             const syncDefault = document.getElementById('syncDefaultBypassCheck').checked;
 
             if (!realKey) {
-                showToast('Vui lòng nhập Key Thật!', 'error');
+                showToast('Vui lòng nhập Mã Key Thật!', 'error');
                 return;
             }
 
-            const note = `Vượt Link (Link4m) - Hạn: ${Math.round(currentBypassSeconds / 3600)}h`;
-            createKeyInDatabase(realKey, currentBypassSeconds, 1, note, true, () => {
+            const note = `Vượt Link (Link4m) - ${Math.round(currentBypassSeconds / 3600)}h`;
+            createKeyInDatabase(realKey, currentBypassSeconds, 1, note, 'bypass', () => {
                 if (syncDefault && shortLink) {
                     configRef.update({ bypass_link: shortLink });
                 }
-                navigator.clipboard.writeText(shortLink || realKey);
-                showToast(`Đã tạo key ${realKey} & copy link vượt!`, 'orange');
+                navigator.clipboard.writeText(realKey);
+                showToast(`Đã tạo Key Vượt Link: ${realKey}`, 'orange');
+                generateBypassKey();
             });
         }
 
         // Create Key in Firebase
-        function createKeyInDatabase(rawKey, durationSeconds, maxDevices, note, isBypass, onSuccess) {
+        function createKeyInDatabase(rawKey, durationSeconds, maxDevices, note, tier, onSuccess) {
             const sanitizedKey = rawKey.replace(/[.#$\[\]\/]/g, '_');
             const now = Date.now();
 
@@ -1131,6 +1170,7 @@
             const keyData = {
                 key: rawKey,
                 status: 'active',
+                tier: tier, // 'premium' or 'bypass'
                 duration: durationStr,
                 durationSeconds: durationSeconds,
                 maxDevices: maxDevices,
@@ -1142,29 +1182,54 @@
             };
 
             keysRef.child(sanitizedKey).set(keyData).then(() => {
-                if (onSuccess) {
-                    onSuccess();
-                } else {
-                    navigator.clipboard.writeText(rawKey);
-                    showToast(`Đã tạo & Copy key: ${rawKey}`, 'success');
-                    generateStdKey();
-                }
+                if (onSuccess) onSuccess();
             }).catch(err => {
                 showToast('Lỗi khi lưu key: ' + err.message, 'error');
             });
+        }
+
+        // Toggle Kill Switch
+        function toggleKillSwitch() {
+            const newState = !isMaintenanceActive;
+            const msg = document.getElementById('configMaintenanceMsgInput').value.trim() || 'Hệ thống đang tạm ngắt kết nối / bảo trì bởi Quản Trị Viên!';
+            
+            configRef.update({
+                is_maintenance: newState,
+                maintenance_message: msg
+            }).then(() => {
+                showToast(newState ? '🔴 ĐÃ NGẮT KẾT NỐI TOÀN BỘ APP!' : '🟢 ĐÃ MỞ LẠI HỆ THỐNG!', newState ? 'error' : 'success');
+            });
+        }
+
+        function updateKillSwitchUI(isKilled) {
+            const btn = document.getElementById('killSwitchBtn');
+            const text = document.getElementById('killSwitchText');
+            const actionBtn = document.getElementById('killSwitchActionBtn');
+
+            if (isKilled) {
+                btn.className = 'kill-switch-btn killed';
+                text.innerText = 'App: ĐÃ NGẮT';
+                actionBtn.className = 'btn btn-success btn-sm';
+                actionBtn.innerText = 'Mở Lại App Ngay';
+            } else {
+                btn.className = 'kill-switch-btn normal';
+                text.innerText = 'App: Hoạt Động';
+                actionBtn.className = 'btn btn-danger btn-sm';
+                actionBtn.innerText = 'Ngắt App Ngay';
+            }
         }
 
         // Handle Save Config
         function handleSaveConfig(e) {
             e.preventDefault();
             const bypassLink = document.getElementById('configBypassLinkInput').value.trim();
-            const announce = document.getElementById('configAnnounceInput').value.trim();
+            const maintMsg = document.getElementById('configMaintenanceMsgInput').value.trim();
 
             configRef.update({
                 bypass_link: bypassLink,
-                announcement: announce
+                maintenance_message: maintMsg
             }).then(() => {
-                showToast('Đã cập nhật cấu hình hệ thống thành công!', 'success');
+                showToast('Đã lưu cấu hình hệ thống thành công!', 'success');
             }).catch(err => {
                 showToast('Lỗi lưu cấu hình: ' + err.message, 'error');
             });
@@ -1178,36 +1243,27 @@
             const now = Date.now();
 
             const keysArr = Object.values(allKeys).filter(k => {
-                // Search query
                 const matchSearch = !searchQuery || 
                     (k.key && k.key.toLowerCase().includes(searchQuery)) ||
                     (k.note && k.note.toLowerCase().includes(searchQuery)) ||
                     (k.usedDevices && k.usedDevices.some(d => d.toLowerCase().includes(searchQuery)));
                 if (!matchSearch) return false;
 
-                // Status filter
+                const isBypass = (k.tier === 'bypass') || (k.note || '').toLowerCase().includes('vượt link') || (k.key && k.key.startsWith('PASS-'));
                 if (statusFilter === 'all') return true;
-                if (statusFilter === 'active') {
-                    return k.status !== 'banned' && (!k.expiresAt || k.expiresAt > now);
-                }
-                if (statusFilter === 'bypass') {
-                    const note = (k.note || '').toLowerCase();
-                    return note.includes('vượt link') || note.includes('link4m') || (k.key && k.key.startsWith('PASS-'));
-                }
-                if (statusFilter === 'expired') {
-                    return (k.expiresAt && k.expiresAt <= now) || k.status === 'expired';
-                }
-                if (statusFilter === 'banned') {
-                    return k.status === 'banned';
-                }
+                if (statusFilter === 'premium') return !isBypass && k.status !== 'banned';
+                if (statusFilter === 'bypass') return isBypass;
+                if (statusFilter === 'active') return k.status !== 'banned' && (!k.expiresAt || k.expiresAt > now);
+                if (statusFilter === 'expired') return (k.expiresAt && k.expiresAt <= now) || k.status === 'expired';
+                if (statusFilter === 'banned') return k.status === 'banned';
                 return true;
             }).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
             if (keysArr.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; color: var(--text-muted); padding: 40px;">
-                        <i class="fa-solid fa-key-skeleton" style="font-size: 28px; opacity: 0.5;"></i>
-                        <p style="margin-top: 10px; font-weight: 700;">Không tìm thấy key nào phù hợp</p>
+                        <i class="fa-solid fa-key" style="font-size: 28px; opacity: 0.4;"></i>
+                        <p style="margin-top: 10px; font-weight: 700;">Không tìm thấy mã key nào</p>
                     </div>
                 `;
                 return;
@@ -1216,22 +1272,22 @@
             container.innerHTML = keysArr.map(k => {
                 const isBanned = k.status === 'banned';
                 const isExpired = k.expiresAt && k.expiresAt <= now;
-                const isBypass = (k.note || '').toLowerCase().includes('vượt link') || (k.key && k.key.startsWith('PASS-'));
+                const isBypass = (k.tier === 'bypass') || (k.note || '').toLowerCase().includes('vượt link') || (k.key && k.key.startsWith('PASS-'));
 
-                let statusBadge = `<span class="badge badge-active">ACTIVE</span>`;
+                let statusBadge = `<span class="badge badge-premium">👑 VIP</span>`;
                 if (isBanned) statusBadge = `<span class="badge badge-banned">BANNED</span>`;
                 else if (isExpired) statusBadge = `<span class="badge badge-expired">HẾT HẠN</span>`;
-                else if (isBypass) statusBadge = `<span class="badge badge-bypass">VƯỢT LINK</span>`;
+                else if (isBypass) statusBadge = `<span class="badge badge-bypass">⚡ VƯỢT LINK</span>`;
 
                 const remainingTime = formatRemainingTime(k, now);
                 const devicesUsed = (k.usedDevices || []).length;
                 const maxDevices = k.maxDevices || 1;
 
                 return `
-                    <div class="key-item ${isBanned ? 'banned' : ''} ${isBypass ? 'bypass' : ''}">
+                    <div class="key-item ${isBanned ? 'banned' : ''} ${isBypass ? 'bypass' : 'premium'}">
                         <div class="key-top">
                             <div class="key-code" onclick="copyText('${k.key}')" title="Bấm để sao chép">
-                                <i class="fa-solid fa-key" style="color: ${isBanned ? 'var(--danger)' : (isBypass ? 'var(--orange)' : 'var(--accent)')}; font-size: 13px;"></i>
+                                <i class="fa-solid ${isBypass ? 'fa-bolt' : 'fa-crown'}" style="color: ${isBanned ? 'var(--danger)' : (isBypass ? 'var(--orange)' : 'var(--gold)')}; font-size: 13px;"></i>
                                 <span class="mono">${k.key}</span>
                                 <i class="fa-regular fa-copy" style="font-size: 12px; color: var(--text-muted);"></i>
                             </div>
@@ -1255,8 +1311,8 @@
                                 <i class="fa-solid fa-arrows-rotate"></i> Reset HWID
                             </button>
 
-                            <button class="btn btn-danger btn-sm" style="margin-left: auto;" onclick="deleteKey('${k.key}')">
-                                <i class="fa-solid fa-trash-can"></i>
+                            <button class="btn btn-danger btn-sm" style="margin-left: auto;" onclick="promptDeleteKey('${k.key}')">
+                                <i class="fa-solid fa-trash-can"></i> Xóa
                             </button>
                         </div>
                     </div>
@@ -1264,11 +1320,8 @@
             }).join('');
         }
 
-        // Format Remaining Time
         function formatRemainingTime(k, now) {
-            if (k.duration === 'lifetime' || k.durationSeconds === -1 || k.expiresAt === -1) {
-                return 'Vĩnh Viễn';
-            }
+            if (k.duration === 'lifetime' || k.durationSeconds === -1 || k.expiresAt === -1) return 'Vĩnh Viễn';
             if (!k.activatedAt || !k.expiresAt) {
                 if (k.durationSeconds) {
                     const h = Math.round(k.durationSeconds / 3600);
@@ -1294,33 +1347,27 @@
             const now = Date.now();
             const list = Object.values(allKeys);
             const total = list.length;
-            const active = list.filter(k => k.status !== 'banned' && (!k.expiresAt || k.expiresAt > now)).length;
-            const bypass = list.filter(k => {
-                const note = (k.note || '').toLowerCase();
-                return note.includes('vượt link') || note.includes('link4m') || (k.key && k.key.startsWith('PASS-'));
-            }).length;
-            const banned = list.filter(k => k.status === 'banned').length;
+            const bypass = list.filter(k => (k.tier === 'bypass') || (k.note || '').toLowerCase().includes('vượt link') || (k.key && k.key.startsWith('PASS-'))).length;
+            const premium = list.filter(k => k.tier === 'premium' || (!k.key.startsWith('PASS-') && !(k.note || '').toLowerCase().includes('vượt link'))).length;
+            const banned = list.filter(k => k.status === 'banned' || (k.expiresAt && k.expiresAt <= now)).length;
 
             document.getElementById('stat-total').innerText = total;
-            document.getElementById('stat-active').innerText = active;
+            document.getElementById('stat-premium').innerText = premium;
             document.getElementById('stat-bypass').innerText = bypass;
             document.getElementById('stat-banned').innerText = banned;
         }
 
-        function filterKeys() {
-            renderKeys();
-        }
+        function filterKeys() { renderKeys(); }
 
         function refreshKeys() {
             keysRef.once('value').then(snap => {
                 allKeys = snap.val() || {};
                 renderKeys();
                 updateStats();
-                showToast('Đã làm mới dữ liệu từ máy chủ!', 'success');
+                showToast('Đã làm mới dữ liệu máy chủ!', 'success');
             });
         }
 
-        // Toggle Ban Key
         function toggleBanKey(rawKey, shouldBan) {
             const sanitized = rawKey.replace(/[.#$\[\]\/]/g, '_');
             const newStatus = shouldBan ? 'banned' : 'active';
@@ -1329,25 +1376,42 @@
             });
         }
 
-        // Reset HWID
         function resetHWID(rawKey) {
             const sanitized = rawKey.replace(/[.#$\[\]\/]/g, '_');
             keysRef.child(sanitized).update({ usedDevices: [] }).then(() => {
-                showToast(`Đã Reset HWID thiết bị cho key: ${rawKey}`, 'success');
+                showToast(`Đã Reset HWID thiết bị cho: ${rawKey}`, 'success');
                 if (currentModalKey === rawKey) closeHWIDModal();
             });
         }
 
-        // Delete Key
-        function deleteKey(rawKey) {
-            if (!confirm(`Bạn có chắc muốn xóa vĩnh viễn key ${rawKey}?`)) return;
-            const sanitized = rawKey.replace(/[.#$\[\]\/]/g, '_');
+        // Custom Delete Confirmation Modal Logic
+        function promptDeleteKey(rawKey) {
+            keyPendingDelete = rawKey;
+            document.getElementById('deleteTargetKeyName').innerText = rawKey;
+            document.getElementById('confirmDeleteBtn').onclick = () => executeDeleteKey();
+            document.getElementById('deleteConfirmModal').classList.add('active');
+        }
+
+        function closeDeleteConfirmModal() {
+            document.getElementById('deleteConfirmModal').classList.remove('active');
+            keyPendingDelete = null;
+        }
+
+        function executeDeleteKey() {
+            if (!keyPendingDelete) return;
+            const target = keyPendingDelete;
+            const sanitized = target.replace(/[.#$\[\]\/]/g, '_');
+            closeDeleteConfirmModal();
+
             keysRef.child(sanitized).remove().then(() => {
-                showToast(`Đã xóa key: ${rawKey}`, 'error');
+                showToast(`Đã xóa vĩnh viễn key: ${target}`, 'error');
+            }).catch(err => {
+                showToast('Lỗi khi xóa: ' + err.message, 'error');
             });
         }
 
         // HWID Modal
+        let currentModalKey = null;
         function openHWIDModal(rawKey) {
             currentModalKey = rawKey;
             const keyObj = Object.values(allKeys).find(k => k.key === rawKey);
@@ -1355,7 +1419,7 @@
             const devices = keyObj ? (keyObj.usedDevices || []) : [];
 
             if (devices.length === 0) {
-                content.innerHTML = `<p style="color: var(--text-muted);">Chưa có thiết bị nào đăng nhập key này.</p>`;
+                content.innerHTML = `<p style="color: var(--text-muted);">Chưa có thiết bị nào đăng nhập.</p>`;
             } else {
                 content.innerHTML = devices.map((d, i) => `
                     <div style="background: var(--bg-elevated); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border);">
@@ -1373,14 +1437,12 @@
             currentModalKey = null;
         }
 
-        // Copy Helper
         function copyText(text) {
             navigator.clipboard.writeText(text).then(() => {
                 showToast(`Đã sao chép: ${text}`, 'success');
             });
         }
 
-        // Toast Helper
         function showToast(msg, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');

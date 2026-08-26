@@ -31,6 +31,10 @@ struct ThreeOneOSFiveApp: App {
             if isAdminApp {
                 AdminManagerView()
                     .preferredColorScheme(.dark)
+            } else if licenseManager.isSystemMaintenance {
+                SystemMaintenanceGateView()
+                    .preferredColorScheme(.dark)
+                    .transition(.opacity)
             } else {
                 ZStack {
                     if !securityService.isCoreAccessPermitted() && !showSplash {
@@ -72,6 +76,7 @@ struct ThreeOneOSFiveApp: App {
                         appState.detectSupport()
                     }
                     Task {
+                        _ = await licenseManager.checkSystemMaintenance()
                         await licenseManager.recheckLicense()
                     }
                 }
@@ -80,6 +85,7 @@ struct ThreeOneOSFiveApp: App {
                         enforce_binary_security()
                         licenseManager.startHeartbeat()
                         Task {
+                            _ = await licenseManager.checkSystemMaintenance()
                             await licenseManager.recheckLicense()
                         }
                         guard !showSplash, securityService.isCoreAccessPermitted() else { return }
@@ -197,6 +203,116 @@ class AppState: ObservableObject {
                     self.exploitStatus = .failed(method: "kexploit", code: -1)
                     log("app: kernel exploit failed — relaunch the app before retrying")
                 }
+            }
+        }
+    }
+}
+
+// MARK: - System Maintenance / Kill Switch Gate View
+struct SystemMaintenanceGateView: View {
+    @ObservedObject private var licenseManager = LicenseManager.shared
+    @State private var isChecking = false
+
+    var body: some View {
+        ZStack {
+            Color(red: 0.04, green: 0.05, blue: 0.08).ignoresSafeArea()
+
+            RadialGradient(
+                colors: [Color.red.opacity(0.18), Color.clear],
+                center: .center,
+                startRadius: 20,
+                endRadius: 300
+            )
+            .ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                Spacer()
+
+                ZStack {
+                    Circle()
+                        .fill(Color.red.opacity(0.12))
+                        .frame(width: 100, height: 100)
+
+                    Circle()
+                        .stroke(Color.red.opacity(0.35), lineWidth: 2)
+                        .frame(width: 110, height: 110)
+
+                    Image(systemName: "exclamationmark.octagon.fill")
+                        .font(.system(size: 48, weight: .black))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [.red, .orange],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+
+                VStack(spacing: 10) {
+                    Text("HỆ THỐNG TẠM DỪNG")
+                        .font(.system(size: 20, weight: .black, design: .monospaced))
+                        .foregroundStyle(.white)
+                        .tracking(1.5)
+
+                    Text(licenseManager.maintenanceMessage)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .lineSpacing(4)
+                }
+
+                VStack(spacing: 6) {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 8, height: 8)
+                        Text("Trạng Thái: Ngắt Kết Nối Bởi Admin")
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Color.red)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
+                    .background(Color.red.opacity(0.1).cornerRadius(8))
+                }
+
+                Spacer()
+
+                Button {
+                    let gen = UIImpactFeedbackGenerator(style: .medium)
+                    gen.impactOccurred()
+                    isChecking = true
+                    Task {
+                        _ = await licenseManager.checkSystemMaintenance()
+                        await MainActor.run {
+                            isChecking = false
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        if isChecking {
+                            ProgressView().tint(.black)
+                        } else {
+                            Image(systemName: "arrow.clockwise")
+                            Text("Kiểm Tra Lại Kết Nối")
+                        }
+                    }
+                    .font(.system(size: 14, weight: .black))
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        LinearGradient(
+                            colors: [Color(red: 0.0, green: 0.85, blue: 1.0), Color.blue],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        .cornerRadius(12)
+                    )
+                }
+                .disabled(isChecking)
+                .padding(.horizontal, 30)
+                .padding(.bottom, 20)
             }
         }
     }
