@@ -311,6 +311,7 @@ struct MainInjectorView: View {
     }
 
     // MARK: - Tab Switcher Section (3 Tabs)
+    @ViewBuilder
     private var tabSwitcherSection: some View {
         let canUseMods = licenseManager.currentLicense?.canUseMods ?? false
         HStack(spacing: 6) {
