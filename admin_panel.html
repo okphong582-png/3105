@@ -16,23 +16,25 @@
 
     <style>
         :root {
-            --bg-base: #06080c;
-            --bg-surface: #0f131a;
-            --bg-elevated: #161c26;
-            --accent: #00f0ff;
-            --accent-glow: rgba(0, 240, 255, 0.4);
-            --gold: #ffc107;
-            --gold-glow: rgba(255, 193, 7, 0.4);
-            --orange: #ff9f1c;
-            --orange-glow: rgba(255, 159, 28, 0.4);
-            --danger: #ff3860;
-            --danger-glow: rgba(255, 56, 96, 0.35);
-            --success: #00f5a0;
-            --success-glow: rgba(0, 245, 160, 0.35);
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.08);
-            --border-active: rgba(0, 240, 255, 0.5);
+            /* NÂU HIỆN ĐẠI (Modern Mocha & Roasted Espresso with Amber Bronze Gold) */
+            --bg-base: #140f0c;         /* Nền nâu đen Espresso sang trọng */
+            --bg-surface: #1f1713;      /* Nền thẻ nâu Mocha đậm đà */
+            --bg-elevated: #2a201a;     /* Nền roast chestnut ấm áp */
+            --bg-input: #231914;        /* Nền ô nhập */
+            --accent: #d4a373;          /* Nâu vàng ánh kim Caramel / Champagne Bronze */
+            --accent-glow: rgba(212, 163, 115, 0.4);
+            --gold: #f4a261;            /* Vàng hổ phách Amber Gold cho VIP */
+            --gold-glow: rgba(244, 162, 97, 0.4);
+            --orange: #e76f51;          /* Cam đất Terracotta cho Vượt Link */
+            --orange-glow: rgba(231, 111, 81, 0.4);
+            --danger: #e63946;          /* Đỏ trầm rượu vang */
+            --danger-glow: rgba(230, 57, 70, 0.35);
+            --success: #52b788;         /* Xanh ngọc Jade rêu ấm cho Key Lite */
+            --success-glow: rgba(82, 183, 136, 0.35);
+            --text: #fdfaf7;            /* Trắng ngà kem vani ấm dịu mắt */
+            --text-muted: #bfa598;      /* Nâu xám khói sang trọng */
+            --border: rgba(212, 163, 115, 0.16); /* Viền ánh đồng nhẹ */
+            --border-active: rgba(212, 163, 115, 0.6);
             --radius-lg: 18px;
             --radius-md: 12px;
             --radius-sm: 8px;
@@ -59,15 +61,16 @@
             flex-direction: column;
             overflow-x: hidden;
             background-image: 
-                radial-gradient(circle at 15% 10%, rgba(0, 240, 255, 0.08) 0%, transparent 45%),
-                radial-gradient(circle at 85% 90%, rgba(255, 159, 28, 0.06) 0%, transparent 45%);
+                radial-gradient(circle at 18% 5%, rgba(212, 163, 115, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 82% 95%, rgba(231, 111, 81, 0.09) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(244, 162, 97, 0.04) 0%, transparent 60%);
             background-attachment: fixed;
             padding-bottom: env(safe-area-inset-bottom, 20px);
         }
 
         /* Header */
         header {
-            background: rgba(15, 19, 26, 0.88);
+            background: rgba(23, 17, 14, 0.92);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
@@ -90,21 +93,21 @@
             width: 42px;
             height: 42px;
             border-radius: var(--radius-md);
-            background: linear-gradient(135deg, #1e293b, #090d16);
+            background: linear-gradient(135deg, #33231c, #1a120e);
             border: 1.5px solid var(--accent);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
             color: var(--accent);
-            box-shadow: 0 0 14px var(--accent-glow);
+            box-shadow: 0 0 16px var(--accent-glow);
         }
 
         .brand-info h1 {
             font-size: 18px;
             font-weight: 900;
             letter-spacing: 0.5px;
-            background: linear-gradient(90deg, #fff, var(--accent));
+            background: linear-gradient(90deg, #fdfaf7, var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -136,13 +139,13 @@
         }
 
         .kill-switch-btn.normal {
-            background: rgba(0, 245, 160, 0.15);
+            background: rgba(82, 183, 136, 0.15);
             color: var(--success);
-            border: 1px solid rgba(0, 245, 160, 0.4);
+            border: 1px solid rgba(82, 183, 136, 0.4);
         }
 
         .kill-switch-btn.killed {
-            background: rgba(255, 56, 96, 0.25);
+            background: rgba(230, 57, 70, 0.25);
             color: var(--danger);
             border: 1px solid var(--danger);
             box-shadow: 0 0 14px var(--danger-glow);
@@ -169,11 +172,11 @@
         /* Stats Cards */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 10px;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 600px) {
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -190,6 +193,12 @@
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
             position: relative;
             overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
         }
 
         .stat-card::before {
@@ -200,7 +209,7 @@
             right: 0;
             height: 2px;
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            opacity: 0.5;
+            opacity: 0.6;
         }
 
         .stat-label {
@@ -220,23 +229,24 @@
 
         .stat-icon {
             font-size: 24px;
-            opacity: 0.8;
+            opacity: 0.85;
         }
 
-        /* Tab Switcher */
+        /* Main Navigation Tab Switcher (Gọn gàng 3 Tab, không tràn hàng dài) */
         .tab-switcher {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
-            padding: 4px;
-            gap: 4px;
+            padding: 5px;
+            gap: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         }
 
         .tab-btn {
-            flex: 1;
-            padding: 10px 8px;
-            font-size: 12px;
+            padding: 12px 10px;
+            font-size: 13px;
             font-weight: 800;
             border: none;
             background: transparent;
@@ -246,32 +256,136 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
             transition: all 0.25s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text);
+            background: rgba(212, 163, 115, 0.08);
         }
 
         .tab-btn.active {
-            background: var(--accent);
-            color: #000;
-            box-shadow: 0 0 12px var(--accent-glow);
+            background: linear-gradient(135deg, var(--accent), #b07d50);
+            color: #140f0c;
+            box-shadow: 0 4px 16px var(--accent-glow);
+            font-weight: 900;
         }
 
-        .tab-btn.active.tab-bypass {
-            background: linear-gradient(135deg, var(--orange), var(--gold));
-            color: #000;
-            box-shadow: 0 0 12px var(--orange-glow);
+        /* Tier Segmented Control (Chia tách rõ ràng 3 gói tạo key) */
+        .tier-segmented-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 18px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 8px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
         }
 
-        .tab-btn.active.tab-prem {
-            background: linear-gradient(135deg, var(--gold), #ff9100);
-            color: #000;
-            box-shadow: 0 0 12px var(--gold-glow);
+        @media (max-width: 640px) {
+            .tier-segmented-bar {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
         }
 
-        .tab-btn.active.tab-lite {
-            background: linear-gradient(135deg, var(--success), #00b4d8);
-            color: #000;
-            box-shadow: 0 0 12px var(--success-glow);
+        .tier-seg-btn {
+            background: var(--bg-elevated);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tier-seg-btn:hover {
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .tier-seg-btn .seg-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: rgba(0, 0, 0, 0.25);
+            flex-shrink: 0;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .tier-seg-btn .seg-title {
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            color: var(--text);
+        }
+
+        .tier-seg-btn .seg-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Active states for each tier */
+        .tier-seg-btn.active.tier-prem {
+            background: linear-gradient(135deg, rgba(244, 162, 97, 0.22), rgba(212, 163, 115, 0.1));
+            border-color: var(--gold);
+            box-shadow: 0 0 16px var(--gold-glow);
+        }
+        .tier-seg-btn.active.tier-prem .seg-icon {
+            background: var(--gold);
+            color: #140f0c;
+        }
+        .tier-seg-btn.active.tier-prem .seg-title {
+            color: var(--gold);
+        }
+
+        .tier-seg-btn.active.tier-lite {
+            background: linear-gradient(135deg, rgba(82, 183, 136, 0.22), rgba(116, 198, 157, 0.1));
+            border-color: var(--success);
+            box-shadow: 0 0 16px var(--success-glow);
+        }
+        .tier-seg-btn.active.tier-lite .seg-icon {
+            background: var(--success);
+            color: #140f0c;
+        }
+        .tier-seg-btn.active.tier-lite .seg-title {
+            color: var(--success);
+        }
+
+        .tier-seg-btn.active.tier-bypass {
+            background: linear-gradient(135deg, rgba(231, 111, 81, 0.22), rgba(244, 162, 97, 0.1));
+            border-color: var(--orange);
+            box-shadow: 0 0 16px var(--orange-glow);
+        }
+        .tier-seg-btn.active.tier-bypass .seg-icon {
+            background: var(--orange);
+            color: #140f0c;
+        }
+        .tier-seg-btn.active.tier-bypass .seg-title {
+            color: var(--orange);
+        }
+
+        .tier-form-panel {
+            display: none;
+        }
+        .tier-form-panel.active {
+            display: block;
+            animation: fadeIn 0.25s ease;
         }
 
         .aim-toggle-card {
@@ -299,6 +413,10 @@
             accent-color: var(--accent);
         }
 
+        .tab-panel {
+            display: none;
+        }
+
         .tab-panel.active {
             display: block;
             animation: fadeIn 0.3s ease;
@@ -315,7 +433,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
             padding: 20px;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
             display: flex;
             flex-direction: column;
             gap: 16px;
@@ -363,14 +481,14 @@
             font-size: 9px;
             padding: 2px 6px;
             border-radius: 4px;
-            background: rgba(0, 240, 255, 0.15);
+            background: rgba(212, 163, 115, 0.15);
             color: var(--accent);
             font-family: 'JetBrains Mono', monospace;
         }
 
         input[type="text"], input[type="number"], select, textarea {
             width: 100%;
-            background: var(--bg-elevated);
+            background: var(--bg-input);
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             padding: 12px 14px;
@@ -382,7 +500,7 @@
 
         input:focus, select:focus, textarea:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 10px var(--accent-glow);
+            box-shadow: 0 0 12px var(--accent-glow);
         }
 
         .input-group {
@@ -417,8 +535,8 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--gold), #ff9100);
-            color: #000;
+            background: linear-gradient(135deg, var(--gold), #c97a44);
+            color: #140f0c;
             box-shadow: 0 4px 16px var(--gold-glow);
         }
 
@@ -427,8 +545,8 @@
         }
 
         .btn-orange {
-            background: linear-gradient(135deg, var(--orange), var(--gold));
-            color: #000;
+            background: linear-gradient(135deg, var(--orange), #b85437);
+            color: #fff;
             box-shadow: 0 4px 16px var(--orange-glow);
         }
 
@@ -437,21 +555,25 @@
         }
 
         .btn-danger {
-            background: rgba(255, 56, 96, 0.15);
+            background: rgba(230, 57, 70, 0.15);
             color: var(--danger);
-            border: 1px solid rgba(255, 56, 96, 0.4);
+            border: 1px solid rgba(230, 57, 70, 0.4);
         }
 
         .btn-success {
-            background: rgba(0, 245, 160, 0.15);
-            color: var(--success);
-            border: 1px solid rgba(0, 245, 160, 0.4);
+            background: linear-gradient(135deg, var(--success), #398e65);
+            color: #140f0c;
+            box-shadow: 0 4px 16px var(--success-glow);
         }
 
         .btn-secondary {
             background: var(--bg-elevated);
             color: var(--text);
             border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
         }
 
         .btn-sm {
@@ -470,26 +592,38 @@
             background: var(--bg-elevated);
             border: 1px solid var(--border);
             color: var(--text);
-            padding: 8px;
+            padding: 9px 8px;
             border-radius: 6px;
             font-size: 11px;
             font-weight: 700;
             cursor: pointer;
             text-align: center;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent);
         }
 
         .preset-btn.selected {
             border-color: var(--gold);
-            background: rgba(255, 193, 7, 0.15);
+            background: rgba(244, 162, 97, 0.18);
             color: var(--gold);
-            box-shadow: 0 0 8px var(--gold-glow);
+            box-shadow: 0 0 10px var(--gold-glow);
         }
 
         .preset-btn.selected.preset-orange {
             border-color: var(--orange);
-            background: rgba(255, 159, 28, 0.15);
+            background: rgba(231, 111, 81, 0.18);
             color: var(--orange);
-            box-shadow: 0 0 8px var(--orange-glow);
+            box-shadow: 0 0 10px var(--orange-glow);
+        }
+
+        .preset-btn.selected.preset-lite {
+            border-color: var(--success);
+            background: rgba(82, 183, 136, 0.18);
+            color: var(--success);
+            box-shadow: 0 0 10px var(--success-glow);
         }
 
         /* Search & Lists */
@@ -671,7 +805,7 @@
         }
 
         .toast {
-            background: rgba(15, 23, 42, 0.96);
+            background: rgba(30, 22, 18, 0.96);
             border: 1px solid var(--border);
             border-radius: var(--radius-md);
             padding: 12px 16px;
@@ -763,22 +897,19 @@
             </div>
         </div>
 
-        <!-- Tab Switcher -->
+        <!-- Main Navigation Tab Switcher (Gọn gàng 3 Tab, không tràn hàng dài) -->
         <div class="tab-switcher">
-            <button class="tab-btn active" onclick="switchTab('tab-list')">
-                <i class="fa-solid fa-list-check"></i> Danh Sách
+            <button class="tab-btn active" id="mainTabBtn-list" onclick="switchTab('tab-list')">
+                <i class="fa-solid fa-list-check"></i>
+                <span>Danh Sách Key</span>
             </button>
-            <button class="tab-btn tab-prem" onclick="switchTab('tab-create-prem')">
-                <i class="fa-solid fa-crown"></i> Tạo Key VIP
+            <button class="tab-btn" id="mainTabBtn-create" onclick="switchTab('tab-create')">
+                <i class="fa-solid fa-plus-circle"></i>
+                <span>Tạo Key Mới</span>
             </button>
-            <button class="tab-btn tab-lite" onclick="switchTab('tab-create-lite')">
-                <i class="fa-solid fa-feather"></i> Tạo Key Lite
-            </button>
-            <button class="tab-btn tab-bypass" onclick="switchTab('tab-create-bypass')">
-                <i class="fa-solid fa-bolt"></i> Vượt Link (2 Ô)
-            </button>
-            <button class="tab-btn" onclick="switchTab('tab-config')">
-                <i class="fa-solid fa-gear"></i> Cấu Hình
+            <button class="tab-btn" id="mainTabBtn-config" onclick="switchTab('tab-config')">
+                <i class="fa-solid fa-gear"></i>
+                <span>Cấu Hình & Aim</span>
             </button>
         </div>
 
@@ -820,204 +951,232 @@
             </div>
         </div>
 
-        <!-- TAB 2: TẠO KEY PREMIUM (VIP) - FULL MOD & AIM -->
-        <div id="tab-create-prem" class="tab-panel">
-            <div class="card" style="border-color: rgba(255, 193, 7, 0.4);">
+        <!-- TAB 2: TRUNG TÂM TẠO KEY BẢN QUYỀN (CHIA TÁCH RÕ RÀNG 3 GÓI) -->
+        <div id="tab-create" class="tab-panel">
+            <div class="card" style="border-color: rgba(212, 163, 115, 0.35);">
                 <div class="card-header">
-                    <div class="card-title" style="color: var(--gold);">
-                        <i class="fa-solid fa-crown" style="color: var(--gold);"></i>
-                        <span>TẠO KEY PREMIUM VIP (ĐẦY ĐỦ MOD SKIN, MOD ĐỒ & AIM)</span>
+                    <div class="card-title" style="color: var(--accent);">
+                        <i class="fa-solid fa-key" style="color: var(--accent);"></i>
+                        <span>TRUNG TÂM TẠO KEY BẢN QUYỀN</span>
                     </div>
+                    <span class="tag" style="background: rgba(212, 163, 115, 0.15); color: var(--accent);">CHỌN 1 TRONG 3 GÓI BÊN DƯỚI</span>
                 </div>
 
-                <form onsubmit="handleCreatePremKey(event)" style="display: flex; flex-direction: column; gap: 14px;">
-                    <div class="form-group">
-                        <label>
-                            <span>Mã Key (Để trống để tự sinh ngẫu nhiên)</span>
-                            <span class="tag" style="background: rgba(255, 193, 7, 0.15); color: var(--gold);">PREMIUM VIP KEY</span>
-                        </label>
-                        <div class="input-group">
-                            <input type="text" id="premKeyInput" class="mono" placeholder="VD: ONIAKUMA-VIP-2026">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="generatePremKey()">
-                                <i class="fa-solid fa-dice"></i> Sinh Mã
-                            </button>
+                <!-- 3-Way Tier Segmented Switcher (Chia tách rõ ràng, không bị kéo thành hàng dài!) -->
+                <div class="tier-segmented-bar">
+                    <button type="button" id="tierSegBtn-prem" class="tier-seg-btn active tier-prem" onclick="switchCreateTier('prem')">
+                        <div class="seg-icon"><i class="fa-solid fa-crown"></i></div>
+                        <div>
+                            <div class="seg-title">KEY PRO VIP</div>
+                            <div class="seg-sub">Full Mod Skin + Mod Đồ + 5 Aim</div>
                         </div>
-                    </div>
-
-                    <!-- Preset Durations -->
-                    <div class="form-group">
-                        <label>Chọn Thời Hạn Nhanh</label>
-                        <div class="preset-grid">
-                            <div class="preset-btn selected" onclick="selectPremPreset(3600, '1 Giờ', this)">1 Giờ</div>
-                            <div class="preset-btn" onclick="selectPremPreset(7200, '2 Giờ', this)">2 Giờ</div>
-                            <div class="preset-btn" onclick="selectPremPreset(21600, '6 Giờ', this)">6 Giờ</div>
-                            <div class="preset-btn" onclick="selectPremPreset(43200, '12 Giờ', this)">12 Giờ</div>
-                            <div class="preset-btn" onclick="selectPremPreset(86400, '1 Ngày', this)">1 Ngày</div>
-                            <div class="preset-btn" onclick="selectPremPreset(259200, '3 Ngày', this)">3 Ngày</div>
-                            <div class="preset-btn" onclick="selectPremPreset(604800, '7 Ngày', this)">7 Ngày</div>
-                            <div class="preset-btn" onclick="selectPremPreset(2592000, '30 Ngày', this)">30 Ngày</div>
-                            <div class="preset-btn" onclick="selectPremPreset(-1, 'Vĩnh Viễn', this)">Vĩnh Viễn</div>
-                        </div>
-                    </div>
-
-                    <!-- Custom Hours -->
-                    <div class="form-group">
-                        <label>Hoặc Nhập Số Giờ Tùy Chỉnh</label>
-                        <div class="input-group">
-                            <input type="number" id="premCustomHours" placeholder="VD: 5, 8, 48, 720 giờ..." oninput="handlePremCustomHours(this.value)">
-                            <span style="display: flex; align-items: center; padding: 0 10px; color: var(--text-muted); font-size: 13px; font-weight: 700;">Giờ</span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Số Thiết Bị Tối Đa (Max Devices)</label>
-                        <input type="number" id="premMaxDevices" min="1" max="100" value="1" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Ghi Chú Khách Hàng</label>
-                        <input type="text" id="premNote" placeholder="VD: Khách VIP Facebook, Telegram...">
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" style="margin-top: 8px;">
-                        <i class="fa-solid fa-crown"></i> Tạo & Lưu Key Premium VIP (Full Tính Năng)
                     </button>
-                </form>
-            </div>
-        </div>
 
-        <!-- TAB LITE: TẠO KEY LITE (CHỈ AIM NECK, AIM DRAG & AIM BODY) -->
-        <div id="tab-create-lite" class="tab-panel">
-            <div class="card" style="border-color: rgba(0, 245, 160, 0.4);">
-                <div class="card-header">
-                    <div class="card-title" style="color: var(--success);">
-                        <i class="fa-solid fa-feather" style="color: var(--success);"></i>
-                        <span>TẠO KEY LITE (CHỈ AIM NECK, AIM DRAG & AIM BODY)</span>
-                    </div>
+                    <button type="button" id="tierSegBtn-lite" class="tier-seg-btn tier-lite" onclick="switchCreateTier('lite')">
+                        <div class="seg-icon"><i class="fa-solid fa-feather"></i></div>
+                        <div>
+                            <div class="seg-title">KEY LITE</div>
+                            <div class="seg-sub">Chỉ Aim Neck, Drag & Body</div>
+                        </div>
+                    </button>
+
+                    <button type="button" id="tierSegBtn-bypass" class="tier-seg-btn tier-bypass" onclick="switchCreateTier('bypass')">
+                        <div class="seg-icon"><i class="fa-solid fa-bolt"></i></div>
+                        <div>
+                            <div class="seg-title">VƯỢT LINK (2 Ô)</div>
+                            <div class="seg-sub">5 Aim • Rút Gọn Link4m</div>
+                        </div>
+                    </button>
                 </div>
 
-                <form onsubmit="handleCreateLiteKey(event)" style="display: flex; flex-direction: column; gap: 14px;">
-                    <div class="form-group">
-                        <label>
-                            <span>Mã Key Lite (Để trống để tự sinh ngẫu nhiên)</span>
-                            <span class="tag" style="background: rgba(0, 245, 160, 0.15); color: var(--success);">KEY LITE</span>
-                        </label>
-                        <div class="input-group">
-                            <input type="text" id="liteKeyInput" class="mono" placeholder="VD: LITE-AKUMA-2026">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="generateLiteKey()">
-                                <i class="fa-solid fa-dice"></i> Sinh Mã
-                            </button>
+                <!-- GÓI 1: FORM TẠO KEY PREMIUM (VIP) - FULL MOD & AIM -->
+                <div id="tierPanel-prem" class="tier-form-panel active">
+                    <div style="margin-bottom: 12px; font-weight: 800; font-size: 13px; color: var(--gold); display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-crown"></i>
+                        <span>CẤU HÌNH GÓI KEY PREMIUM VIP (MỞ TOÀN BỘ MOD SKIN, MOD ĐỒ & 5 AIM)</span>
+                    </div>
+
+                    <form onsubmit="handleCreatePremKey(event)" style="display: flex; flex-direction: column; gap: 14px;">
+                        <div class="form-group">
+                            <label>
+                                <span>Mã Key (Để trống để tự sinh ngẫu nhiên)</span>
+                                <span class="tag" style="background: rgba(244, 162, 97, 0.15); color: var(--gold);">PREMIUM VIP KEY</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="text" id="premKeyInput" class="mono" placeholder="VD: ONIAKUMA-VIP-2026">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="generatePremKey()">
+                                    <i class="fa-solid fa-dice"></i> Sinh Mã
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Preset Durations -->
-                    <div class="form-group">
-                        <label>Chọn Thời Hạn Nhanh</label>
-                        <div class="preset-grid">
-                            <div class="preset-btn selected" onclick="selectLitePreset(3600, '1 Giờ', this)">1 Giờ</div>
-                            <div class="preset-btn" onclick="selectLitePreset(7200, '2 Giờ', this)">2 Giờ</div>
-                            <div class="preset-btn" onclick="selectLitePreset(21600, '6 Giờ', this)">6 Giờ</div>
-                            <div class="preset-btn" onclick="selectLitePreset(43200, '12 Giờ', this)">12 Giờ</div>
-                            <div class="preset-btn" onclick="selectLitePreset(86400, '1 Ngày', this)">1 Ngày</div>
-                            <div class="preset-btn" onclick="selectLitePreset(259200, '3 Ngày', this)">3 Ngày</div>
-                            <div class="preset-btn" onclick="selectLitePreset(604800, '7 Ngày', this)">7 Ngày</div>
-                            <div class="preset-btn" onclick="selectLitePreset(2592000, '30 Ngày', this)">30 Ngày</div>
-                            <div class="preset-btn" onclick="selectLitePreset(-1, 'Vĩnh Viễn', this)">Vĩnh Viễn</div>
+                        <!-- Preset Durations -->
+                        <div class="form-group">
+                            <label>Chọn Thời Hạn Nhanh</label>
+                            <div class="preset-grid">
+                                <div class="preset-btn selected" onclick="selectPremPreset(3600, '1 Giờ', this)">1 Giờ</div>
+                                <div class="preset-btn" onclick="selectPremPreset(7200, '2 Giờ', this)">2 Giờ</div>
+                                <div class="preset-btn" onclick="selectPremPreset(21600, '6 Giờ', this)">6 Giờ</div>
+                                <div class="preset-btn" onclick="selectPremPreset(43200, '12 Giờ', this)">12 Giờ</div>
+                                <div class="preset-btn" onclick="selectPremPreset(86400, '1 Ngày', this)">1 Ngày</div>
+                                <div class="preset-btn" onclick="selectPremPreset(259200, '3 Ngày', this)">3 Ngày</div>
+                                <div class="preset-btn" onclick="selectPremPreset(604800, '7 Ngày', this)">7 Ngày</div>
+                                <div class="preset-btn" onclick="selectPremPreset(2592000, '30 Ngày', this)">30 Ngày</div>
+                                <div class="preset-btn" onclick="selectPremPreset(-1, 'Vĩnh Viễn', this)">Vĩnh Viễn</div>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Custom Hours -->
-                    <div class="form-group">
-                        <label>Hoặc Nhập Số Giờ Tùy Chỉnh</label>
-                        <div class="input-group">
-                            <input type="number" id="liteCustomHours" placeholder="VD: 5, 8, 48, 720 giờ..." oninput="handleLiteCustomHours(this.value)">
-                            <span style="display: flex; align-items: center; padding: 0 10px; color: var(--text-muted); font-size: 13px; font-weight: 700;">Giờ</span>
+                        <!-- Custom Hours -->
+                        <div class="form-group">
+                            <label>Hoặc Nhập Số Giờ Tùy Chỉnh</label>
+                            <div class="input-group">
+                                <input type="number" id="premCustomHours" placeholder="VD: 5, 8, 48, 720 giờ..." oninput="handlePremCustomHours(this.value)">
+                                <span style="display: flex; align-items: center; padding: 0 10px; color: var(--text-muted); font-size: 13px; font-weight: 700;">Giờ</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label>Số Thiết Bị Tối Đa (Max Devices)</label>
-                        <input type="number" id="liteMaxDevices" min="1" max="100" value="1" required>
-                    </div>
+                        <div class="form-group">
+                            <label>Số Thiết Bị Tối Đa (Max Devices)</label>
+                            <input type="number" id="premMaxDevices" min="1" max="100" value="1" required>
+                        </div>
 
-                    <div class="form-group">
-                        <label>Ghi Chú Khách Hàng</label>
-                        <input type="text" id="liteNote" placeholder="VD: Khách mua gói Lite...">
-                    </div>
+                        <div class="form-group">
+                            <label>Ghi Chú Khách Hàng</label>
+                            <input type="text" id="premNote" placeholder="VD: Khách VIP Facebook, Telegram...">
+                        </div>
 
-                    <button type="submit" class="btn btn-success" style="margin-top: 8px;">
-                        <i class="fa-solid fa-feather"></i> Tạo & Lưu Key Lite (Aim Neck, Drag & Body)
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- TAB 3: TẠO KEY CHO NGƯỜI VƯỢT LINK (LINK4M - CHUẨN 2 Ô) -->
-        <div id="tab-create-bypass" class="tab-panel">
-            <div class="card" style="border-color: rgba(255, 159, 28, 0.4);">
-                <div class="card-header">
-                    <div class="card-title" style="color: var(--orange);">
-                        <i class="fa-solid fa-bolt" style="color: var(--orange);"></i>
-                        <span>Tạo Key Cho Người Vượt Link (Chỉ Aim Bot)</span>
-                    </div>
+                        <button type="submit" class="btn btn-primary" style="margin-top: 8px;">
+                            <i class="fa-solid fa-crown"></i> Tạo & Lưu Key Premium VIP (Full Tính Năng)
+                        </button>
+                    </form>
                 </div>
 
-                <form onsubmit="handleCreateBypassKey(event)" style="display: flex; flex-direction: column; gap: 14px;">
-                    <!-- Ô 1: KEY THẬT -->
-                    <div class="form-group">
-                        <label>
-                            <span style="color: var(--accent); font-weight: 800;">Ô 1: MÃ KEY THẬT (Lưu Database Server)</span>
-                            <span class="tag" style="background: rgba(0, 240, 255, 0.2); color: var(--accent);">REAL KEY</span>
+                <!-- GÓI 2: FORM TẠO KEY LITE (CHỈ AIM NECK, AIM DRAG & AIM BODY) -->
+                <div id="tierPanel-lite" class="tier-form-panel">
+                    <div style="margin-bottom: 12px; font-weight: 800; font-size: 13px; color: var(--success); display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-feather"></i>
+                        <span>CẤU HÌNH GÓI KEY LITE (CHỈ AIM NECK, AIM DRAG & AIM BODY • KHÓA MOD & AIM KHÁC)</span>
+                    </div>
+
+                    <form onsubmit="handleCreateLiteKey(event)" style="display: flex; flex-direction: column; gap: 14px;">
+                        <div class="form-group">
+                            <label>
+                                <span>Mã Key Lite (Để trống để tự sinh ngẫu nhiên)</span>
+                                <span class="tag" style="background: rgba(82, 183, 136, 0.15); color: var(--success);">KEY LITE</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="text" id="liteKeyInput" class="mono" placeholder="VD: LITE-AKUMA-2026">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="generateLiteKey()">
+                                    <i class="fa-solid fa-dice"></i> Sinh Mã
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Preset Durations -->
+                        <div class="form-group">
+                            <label>Chọn Thời Hạn Nhanh</label>
+                            <div class="preset-grid">
+                                <div class="preset-btn selected preset-lite" onclick="selectLitePreset(3600, '1 Giờ', this)">1 Giờ</div>
+                                <div class="preset-btn preset-lite" onclick="selectLitePreset(7200, '2 Giờ', this)">2 Giờ</div>
+                                <div class="preset-btn preset-lite" onclick="selectLitePreset(21600, '6 Giờ', this)">6 Giờ</div>
+                                <div class="preset-btn preset-lite" onclick="selectLitePreset(43200, '12 Giờ', this)">12 Giờ</div>
+                                <div class="preset-btn preset-lite" onclick="selectLitePreset(86400, '1 Ngày', this)">1 Ngày</div>
+                                <div class="preset-btn preset-lite" onclick="selectLitePreset(259200, '3 Ngày', this)">3 Ngày</div>
+                                <div class="preset-btn preset-lite" onclick="selectLitePreset(604800, '7 Ngày', this)">7 Ngày</div>
+                                <div class="preset-btn preset-lite" onclick="selectLitePreset(2592000, '30 Ngày', this)">30 Ngày</div>
+                                <div class="preset-btn preset-lite" onclick="selectLitePreset(-1, 'Vĩnh Viễn', this)">Vĩnh Viễn</div>
+                            </div>
+                        </div>
+
+                        <!-- Custom Hours -->
+                        <div class="form-group">
+                            <label>Hoặc Nhập Số Giờ Tùy Chỉnh</label>
+                            <div class="input-group">
+                                <input type="number" id="liteCustomHours" placeholder="VD: 5, 8, 48, 720 giờ..." oninput="handleLiteCustomHours(this.value)">
+                                <span style="display: flex; align-items: center; padding: 0 10px; color: var(--text-muted); font-size: 13px; font-weight: 700;">Giờ</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Số Thiết Bị Tối Đa (Max Devices)</label>
+                            <input type="number" id="liteMaxDevices" min="1" max="100" value="1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Ghi Chú Khách Hàng</label>
+                            <input type="text" id="liteNote" placeholder="VD: Khách mua gói Lite...">
+                        </div>
+
+                        <button type="submit" class="btn btn-success" style="margin-top: 8px;">
+                            <i class="fa-solid fa-feather"></i> Tạo & Lưu Key Lite (Aim Neck, Drag & Body)
+                        </button>
+                    </form>
+                </div>
+
+                <!-- GÓI 3: FORM TẠO KEY CHO NGƯỜI VƯỢT LINK (LINK4M - CHUẨN 2 Ô) -->
+                <div id="tierPanel-bypass" class="tier-form-panel">
+                    <div style="margin-bottom: 12px; font-weight: 800; font-size: 13px; color: var(--orange); display: flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>CẤU HÌNH GÓI VƯỢT LINK (CHUẨN 2 Ô: MÃ KEY THẬT + LINK RÚT GỌN LINK4M • 5 AIM)</span>
+                    </div>
+
+                    <form onsubmit="handleCreateBypassKey(event)" style="display: flex; flex-direction: column; gap: 14px;">
+                        <!-- Ô 1: KEY THẬT -->
+                        <div class="form-group">
+                            <label>
+                                <span style="color: var(--accent); font-weight: 800;">Ô 1: MÃ KEY THẬT (Lưu Database Server)</span>
+                                <span class="tag" style="background: rgba(212, 163, 115, 0.2); color: var(--accent);">REAL KEY</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="text" id="bypassRealKey" class="mono" placeholder="PASS-XXXX-YYYY" required>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="generateBypassKey()">
+                                    <i class="fa-solid fa-dice"></i> Đổi Mã
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Ô 2: LINK RÚT GỌN LINK4M -->
+                        <div class="form-group">
+                            <label>
+                                <span style="color: var(--orange); font-weight: 800;">Ô 2: LINK RÚT GỌN / LINK VƯỢT (Link4m)</span>
+                                <span class="tag" style="background: rgba(231, 111, 81, 0.2); color: var(--orange);">LINK4M SHORT URL</span>
+                            </label>
+                            <input type="text" id="bypassShortLink" placeholder="VD: https://link4m.co/abc123xyz" value="https://link4m.co/">
+                        </div>
+
+                        <!-- Thời Hạn Sống Key Vượt Link -->
+                        <div class="form-group">
+                            <label>Thời Hạn Sống Key Vượt Link</label>
+                            <div class="preset-grid">
+                                <div class="preset-btn preset-orange" onclick="selectBypassPreset(3600, this)">1 Giờ</div>
+                                <div class="preset-btn preset-orange selected" onclick="selectBypassPreset(7200, this)">2 Giờ</div>
+                                <div class="preset-btn preset-orange" onclick="selectBypassPreset(14400, this)">4 Giờ</div>
+                                <div class="preset-btn preset-orange" onclick="selectBypassPreset(21600, this)">6 Giờ</div>
+                                <div class="preset-btn preset-orange" onclick="selectBypassPreset(43200, this)">12 Giờ</div>
+                                <div class="preset-btn preset-orange" onclick="selectBypassPreset(86400, this)">24 Giờ</div>
+                            </div>
+                        </div>
+
+                        <!-- Nhập Số Giờ Tùy Chỉnh Cho Vượt Link -->
+                        <div class="form-group">
+                            <label>Hoặc Nhập Số Giờ Tùy Chỉnh Cho Key Vượt Link</label>
+                            <div class="input-group">
+                                <input type="number" id="bypassCustomHours" placeholder="VD: 2, 4, 8, 12 giờ..." oninput="handleBypassCustomHours(this.value)">
+                                <span style="display: flex; align-items: center; padding: 0 10px; color: var(--text-muted); font-size: 13px; font-weight: 700;">Giờ</span>
+                            </div>
+                        </div>
+
+                        <!-- Checkbox đồng bộ -->
+                        <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; margin-top: 4px;">
+                            <input type="checkbox" id="syncDefaultBypassCheck" checked style="width: 18px; height: 18px; accent-color: var(--orange);">
+                            <span>Tự động đặt link này làm <b>Link Vượt Mặc Định</b> cho toàn bộ App Client</span>
                         </label>
-                        <div class="input-group">
-                            <input type="text" id="bypassRealKey" class="mono" placeholder="PASS-XXXX-YYYY" required>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="generateBypassKey()">
-                                <i class="fa-solid fa-dice"></i> Đổi Mã
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- Ô 2: LINK RÚT GỌN LINK4M -->
-                    <div class="form-group">
-                        <label>
-                            <span style="color: var(--orange); font-weight: 800;">Ô 2: LINK RÚT GỌN / LINK VƯỢT (Link4m)</span>
-                            <span class="tag" style="background: rgba(255, 159, 28, 0.2); color: var(--orange);">LINK4M SHORT URL</span>
-                        </label>
-                        <input type="text" id="bypassShortLink" placeholder="VD: https://link4m.co/abc123xyz" value="https://link4m.co/">
-                    </div>
-
-                    <!-- Thời Hạn Sống Key Vượt Link -->
-                    <div class="form-group">
-                        <label>Thời Hạn Sống Key Vượt Link</label>
-                        <div class="preset-grid">
-                            <div class="preset-btn preset-orange" onclick="selectBypassPreset(3600, this)">1 Giờ</div>
-                            <div class="preset-btn preset-orange selected" onclick="selectBypassPreset(7200, this)">2 Giờ</div>
-                            <div class="preset-btn preset-orange" onclick="selectBypassPreset(14400, this)">4 Giờ</div>
-                            <div class="preset-btn preset-orange" onclick="selectBypassPreset(21600, this)">6 Giờ</div>
-                            <div class="preset-btn preset-orange" onclick="selectBypassPreset(43200, this)">12 Giờ</div>
-                            <div class="preset-btn preset-orange" onclick="selectBypassPreset(86400, this)">24 Giờ</div>
-                        </div>
-                    </div>
-
-                    <!-- Nhập Số Giờ Tùy Chỉnh Cho Vượt Link -->
-                    <div class="form-group">
-                        <label>Hoặc Nhập Số Giờ Tùy Chỉnh Cho Key Vượt Link</label>
-                        <div class="input-group">
-                            <input type="number" id="bypassCustomHours" placeholder="VD: 2, 4, 8, 12 giờ..." oninput="handleBypassCustomHours(this.value)">
-                            <span style="display: flex; align-items: center; padding: 0 10px; color: var(--text-muted); font-size: 13px; font-weight: 700;">Giờ</span>
-                        </div>
-                    </div>
-
-                    <!-- Checkbox đồng bộ -->
-                    <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; cursor: pointer; margin-top: 4px;">
-                        <input type="checkbox" id="syncDefaultBypassCheck" checked style="width: 18px; height: 18px; accent-color: var(--orange);">
-                        <span>Tự động đặt link này làm <b>Link Vượt Mặc Định</b> cho toàn bộ App Client</span>
-                    </label>
-
-                    <button type="submit" class="btn btn-orange" style="margin-top: 8px;">
-                        <i class="fa-solid fa-bolt"></i> Tạo & Lưu Key Vượt Link
-                    </button>
-                </form>
+                        <button type="submit" class="btn btn-orange" style="margin-top: 8px;">
+                            <i class="fa-solid fa-bolt"></i> Tạo & Lưu Key Vượt Link
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -1227,10 +1386,44 @@
 
         // Tab Switching
         function switchTab(tabId) {
+            if (tabId === 'tab-create-prem') {
+                tabId = 'tab-create';
+                switchCreateTier('prem');
+            } else if (tabId === 'tab-create-lite') {
+                tabId = 'tab-create';
+                switchCreateTier('lite');
+            } else if (tabId === 'tab-create-bypass') {
+                tabId = 'tab-create';
+                switchCreateTier('bypass');
+            }
+
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+
+            const targetPanel = document.getElementById(tabId);
+            if (targetPanel) targetPanel.classList.add('active');
+
+            if (tabId === 'tab-list') {
+                document.getElementById('mainTabBtn-list').classList.add('active');
+            } else if (tabId === 'tab-create') {
+                document.getElementById('mainTabBtn-create').classList.add('active');
+            } else if (tabId === 'tab-config') {
+                document.getElementById('mainTabBtn-config').classList.add('active');
+            } else if (window.event && window.event.currentTarget && window.event.currentTarget.classList.contains('tab-btn')) {
+                window.event.currentTarget.classList.add('active');
+            }
+        }
+
+        // Switch between the 3 tiers in Tab Create (VIP, Lite, Bypass)
+        function switchCreateTier(tier) {
+            document.querySelectorAll('.tier-seg-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tier-form-panel').forEach(p => p.classList.remove('active'));
+
+            const btn = document.getElementById(`tierSegBtn-${tier}`);
+            if (btn) btn.classList.add('active');
+
+            const panel = document.getElementById(`tierPanel-${tier}`);
+            if (panel) panel.classList.add('active');
         }
 
         // Generate Premium Key
@@ -1265,7 +1458,7 @@
         // Preset Duration Selectors for Premium
         function selectPremPreset(sec, label, el) {
             currentPremSeconds = sec;
-            document.querySelectorAll('#tab-create-prem .preset-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('#tierPanel-prem .preset-btn').forEach(b => b.classList.remove('selected'));
             el.classList.add('selected');
             if (sec > 0) {
                 document.getElementById('premCustomHours').value = sec / 3600;
@@ -1278,14 +1471,14 @@
             const h = parseFloat(hours);
             if (h > 0) {
                 currentPremSeconds = Math.round(h * 3600);
-                document.querySelectorAll('#tab-create-prem .preset-btn').forEach(b => b.classList.remove('selected'));
+                document.querySelectorAll('#tierPanel-prem .preset-btn').forEach(b => b.classList.remove('selected'));
             }
         }
 
         // Preset Duration Selectors for Bypass
         function selectBypassPreset(sec, el) {
             currentBypassSeconds = sec;
-            document.querySelectorAll('#tab-create-bypass .preset-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('#tierPanel-bypass .preset-btn').forEach(b => b.classList.remove('selected'));
             el.classList.add('selected');
             document.getElementById('bypassCustomHours').value = sec / 3600;
         }
@@ -1294,7 +1487,7 @@
             const h = parseFloat(hours);
             if (h > 0) {
                 currentBypassSeconds = Math.round(h * 3600);
-                document.querySelectorAll('#tab-create-bypass .preset-btn').forEach(b => b.classList.remove('selected'));
+                document.querySelectorAll('#tierPanel-bypass .preset-btn').forEach(b => b.classList.remove('selected'));
             }
         }
 
@@ -1316,7 +1509,7 @@
         // Preset Duration Selectors for Lite
         function selectLitePreset(sec, label, el) {
             currentLiteSeconds = sec;
-            document.querySelectorAll('#tab-create-lite .preset-btn').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('#tierPanel-lite .preset-btn').forEach(b => b.classList.remove('selected'));
             el.classList.add('selected');
             if (sec > 0) {
                 document.getElementById('liteCustomHours').value = sec / 3600;
@@ -1329,7 +1522,7 @@
             const h = parseFloat(hours);
             if (h > 0) {
                 currentLiteSeconds = Math.round(h * 3600);
-                document.querySelectorAll('#tab-create-lite .preset-btn').forEach(b => b.classList.remove('selected'));
+                document.querySelectorAll('#tierPanel-lite .preset-btn').forEach(b => b.classList.remove('selected'));
             }
         }
 
