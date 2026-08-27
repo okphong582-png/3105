@@ -134,9 +134,14 @@ struct SettingsView: View {
 
                 Section("HỖ TRỢ & CỘNG ĐỒNG") {
                     creditsRow(
-                        name: "Mua Key / Hỗ Trợ Zalo",
+                        name: "Mua Key / Hỗ Trợ Zalo (Admin Hoàng Hà)",
                         role: "Zalo: 0866445455",
                         url: "https://zalo.me/0866445455"
+                    )
+                    creditsRow(
+                        name: "Hỗ Trợ Zalo (Admin Trọng Kiên)",
+                        role: "Zalo: 0826794943",
+                        url: "https://zalo.me/0826794943"
                     )
                     creditsRow(
                         name: "Nhóm Cộng Đồng OniAkuma",
@@ -145,8 +150,8 @@ struct SettingsView: View {
                     )
                     creditsRow(
                         name: "HoangHaMod & TrongKien",
-                        role: "Phát triển & Tùy biến OniAkuma",
-                        url: "https://zalo.me/0866445455"
+                        role: "Đội ngũ phát triển & Tùy biến OniAkuma",
+                        url: "https://zalo.me/0826794943"
                     )
                 }
             }

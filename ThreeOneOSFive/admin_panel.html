@@ -268,9 +268,35 @@
             box-shadow: 0 0 12px var(--gold-glow);
         }
 
-        /* Tab Panels */
-        .tab-panel {
-            display: none;
+        .tab-btn.active.tab-lite {
+            background: linear-gradient(135deg, var(--success), #00b4d8);
+            color: #000;
+            box-shadow: 0 0 12px var(--success-glow);
+        }
+
+        .aim-toggle-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .aim-toggle-card:hover {
+            border-color: var(--accent);
+        }
+
+        .aim-toggle-card input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent);
         }
 
         .tab-panel.active {
@@ -515,6 +541,10 @@
             border-color: rgba(255, 193, 7, 0.35);
         }
 
+        .key-item.lite {
+            border-color: rgba(0, 245, 160, 0.35);
+        }
+
         .key-top {
             display: flex;
             justify-content: space-between;
@@ -544,6 +574,12 @@
             background: rgba(255, 193, 7, 0.15);
             color: var(--gold);
             border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .badge-lite {
+            background: rgba(0, 245, 160, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(0, 245, 160, 0.3);
         }
 
         .badge-bypass {
@@ -704,6 +740,14 @@
 
             <div class="stat-card">
                 <div>
+                    <div class="stat-label">Key Lite (Aim)</div>
+                    <div class="stat-val" id="stat-lite" style="color: var(--success);">0</div>
+                </div>
+                <i class="fa-solid fa-feather stat-icon" style="color: var(--success);"></i>
+            </div>
+
+            <div class="stat-card">
+                <div>
                     <div class="stat-label">Vượt Link</div>
                     <div class="stat-val" id="stat-bypass" style="color: var(--orange);">0</div>
                 </div>
@@ -726,6 +770,9 @@
             </button>
             <button class="tab-btn tab-prem" onclick="switchTab('tab-create-prem')">
                 <i class="fa-solid fa-crown"></i> Tạo Key VIP
+            </button>
+            <button class="tab-btn tab-lite" onclick="switchTab('tab-create-lite')">
+                <i class="fa-solid fa-feather"></i> Tạo Key Lite
             </button>
             <button class="tab-btn tab-bypass" onclick="switchTab('tab-create-bypass')">
                 <i class="fa-solid fa-bolt"></i> Vượt Link (2 Ô)
@@ -755,6 +802,7 @@
                     <select id="statusFilter" class="filter-select" onchange="filterKeys()">
                         <option value="all">Tất Cả Key</option>
                         <option value="premium">Key Premium VIP</option>
+                        <option value="lite">Key Lite (Neck, Drag, Body)</option>
                         <option value="bypass">Key Vượt Link</option>
                         <option value="active">Đang Hoạt Động</option>
                         <option value="expired">Hết Hạn</option>
@@ -833,6 +881,72 @@
 
                     <button type="submit" class="btn btn-primary" style="margin-top: 8px;">
                         <i class="fa-solid fa-crown"></i> Tạo & Lưu Key Premium VIP (Full Tính Năng)
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB LITE: TẠO KEY LITE (CHỈ AIM NECK, AIM DRAG & AIM BODY) -->
+        <div id="tab-create-lite" class="tab-panel">
+            <div class="card" style="border-color: rgba(0, 245, 160, 0.4);">
+                <div class="card-header">
+                    <div class="card-title" style="color: var(--success);">
+                        <i class="fa-solid fa-feather" style="color: var(--success);"></i>
+                        <span>TẠO KEY LITE (CHỈ AIM NECK, AIM DRAG & AIM BODY)</span>
+                    </div>
+                </div>
+
+                <form onsubmit="handleCreateLiteKey(event)" style="display: flex; flex-direction: column; gap: 14px;">
+                    <div class="form-group">
+                        <label>
+                            <span>Mã Key Lite (Để trống để tự sinh ngẫu nhiên)</span>
+                            <span class="tag" style="background: rgba(0, 245, 160, 0.15); color: var(--success);">KEY LITE</span>
+                        </label>
+                        <div class="input-group">
+                            <input type="text" id="liteKeyInput" class="mono" placeholder="VD: LITE-AKUMA-2026">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="generateLiteKey()">
+                                <i class="fa-solid fa-dice"></i> Sinh Mã
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Preset Durations -->
+                    <div class="form-group">
+                        <label>Chọn Thời Hạn Nhanh</label>
+                        <div class="preset-grid">
+                            <div class="preset-btn selected" onclick="selectLitePreset(3600, '1 Giờ', this)">1 Giờ</div>
+                            <div class="preset-btn" onclick="selectLitePreset(7200, '2 Giờ', this)">2 Giờ</div>
+                            <div class="preset-btn" onclick="selectLitePreset(21600, '6 Giờ', this)">6 Giờ</div>
+                            <div class="preset-btn" onclick="selectLitePreset(43200, '12 Giờ', this)">12 Giờ</div>
+                            <div class="preset-btn" onclick="selectLitePreset(86400, '1 Ngày', this)">1 Ngày</div>
+                            <div class="preset-btn" onclick="selectLitePreset(259200, '3 Ngày', this)">3 Ngày</div>
+                            <div class="preset-btn" onclick="selectLitePreset(604800, '7 Ngày', this)">7 Ngày</div>
+                            <div class="preset-btn" onclick="selectLitePreset(2592000, '30 Ngày', this)">30 Ngày</div>
+                            <div class="preset-btn" onclick="selectLitePreset(-1, 'Vĩnh Viễn', this)">Vĩnh Viễn</div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Hours -->
+                    <div class="form-group">
+                        <label>Hoặc Nhập Số Giờ Tùy Chỉnh</label>
+                        <div class="input-group">
+                            <input type="number" id="liteCustomHours" placeholder="VD: 5, 8, 48, 720 giờ..." oninput="handleLiteCustomHours(this.value)">
+                            <span style="display: flex; align-items: center; padding: 0 10px; color: var(--text-muted); font-size: 13px; font-weight: 700;">Giờ</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Số Thiết Bị Tối Đa (Max Devices)</label>
+                        <input type="number" id="liteMaxDevices" min="1" max="100" value="1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ghi Chú Khách Hàng</label>
+                        <input type="text" id="liteNote" placeholder="VD: Khách mua gói Lite...">
+                    </div>
+
+                    <button type="submit" class="btn btn-success" style="margin-top: 8px;">
+                        <i class="fa-solid fa-feather"></i> Tạo & Lưu Key Lite (Aim Neck, Drag & Body)
                     </button>
                 </form>
             </div>
@@ -934,6 +1048,42 @@
                     </div>
                 </div>
 
+                <!-- Aim Bot Remote Visibility Box -->
+                <div style="background: rgba(0, 240, 255, 0.05); border: 1.5px solid rgba(0, 240, 255, 0.25); border-radius: var(--radius-md); padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-weight: 900; font-size: 14px; color: var(--accent); display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-crosshairs"></i> BẬT / ẨN TÍNH NĂNG AIM BOT TRÊN APP CLIENT
+                        </div>
+                        <span class="badge badge-premium">REALTIME</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                        Khi bạn <b>bỏ chọn (tắt)</b> tính năng nào bên dưới, tính năng đó sẽ <b>biến mất hoàn toàn</b> khỏi màn hình App của người dùng. Khi bật lại sẽ xuất hiện bình thường.
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-top: 4px;">
+                        <label class="aim-toggle-card">
+                            <span>🎯 Aim Neck (Khóa Cổ)</span>
+                            <input type="checkbox" id="aimVisNeck" checked onchange="toggleAimVisibility('neck', this.checked)">
+                        </label>
+                        <label class="aim-toggle-card">
+                            <span>🎯 Aim Drag (Kéo Tâm)</span>
+                            <input type="checkbox" id="aimVisDrag" checked onchange="toggleAimVisibility('drag', this.checked)">
+                        </label>
+                        <label class="aim-toggle-card">
+                            <span>🎯 Aim Body (Khóa Thân)</span>
+                            <input type="checkbox" id="aimVisBody" checked onchange="toggleAimVisibility('body', this.checked)">
+                        </label>
+                        <label class="aim-toggle-card">
+                            <span>🎯 Aim Chest (Khóa Ngực)</span>
+                            <input type="checkbox" id="aimVisChest" checked onchange="toggleAimVisibility('chest', this.checked)">
+                        </label>
+                        <label class="aim-toggle-card">
+                            <span>🎯 Aim Magic (Ma Thuật)</span>
+                            <input type="checkbox" id="aimVisMagic" checked onchange="toggleAimVisibility('magic', this.checked)">
+                        </label>
+                    </div>
+                </div>
+
                 <form onsubmit="handleSaveConfig(event)" style="display: flex; flex-direction: column; gap: 14px;">
                     <div class="form-group">
                         <label>Link Vượt Link4m Mặc Định Cho App Client</label>
@@ -1020,6 +1170,7 @@
 
         let allKeys = {};
         let currentPremSeconds = 3600;
+        let currentLiteSeconds = 3600;
         let currentBypassSeconds = 7200;
         let isMaintenanceActive = false;
         let keyPendingDelete = null;
@@ -1048,11 +1199,29 @@
             if (config.maintenance_message) {
                 document.getElementById('configMaintenanceMsgInput').value = config.maintenance_message;
             }
+
+            if (config.aim_visibility) {
+                if (document.getElementById('aimVisNeck')) document.getElementById('aimVisNeck').checked = config.aim_visibility.neck !== false;
+                if (document.getElementById('aimVisDrag')) document.getElementById('aimVisDrag').checked = config.aim_visibility.drag !== false;
+                if (document.getElementById('aimVisBody')) document.getElementById('aimVisBody').checked = config.aim_visibility.body !== false;
+                if (document.getElementById('aimVisChest')) document.getElementById('aimVisChest').checked = config.aim_visibility.chest !== false;
+                if (document.getElementById('aimVisMagic')) document.getElementById('aimVisMagic').checked = config.aim_visibility.magic !== false;
+            }
         });
+
+        // Toggle Remote Aim Visibility
+        function toggleAimVisibility(aimType, isVisible) {
+            configRef.child('aim_visibility').child(aimType).set(isVisible).then(() => {
+                showToast(`Đã ${isVisible ? 'BẬT' : 'ẨN'} tính năng Aim: ${aimType.toUpperCase()} trên App`, isVisible ? 'success' : 'orange');
+            }).catch(err => {
+                showToast('Lỗi cập nhật hiển thị: ' + err.message, 'error');
+            });
+        }
 
         // Initialize Keys
         window.addEventListener('DOMContentLoaded', () => {
             generatePremKey();
+            generateLiteKey();
             generateBypassKey();
         });
 
@@ -1071,6 +1240,17 @@
             for (let i = 0; i < 4; i++) p1 += chars.charAt(Math.floor(Math.random() * chars.length));
             for (let i = 0; i < 4; i++) p2 += chars.charAt(Math.floor(Math.random() * chars.length));
             document.getElementById('premKeyInput').value = `ONIAKUMA-${p1}-${p2}`;
+        }
+
+        // Generate Lite Key
+        function generateLiteKey() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let p1 = '', p2 = '';
+            for (let i = 0; i < 4; i++) p1 += chars.charAt(Math.floor(Math.random() * chars.length));
+            for (let i = 0; i < 4; i++) p2 += chars.charAt(Math.floor(Math.random() * chars.length));
+            if (document.getElementById('liteKeyInput')) {
+                document.getElementById('liteKeyInput').value = `LITE-${p1}-${p2}`;
+            }
         }
 
         // Generate Bypass Key
@@ -1130,6 +1310,41 @@
                 navigator.clipboard.writeText(key);
                 showToast(`Đã tạo & Copy Key VIP: ${key}`, 'gold');
                 generatePremKey();
+            });
+        }
+
+        // Preset Duration Selectors for Lite
+        function selectLitePreset(sec, label, el) {
+            currentLiteSeconds = sec;
+            document.querySelectorAll('#tab-create-lite .preset-btn').forEach(b => b.classList.remove('selected'));
+            el.classList.add('selected');
+            if (sec > 0) {
+                document.getElementById('liteCustomHours').value = sec / 3600;
+            } else {
+                document.getElementById('liteCustomHours').value = '';
+            }
+        }
+
+        function handleLiteCustomHours(hours) {
+            const h = parseFloat(hours);
+            if (h > 0) {
+                currentLiteSeconds = Math.round(h * 3600);
+                document.querySelectorAll('#tab-create-lite .preset-btn').forEach(b => b.classList.remove('selected'));
+            }
+        }
+
+        // Handle Create Lite Key (Aim Neck, Drag, Body Only)
+        function handleCreateLiteKey(e) {
+            e.preventDefault();
+            let key = document.getElementById('liteKeyInput').value.trim().toUpperCase();
+            if (!key) key = document.getElementById('liteKeyInput').placeholder;
+            const maxDevices = parseInt(document.getElementById('liteMaxDevices').value) || 1;
+            const note = document.getElementById('liteNote').value.trim() || 'Key Lite (Aim Neck, Drag, Body)';
+
+            createKeyInDatabase(key, currentLiteSeconds, maxDevices, note, 'lite', () => {
+                navigator.clipboard.writeText(key);
+                showToast(`Đã tạo & Copy Key Lite: ${key}`, 'success');
+                generateLiteKey();
             });
         }
 
@@ -1249,9 +1464,13 @@
                     (k.usedDevices && k.usedDevices.some(d => d.toLowerCase().includes(searchQuery)));
                 if (!matchSearch) return false;
 
-                const isBypass = (k.tier === 'bypass') || (k.note || '').toLowerCase().includes('vượt link') || (k.key && k.key.startsWith('PASS-'));
+                const isLite = (k.tier === 'lite') || (k.key && k.key.startsWith('LITE-')) || (k.note || '').toLowerCase().includes('lite');
+                const isBypass = !isLite && ((k.tier === 'bypass') || (k.note || '').toLowerCase().includes('vượt link') || (k.key && k.key.startsWith('PASS-')));
+                const isPremium = !isLite && !isBypass;
+
                 if (statusFilter === 'all') return true;
-                if (statusFilter === 'premium') return !isBypass && k.status !== 'banned';
+                if (statusFilter === 'premium') return isPremium && k.status !== 'banned';
+                if (statusFilter === 'lite') return isLite && k.status !== 'banned';
                 if (statusFilter === 'bypass') return isBypass;
                 if (statusFilter === 'active') return k.status !== 'banned' && (!k.expiresAt || k.expiresAt > now);
                 if (statusFilter === 'expired') return (k.expiresAt && k.expiresAt <= now) || k.status === 'expired';
@@ -1272,22 +1491,27 @@
             container.innerHTML = keysArr.map(k => {
                 const isBanned = k.status === 'banned';
                 const isExpired = k.expiresAt && k.expiresAt <= now;
-                const isBypass = (k.tier === 'bypass') || (k.note || '').toLowerCase().includes('vượt link') || (k.key && k.key.startsWith('PASS-'));
+                const isLite = (k.tier === 'lite') || (k.key && k.key.startsWith('LITE-')) || (k.note || '').toLowerCase().includes('lite');
+                const isBypass = !isLite && ((k.tier === 'bypass') || (k.note || '').toLowerCase().includes('vượt link') || (k.key && k.key.startsWith('PASS-')));
 
                 let statusBadge = `<span class="badge badge-premium">👑 VIP</span>`;
                 if (isBanned) statusBadge = `<span class="badge badge-banned">BANNED</span>`;
                 else if (isExpired) statusBadge = `<span class="badge badge-expired">HẾT HẠN</span>`;
+                else if (isLite) statusBadge = `<span class="badge badge-lite">⚡ KEY LITE</span>`;
                 else if (isBypass) statusBadge = `<span class="badge badge-bypass">⚡ VƯỢT LINK</span>`;
 
                 const remainingTime = formatRemainingTime(k, now);
                 const devicesUsed = (k.usedDevices || []).length;
                 const maxDevices = k.maxDevices || 1;
+                const iconClass = isLite ? 'fa-feather' : (isBypass ? 'fa-bolt' : 'fa-crown');
+                const iconColor = isBanned ? 'var(--danger)' : (isLite ? 'var(--success)' : (isBypass ? 'var(--orange)' : 'var(--gold)'));
+                const itemClass = isLite ? 'lite' : (isBypass ? 'bypass' : 'premium');
 
                 return `
-                    <div class="key-item ${isBanned ? 'banned' : ''} ${isBypass ? 'bypass' : 'premium'}">
+                    <div class="key-item ${isBanned ? 'banned' : ''} ${itemClass}">
                         <div class="key-top">
                             <div class="key-code" onclick="copyText('${k.key}')" title="Bấm để sao chép">
-                                <i class="fa-solid ${isBypass ? 'fa-bolt' : 'fa-crown'}" style="color: ${isBanned ? 'var(--danger)' : (isBypass ? 'var(--orange)' : 'var(--gold)')}; font-size: 13px;"></i>
+                                <i class="fa-solid ${iconClass}" style="color: ${iconColor}; font-size: 13px;"></i>
                                 <span class="mono">${k.key}</span>
                                 <i class="fa-regular fa-copy" style="font-size: 12px; color: var(--text-muted);"></i>
                             </div>
@@ -1347,12 +1571,16 @@
             const now = Date.now();
             const list = Object.values(allKeys);
             const total = list.length;
-            const bypass = list.filter(k => (k.tier === 'bypass') || (k.note || '').toLowerCase().includes('vượt link') || (k.key && k.key.startsWith('PASS-'))).length;
-            const premium = list.filter(k => k.tier === 'premium' || (!k.key.startsWith('PASS-') && !(k.note || '').toLowerCase().includes('vượt link'))).length;
+            const lite = list.filter(k => (k.tier === 'lite') || (k.key && k.key.startsWith('LITE-')) || (k.note || '').toLowerCase().includes('lite')).length;
+            const bypass = list.filter(k => k.tier !== 'lite' && !k.key.startsWith('LITE-') && ((k.tier === 'bypass') || (k.note || '').toLowerCase().includes('vượt link') || (k.key && k.key.startsWith('PASS-')))).length;
+            const premium = list.filter(k => (k.tier === 'premium' || (!k.key.startsWith('PASS-') && !k.key.startsWith('LITE-') && !(k.note || '').toLowerCase().includes('vượt link') && !(k.note || '').toLowerCase().includes('lite')))).length;
             const banned = list.filter(k => k.status === 'banned' || (k.expiresAt && k.expiresAt <= now)).length;
 
             document.getElementById('stat-total').innerText = total;
             document.getElementById('stat-premium').innerText = premium;
+            if (document.getElementById('stat-lite')) {
+                document.getElementById('stat-lite').innerText = lite;
+            }
             document.getElementById('stat-bypass').innerText = bypass;
             document.getElementById('stat-banned').innerText = banned;
         }

@@ -351,9 +351,11 @@ struct MainInjectorView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Tab 1: Aim Bot Section (5 Chế Độ)
+    // MARK: - Tab 1: Aim Bot Section (Tự động lọc theo Admin & Gói Key)
     private var aimBotSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let visibleAims = AimModType.allCases.filter { licenseManager.isAimVisible($0) }
+
+        return VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("TÍNH NĂNG AIM BOT")
                     .font(.system(size: 11, weight: .black, design: .monospaced))
@@ -362,7 +364,7 @@ struct MainInjectorView: View {
 
                 Spacer()
 
-                Text("5 CHẾ ĐỘ")
+                Text("\(visibleAims.count) CHẾ ĐỘ SẴN SÀNG")
                     .font(.system(size: 10, weight: .black, design: .monospaced))
                     .foregroundStyle(activeTheme.primaryColor)
                     .padding(.horizontal, 8)
@@ -371,18 +373,43 @@ struct MainInjectorView: View {
             }
             .padding(.horizontal, 4)
 
-            VStack(spacing: 12) {
-                ForEach(AimModType.allCases) { aimType in
-                    featureToggleCard(
-                        title: aimType.title,
-                        subtitle: aimType.subtitle,
-                        filename: aimType.filename,
-                        icon: aimType.icon,
-                        isEnabled: modManager.isAimModEnabled(aimType),
-                        isProcessing: modManager.isAimModProcessing(aimType),
-                        accentColor: aimType.accentColor
-                    ) {
-                        modManager.toggleAimMod(aimType, store: store)
+            if visibleAims.isEmpty {
+                VStack(spacing: 10) {
+                    Image(systemName: "shield.slash.fill")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.secondary)
+                    Text("Các chế độ Aim Bot đang được Quản Trị Viên tạm ẩn.")
+                        .font(.subheadline.weight(.bold))
+                        .foregroundStyle(.white)
+                    Text("Vui lòng quay lại sau khi Admin mở lại trên máy chủ.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+                .background(Color.white.opacity(0.04).cornerRadius(16))
+            } else {
+                VStack(spacing: 12) {
+                    ForEach(visibleAims) { aimType in
+                        let isAllowed = licenseManager.currentLicense?.canUseAimMod(aimType) ?? true
+                        featureToggleCard(
+                            title: aimType.title,
+                            subtitle: isAllowed ? aimType.subtitle : "🔒 Gói Key Lite chỉ có Neck, Drag, Body. Hãy nâng cấp PRO VIP!",
+                            filename: aimType.filename,
+                            icon: isAllowed ? aimType.icon : "lock.fill",
+                            isEnabled: isAllowed && modManager.isAimModEnabled(aimType),
+                            isProcessing: modManager.isAimModProcessing(aimType),
+                            accentColor: isAllowed ? aimType.accentColor : Color.gray,
+                            isLocked: !isAllowed
+                        ) {
+                            if !isAllowed {
+                                let gen = UINotificationFeedbackGenerator()
+                                gen.notificationOccurred(.warning)
+                                modManager.triggerToast("Tính năng này yêu cầu Key PRO VIP! Gói Lite chỉ có Aim Neck, Drag, Body.")
+                            } else {
+                                modManager.toggleAimMod(aimType, store: store)
+                            }
+                        }
                     }
                 }
             }
@@ -791,6 +818,7 @@ struct MainInjectorView: View {
         isEnabled: Bool,
         isProcessing: Bool,
         accentColor: Color,
+        isLocked: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -799,18 +827,20 @@ struct MainInjectorView: View {
                     ZStack {
                         Circle()
                             .fill(
-                                isEnabled
-                                    ? accentColor.opacity(0.2)
-                                    : Color.white.opacity(0.06)
+                                isLocked
+                                    ? Color.orange.opacity(0.12)
+                                    : (isEnabled ? accentColor.opacity(0.2) : Color.white.opacity(0.06))
                             )
                             .frame(width: 52, height: 52)
 
-                        Image(systemName: icon)
+                        Image(systemName: isLocked ? "lock.fill" : icon)
                             .font(.system(size: 24, weight: .bold))
                             .foregroundStyle(
-                                isEnabled
-                                    ? LinearGradient(colors: [accentColor, .white], startPoint: .top, endPoint: .bottom)
-                                    : LinearGradient(colors: [.secondary, .secondary.opacity(0.5)], startPoint: .top, endPoint: .bottom)
+                                isLocked
+                                    ? LinearGradient(colors: [Color.orange, Color.yellow], startPoint: .top, endPoint: .bottom)
+                                    : (isEnabled
+                                        ? LinearGradient(colors: [accentColor, .white], startPoint: .top, endPoint: .bottom)
+                                        : LinearGradient(colors: [.secondary, .secondary.opacity(0.5)], startPoint: .top, endPoint: .bottom))
                             )
                     }
 
@@ -818,15 +848,24 @@ struct MainInjectorView: View {
                         HStack(spacing: 6) {
                             Text(title)
                                 .font(.headline.weight(.black))
-                                .foregroundStyle(isEnabled ? accentColor : .white)
+                                .foregroundStyle(isLocked ? Color.secondary : (isEnabled ? accentColor : .white))
 
-                            Circle()
-                                .fill(isEnabled ? Color.green : Color.red.opacity(0.8))
-                                .frame(width: 7, height: 7)
+                            if isLocked {
+                                Text("CẦN PRO VIP")
+                                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                                    .foregroundStyle(Color.orange)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(Color.orange.opacity(0.15).cornerRadius(4))
+                            } else {
+                                Circle()
+                                    .fill(isEnabled ? Color.green : Color.red.opacity(0.8))
+                                    .frame(width: 7, height: 7)
 
-                            Text(isEnabled ? "BẬT" : "TẮT")
-                                .font(.caption2.weight(.black))
-                                .foregroundStyle(isEnabled ? Color.green : .secondary)
+                                Text(isEnabled ? "BẬT" : "TẮT")
+                                    .font(.caption2.weight(.black))
+                                    .foregroundStyle(isEnabled ? Color.green : .secondary)
+                            }
                         }
 
                         Text(subtitle)
@@ -845,6 +884,10 @@ struct MainInjectorView: View {
                         ProgressView()
                             .tint(accentColor)
                             .scaleEffect(1.1)
+                    } else if isLocked {
+                        Image(systemName: "lock.shield.fill")
+                            .font(.system(size: 22))
+                            .foregroundStyle(Color.orange.opacity(0.8))
                     } else {
                         ZStack(alignment: isEnabled ? .trailing : .leading) {
                             Capsule()

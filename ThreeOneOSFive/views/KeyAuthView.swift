@@ -217,55 +217,56 @@ struct KeyAuthView: View {
 
                         Divider().background(Color.white.opacity(0.08))
 
-                        // FREE BYPASS LINK BUTTON (VƯỢT LINK LẤY KEY)
-                        Button {
-                            openBypassLink()
-                        } label: {
-                            VStack(spacing: 6) {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "link.badge.plus")
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundStyle(Color.orange)
-
-                                    Text("Bạn không có key? Nhấn vô đây để vượt link")
+                        // BYPASS LINK (VƯỢT LINK LẤY KEY)
+                        HStack(spacing: 8) {
+                            Button {
+                                openBypassLink()
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "safari.fill")
                                         .font(.system(size: 13, weight: .bold))
-                                        .foregroundStyle(.white)
-
-                                    Image(systemName: "arrow.up.right.circle.fill")
-                                        .font(.system(size: 13, weight: .bold))
-                                        .foregroundStyle(Color.orange)
+                                    Text("MỞ LINK VƯỢT")
+                                        .font(.system(size: 11, weight: .black, design: .rounded))
                                 }
-
-                                Text("Vượt link nhanh nhận ngay Key miễn phí 100%")
-                                    .font(.caption2)
-                                    .foregroundStyle(Color.orange.opacity(0.9))
+                                .foregroundStyle(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(
+                                    LinearGradient(
+                                        colors: [Color.orange, Color.yellow],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                    .cornerRadius(12)
+                                )
                             }
-                            .padding(14)
-                            .frame(maxWidth: .infinity)
-                            .background(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [Color.orange.opacity(0.18), Color.yellow.opacity(0.08)],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                            .stroke(
-                                                LinearGradient(
-                                                    colors: [Color.orange.opacity(0.6), Color.yellow.opacity(0.3)],
-                                                    startPoint: .leading,
-                                                    endPoint: .trailing
-                                                ),
-                                                lineWidth: 1.5
-                                            )
-                                    )
-                                    .shadow(color: Color.orange.opacity(0.2), radius: 8, y: 2)
-                            )
+
+                            Button {
+                                let linkToCopy = licenseManager.bypassLink.isEmpty ? "https://link4m.co" : licenseManager.bypassLink
+                                UIPasteboard.general.string = linkToCopy
+                                let gen = UINotificationFeedbackGenerator()
+                                gen.notificationOccurred(.success)
+                                showBypassToast = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                                    showBypassToast = false
+                                }
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: showBypassToast ? "checkmark.circle.fill" : "doc.on.doc.fill")
+                                        .font(.system(size: 12, weight: .bold))
+                                    Text(showBypassToast ? "ĐÃ CHÉP LINK!" : "CHÉP LINK VƯỢT")
+                                        .font(.system(size: 11, weight: .black, design: .rounded))
+                                }
+                                .foregroundStyle(showBypassToast ? Color.green : Color.orange)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Color.orange.opacity(0.15).cornerRadius(12))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(showBypassToast ? Color.green : Color.orange.opacity(0.5), lineWidth: 1.2)
+                                )
+                            }
                         }
-                        .buttonStyle(.plain)
                     }
                     .padding(20)
                     .background(
@@ -335,27 +336,39 @@ struct KeyAuthView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
 
-                        HStack(spacing: 12) {
+                        HStack(spacing: 8) {
                             Link(destination: URL(string: "https://zalo.me/0866445455")!) {
-                                HStack(spacing: 6) {
+                                HStack(spacing: 4) {
                                     Image(systemName: "phone.fill")
                                     Text("Zalo: 0866445455")
                                 }
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(Color.white)
-                                .padding(.horizontal, 14)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 8)
+                                .background(Color.blue.opacity(0.85).cornerRadius(10))
+                            }
+
+                            Link(destination: URL(string: "https://zalo.me/0826794943")!) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "phone.fill")
+                                    Text("Zalo: 0826794943")
+                                }
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(Color.white)
+                                .padding(.horizontal, 10)
                                 .padding(.vertical, 8)
                                 .background(Color.blue.opacity(0.85).cornerRadius(10))
                             }
 
                             Link(destination: URL(string: "https://t.me/+1fstsksh_dMxNjE1")!) {
-                                HStack(spacing: 6) {
+                                HStack(spacing: 4) {
                                     Image(systemName: "paperplane.fill")
-                                    Text("Nhóm Telegram")
+                                    Text("Telegram")
                                 }
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(activeTheme.primaryColor)
-                                .padding(.horizontal, 14)
+                                .padding(.horizontal, 10)
                                 .padding(.vertical, 8)
                                 .background(activeTheme.primaryColor.opacity(0.15).cornerRadius(10))
                                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(activeTheme.primaryColor.opacity(0.4), lineWidth: 1))

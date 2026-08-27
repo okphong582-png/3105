@@ -183,17 +183,47 @@ struct LicenseInfo: Codable {
         return now > exp
     }
 
+    var isLiteTier: Bool {
+        if let t = tier?.lowercased(), t == "lite" { return true }
+        return key.uppercased().hasPrefix("LITE-") ||
+               (note ?? "").lowercased().contains("lite")
+    }
+
     var isBypassTier: Bool {
+        if isLiteTier { return false }
         if let t = tier?.lowercased(), t == "bypass" { return true }
-        if let t = tier?.lowercased(), t == "premium" { return false }
+        if let t = tier?.lowercased(), t == "premium" || t == "pro" { return false }
         return key.uppercased().hasPrefix("PASS-") ||
                (note ?? "").lowercased().contains("vượt link") ||
                (note ?? "").lowercased().contains("link4m")
     }
 
-    var isPremiumTier: Bool { !isBypassTier }
+    var isPremiumTier: Bool { !isBypassTier && !isLiteTier }
     var canUseMods: Bool { isPremiumTier }
-    var tierBadgeText: String { isPremiumTier ? "👑 PREMIUM VIP" : "⚡ FREE VƯỢT LINK" }
+
+    func canUseAimMod(_ type: AimModType) -> Bool {
+        if isPremiumTier { return true }
+        if isBypassTier { return true }
+        if isLiteTier {
+            switch type {
+            case .neck, .drag, .body:
+                return true
+            default:
+                return false
+            }
+        }
+        return false
+    }
+
+    var tierBadgeText: String {
+        if isPremiumTier {
+            return "👑 PRO VIP"
+        } else if isLiteTier {
+            return "⚡ KEY LITE"
+        } else {
+            return "🔗 VƯỢT LINK"
+        }
+    }
 
     var remainingTimeFormatted: String {
         if isLifetime { return "Vĩnh Viễn" }
@@ -258,6 +288,19 @@ final class LicenseManager: ObservableObject {
     @Published var bypassKeys: [LicenseInfo] = []
     @Published var isLoadingBypassKeys: Bool = false
 
+    // Remote Aim Visibility toggled by Admin (default: all true)
+    @Published var aimVisibility: [String: Bool] = [
+        "neck": true,
+        "drag": true,
+        "body": true,
+        "chest": true,
+        "magic": true
+    ]
+
+    func isAimVisible(_ type: AimModType) -> Bool {
+        return aimVisibility[type.rawValue] ?? true
+    }
+
     private let storageKey = "oni_akuma_active_license_v2"
     private let savedKeyStringKey = "oni_akuma_saved_raw_key"
     private var heartbeatTimer: Timer?
@@ -317,6 +360,17 @@ final class LicenseManager: ObservableObject {
             }
             if let link = dict["bypass_link"] as? String, !link.isEmpty {
                 self.bypassLink = link
+            }
+            if let aimVis = dict["aim_visibility"] as? [String: Any] {
+                var updated: [String: Bool] = [:]
+                for (k, v) in aimVis {
+                    if let b = v as? Bool {
+                        updated[k] = b
+                    } else if let num = v as? NSNumber {
+                        updated[k] = num.boolValue
+                    }
+                }
+                self.aimVisibility = updated
             }
             self.isSystemMaintenance = isMaint
             return isMaint

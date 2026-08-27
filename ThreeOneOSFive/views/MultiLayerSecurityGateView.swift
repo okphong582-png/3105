@@ -8,6 +8,7 @@ struct MultiLayerSecurityGateView: View {
 
     @State private var inputKey = ""
     @State private var showHWIDCopied = false
+    @State private var showLinkCopiedToast = false
     @FocusState private var isKeyFieldFocused: Bool
 
     private var activeTheme: AppColorTheme {
@@ -31,29 +32,60 @@ struct MultiLayerSecurityGateView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
-                    Spacer(minLength: 16)
-
-                    // Hero Header
+                    // Header Status
                     VStack(spacing: 8) {
-                        AppLogo(size: 76)
+                        AppLogo(size: 68)
 
-                        VStack(spacing: 2) {
-                            Text("OniAkuma")
-                                .font(.system(size: 26, weight: .black, design: .rounded))
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [.white, Color(red: 0.85, green: 0.95, blue: 1.0)],
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
-                                )
-                            
-                            Text("HỆ THỐNG RÀO CHẮN 5 LỚP BẢO MẬT")
-                                .font(.system(size: 11, weight: .black, design: .monospaced))
+                        Text("ONIAKUMA SECURITY GATE")
+                            .font(.system(size: 16, weight: .black, design: .monospaced))
+                            .foregroundStyle(activeTheme.primaryColor)
+                            .tracking(2.0)
+
+                        Text("Hệ thống bảo vệ phân vùng độc quyền • HoangHaMod & TrongKien")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+
+                        HStack(spacing: 8) {
+                            Link(destination: URL(string: "https://zalo.me/0866445455")!) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "phone.fill")
+                                    Text("Zalo: 0866445455")
+                                }
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .background(Color.blue.opacity(0.85).cornerRadius(8))
+                            }
+
+                            Link(destination: URL(string: "https://zalo.me/0826794943")!) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "phone.fill")
+                                    Text("Zalo: 0826794943")
+                                }
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .background(Color.blue.opacity(0.85).cornerRadius(8))
+                            }
+
+                            Link(destination: URL(string: "https://t.me/+1fstsksh_dMxNjE1")!) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "paperplane.fill")
+                                    Text("Telegram")
+                                }
+                                .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(activeTheme.primaryColor)
-                                .tracking(1.2)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .background(activeTheme.primaryColor.opacity(0.15).cornerRadius(8))
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(activeTheme.primaryColor.opacity(0.4), lineWidth: 1))
+                            }
                         }
                     }
+                    .padding(.top, 10)
 
                     // 5-Layer Progress Bar
                     layerProgressHeader
@@ -62,42 +94,6 @@ struct MultiLayerSecurityGateView: View {
                     // Active Layer View
                     activeLayerCard
                         .padding(.horizontal, 4)
-
-                    // Footer Contact / Support
-                    VStack(spacing: 8) {
-                        Text("Hệ thống bảo vệ phân vùng độc quyền • HoangHaMod & TrongKien")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-
-                        HStack(spacing: 12) {
-                            Link(destination: URL(string: "https://zalo.me/0866445455")!) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "phone.fill")
-                                    Text("Zalo: 0866445455")
-                                }
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.blue.opacity(0.8).cornerRadius(8))
-                            }
-
-                            Link(destination: URL(string: "https://t.me/+1fstsksh_dMxNjE1")!) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "paperplane.fill")
-                                    Text("Telegram OniAkuma")
-                                }
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(activeTheme.primaryColor)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(activeTheme.primaryColor.opacity(0.15).cornerRadius(8))
-                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(activeTheme.primaryColor.opacity(0.4), lineWidth: 1))
-                            }
-                        }
-                    }
-                    .padding(.top, 10)
 
                     Spacer(minLength: 24)
                 }
@@ -279,66 +275,86 @@ struct MultiLayerSecurityGateView: View {
     }
 
     // MARK: - LAYER 2: License Key
-    // MARK: - LAYER 2: License Key
     private var layer2View: some View {
         VStack(spacing: 14) {
-            Text("Nhập mã License Key (VIP hoặc Vượt Link) để xác thực quyền truy cập cơ sở dữ liệu:")
+            Text("Nhập mã License Key (VIP, Lite hoặc Vượt Link) để xác thực quyền truy cập:")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
-            // FREE BYPASS LINK BUTTON (VƯỢT LINK LẤY KEY)
-            Button {
-                let gen = UIImpactFeedbackGenerator(style: .medium)
-                gen.impactOccurred()
-                licenseManager.openBypassLink()
-            } label: {
-                VStack(spacing: 4) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "link.badge.plus")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(Color.orange)
-
-                        Text("BẠN CHƯA CÓ KEY? NHẤN VÀO ĐÂY ĐỂ VƯỢT LINK")
-                            .font(.system(size: 12, weight: .black, design: .rounded))
-                            .foregroundStyle(.white)
-
-                        Image(systemName: "arrow.up.right.circle.fill")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Color.orange)
+            // VƯỢT LINK LINK4M LẤY KEY
+            VStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    // Button 1: Mở Safari vượt link trực tiếp
+                    Button {
+                        let gen = UIImpactFeedbackGenerator(style: .medium)
+                        gen.impactOccurred()
+                        licenseManager.openBypassLink()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "safari.fill")
+                                .font(.system(size: 13, weight: .bold))
+                            Text("MỞ LINK VƯỢT")
+                                .font(.system(size: 11, weight: .black, design: .rounded))
+                            Image(systemName: "arrow.up.right")
+                                .font(.system(size: 10, weight: .bold))
+                        }
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 11)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.orange, Color.yellow],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                            .cornerRadius(12)
+                        )
+                        .shadow(color: Color.orange.opacity(0.35), radius: 6, y: 2)
                     }
 
+                    // Button 2: CHỈ SAO CHÉP LINK ĐỂ VƯỢT (Tuyệt đối không điền vào ô key!)
+                    Button {
+                        let linkToCopy = licenseManager.bypassLink.isEmpty ? "https://link4m.co" : licenseManager.bypassLink
+                        UIPasteboard.general.string = linkToCopy
+                        let gen = UINotificationFeedbackGenerator()
+                        gen.notificationOccurred(.success)
+                        showLinkCopiedToast = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                            showLinkCopiedToast = false
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: showLinkCopiedToast ? "checkmark.circle.fill" : "doc.on.doc.fill")
+                                .font(.system(size: 12, weight: .bold))
+                            Text(showLinkCopiedToast ? "ĐÃ SAO CHÉP!" : "CHÉP LINK VƯỢT")
+                                .font(.system(size: 11, weight: .black, design: .rounded))
+                        }
+                        .foregroundStyle(showLinkCopiedToast ? Color.green : Color.orange)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 11)
+                        .background(Color.orange.opacity(0.14).cornerRadius(12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(showLinkCopiedToast ? Color.green : Color.orange.opacity(0.5), lineWidth: 1.2)
+                        )
+                    }
+                }
+
+                if showLinkCopiedToast {
+                    Text("✅ Đã sao chép link vượt! Hãy dán vào Safari/Chrome để vượt link lấy key.")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Color.green)
+                        .multilineTextAlignment(.center)
+                } else {
                     Text("Vượt link nhanh nhận ngay Key miễn phí 100% (Mở khóa Aim Bot)")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Color.orange.opacity(0.9))
+                        .foregroundStyle(Color.orange.opacity(0.85))
                 }
-                .padding(.vertical, 12)
-                .padding(.horizontal, 14)
-                .frame(maxWidth: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.orange.opacity(0.22), Color.yellow.opacity(0.08)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .stroke(
-                                    LinearGradient(
-                                        colors: [Color.orange.opacity(0.7), Color.yellow.opacity(0.4)],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    ),
-                                    lineWidth: 1.5
-                                )
-                        )
-                        .shadow(color: Color.orange.opacity(0.25), radius: 8, y: 2)
-                )
             }
-            .buttonStyle(.plain)
+            .padding(12)
+            .background(Color(red: 0.08, green: 0.09, blue: 0.13).cornerRadius(14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.orange.opacity(0.35), lineWidth: 1))
 
             // Key Input
             HStack(spacing: 8) {
