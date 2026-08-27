@@ -254,6 +254,9 @@ final class LicenseManager: ObservableObject {
     @Published var lastErrorMessage: String? = nil
     @Published var isSystemMaintenance: Bool = false
     @Published var maintenanceMessage: String = "Hệ thống đang tạm ngắt kết nối / bảo trì bởi Quản Trị Viên. Vui lòng quay lại sau!"
+    @Published var bypassLink: String = "https://link4m.co"
+    @Published var bypassKeys: [LicenseInfo] = []
+    @Published var isLoadingBypassKeys: Bool = false
 
     private let storageKey = "oni_akuma_active_license_v2"
     private let savedKeyStringKey = "oni_akuma_saved_raw_key"
@@ -349,7 +352,7 @@ final class LicenseManager: ObservableObject {
                     }
                 }
             }
-            result.sort { ($0.createdAt ?? 0) > ($1.createdAt ?? 0) }
+            result.sort { $0.createdAt > $1.createdAt }
             self.bypassKeys = result
         } catch {
             // log error

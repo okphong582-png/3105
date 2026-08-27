@@ -209,7 +209,7 @@ final class ModFeatureManager: ObservableObject {
                 _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
                     ModFeatureManager.shared.processingAimMods.remove(typeKey)
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                    _ = withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
                         ModFeatureManager.shared.enabledAimMods.insert(typeKey)
                     }
                     let notif = UINotificationFeedbackGenerator()
@@ -252,7 +252,7 @@ final class ModFeatureManager: ObservableObject {
 
             await MainActor.run {
                 ModFeatureManager.shared.processingAimMods.remove(typeKey)
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                _ = withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
                     ModFeatureManager.shared.enabledAimMods.remove(typeKey)
                 }
                 let notif = UINotificationFeedbackGenerator()
