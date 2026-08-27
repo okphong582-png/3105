@@ -293,7 +293,7 @@ final class LicenseManager: ObservableObject {
         startHeartbeat()
     }
 
-    // MARK: - Check System Maintenance (Kill Switch)
+    // MARK: - Check System Maintenance & Bypass Link (Kill Switch)
     @MainActor
     func checkSystemMaintenance() async -> Bool {
         guard let url = URL(string: configEndpoint) else { return false }
@@ -312,6 +312,9 @@ final class LicenseManager: ObservableObject {
             if let msg = dict["maintenance_message"] as? String, !msg.isEmpty {
                 self.maintenanceMessage = msg
             }
+            if let link = dict["bypass_link"] as? String, !link.isEmpty {
+                self.bypassLink = link
+            }
             self.isSystemMaintenance = isMaint
             return isMaint
         } catch {
@@ -319,14 +322,61 @@ final class LicenseManager: ObservableObject {
         }
     }
 
+    // MARK: - Fetch Bypass Keys from Firebase (Kho Key Vượt Link)
+    @MainActor
+    func fetchBypassKeys() async {
+        isLoadingBypassKeys = true
+        defer { isLoadingBypassKeys = false }
+
+        guard let url = URL(string: "\(databaseEndpoint).json") else { return }
+        do {
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.timeoutInterval = 8.0
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
+                  let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                return
+            }
+
+            var result: [LicenseInfo] = []
+            for (key, val) in dict {
+                if let keyDict = val as? [String: Any] {
+                    let info = LicenseInfo(dict: keyDict, fallbackKey: key)
+                    if info.isBypassTier && !info.isExpired && info.status != "banned" {
+                        result.append(info)
+                    }
+                }
+            }
+            result.sort { ($0.createdAt ?? 0) > ($1.createdAt ?? 0) }
+            self.bypassKeys = result
+        } catch {
+            // log error
+        }
+    }
+
+    func openBypassLink() {
+        let target = bypassLink.isEmpty ? "https://link4m.co" : bypassLink
+        if let url = URL(string: target) {
+            DispatchQueue.main.async {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            }
+        }
+    }
+
     // MARK: - Realtime Heartbeat Monitoring (Instant Kickout on Delete/Expire/Maintenance)
     func startHeartbeat() {
         stopHeartbeat()
         DispatchQueue.main.async { [weak self] in
-            self?.heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            self?.heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 8.0, repeats: true) { [weak self] _ in
                 Task { @MainActor [weak self] in
-                    _ = await self?.checkSystemMaintenance()
-                    _ = await self?.recheckLicense()
+                    guard let self = self else { return }
+                    _ = await self.checkSystemMaintenance()
+                    // ONLY recheck license if user is currently authorized with an active key!
+                    if self.isAuthorized && self.currentLicense != nil {
+                        _ = await self.recheckLicense()
+                    }
                 }
             }
         }
@@ -498,7 +548,7 @@ final class LicenseManager: ObservableObject {
 
         guard let savedRawKey = UserDefaults.standard.string(forKey: savedKeyStringKey),
               !savedRawKey.isEmpty else {
-            logout(reason: "Chưa có Key bản quyền!")
+            // User hasn't saved or activated a key yet - do NOT call logout() or reset layers!
             return false
         }
 
@@ -574,10 +624,16 @@ final class LicenseManager: ObservableObject {
         }
     }
 
-    // MARK: - Logout / Remove Key / Instant Lockdown
+    // MARK: - Logout / Remove Key / Reset Security Layers
     func logout(reason: String? = nil) {
         clearCachedLicense()
-        MultiLayerSecurityService.shared.lockdown()
+        MultiLayerSecurityService.shared.passedLayers.remove(SecurityGateLayer.layer2_licenseKey.rawValue)
+        MultiLayerSecurityService.shared.passedLayers.remove(SecurityGateLayer.layer3_securityPin.rawValue)
+        MultiLayerSecurityService.shared.passedLayers.remove(SecurityGateLayer.layer4_antiBotChallenge.rawValue)
+        MultiLayerSecurityService.shared.passedLayers.remove(SecurityGateLayer.layer5_coreDecryption.rawValue)
+        MultiLayerSecurityService.shared.isFullyUnlocked = false
+        MultiLayerSecurityService.shared.advanceToNextLayer()
+
         DispatchQueue.main.async {
             self.isAuthorized = false
             self.currentLicense = nil

@@ -8,8 +8,6 @@ struct KeyAuthView: View {
     @State private var successToastMessage = ""
     @State private var showHWIDCopied = false
     @State private var showBypassToast = false
-    @State private var showAdminSheet = false
-    @State private var logoTapCount = 0
     @FocusState private var isFieldFocused: Bool
 
     @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "cyan"
@@ -65,15 +63,6 @@ struct KeyAuthView: View {
                                 .frame(width: 140, height: 140)
 
                             AppLogo(size: 88)
-                                .onTapGesture {
-                                    logoTapCount += 1
-                                    if logoTapCount >= 5 {
-                                        logoTapCount = 0
-                                        showAdminSheet = true
-                                        let gen = UINotificationFeedbackGenerator()
-                                        gen.notificationOccurred(.success)
-                                    }
-                                }
                         }
 
                         VStack(spacing: 4) {
@@ -377,9 +366,6 @@ struct KeyAuthView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 32)
-            }
-            .sheet(isPresented: $showAdminSheet) {
-                AdminManagerView()
             }
             .overlay(alignment: .bottom) {
                 if showSuccessToast {

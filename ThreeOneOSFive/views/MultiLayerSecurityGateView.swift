@@ -108,6 +108,10 @@ struct MultiLayerSecurityGateView: View {
             if !securityService.passedLayers.contains(1) {
                 securityService.runLayer1IntegrityScan { _ in }
             }
+            Task {
+                _ = await licenseManager.checkSystemMaintenance()
+                await licenseManager.fetchBypassKeys()
+            }
         }
     }
 
@@ -275,18 +279,73 @@ struct MultiLayerSecurityGateView: View {
     }
 
     // MARK: - LAYER 2: License Key
+    // MARK: - LAYER 2: License Key
     private var layer2View: some View {
         VStack(spacing: 14) {
-            Text("Nhập mã License Key được cấp từ Admin để xác thực quyền truy cập cơ sở dữ liệu thời gian thực.")
+            Text("Nhập mã License Key (VIP hoặc Vượt Link) để xác thực quyền truy cập cơ sở dữ liệu:")
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            // FREE BYPASS LINK BUTTON (VƯỢT LINK LẤY KEY)
+            Button {
+                let gen = UIImpactFeedbackGenerator(style: .medium)
+                gen.impactOccurred()
+                licenseManager.openBypassLink()
+            } label: {
+                VStack(spacing: 4) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "link.badge.plus")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(Color.orange)
+
+                        Text("BẠN CHƯA CÓ KEY? NHẤN VÀO ĐÂY ĐỂ VƯỢT LINK")
+                            .font(.system(size: 12, weight: .black, design: .rounded))
+                            .foregroundStyle(.white)
+
+                        Image(systemName: "arrow.up.right.circle.fill")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.orange)
+                    }
+
+                    Text("Vượt link nhanh nhận ngay Key miễn phí 100% (Mở khóa Aim Bot)")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Color.orange.opacity(0.9))
+                }
+                .padding(.vertical, 12)
+                .padding(.horizontal, 14)
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.orange.opacity(0.22), Color.yellow.opacity(0.08)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(
+                                    LinearGradient(
+                                        colors: [Color.orange.opacity(0.7), Color.yellow.opacity(0.4)],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    ),
+                                    lineWidth: 1.5
+                                )
+                        )
+                        .shadow(color: Color.orange.opacity(0.25), radius: 8, y: 2)
+                )
+            }
+            .buttonStyle(.plain)
 
             // Key Input
             HStack(spacing: 8) {
                 Image(systemName: "key.fill")
                     .foregroundStyle(activeTheme.primaryColor)
 
-                TextField("Nhập mã key tại đây...", text: $inputKey)
+                TextField("Nhập hoặc dán mã key tại đây...", text: $inputKey)
                     .font(.system(size: 14, weight: .bold, design: .monospaced))
                     .autocapitalization(.allCharacters)
                     .disableAutocorrection(true)
@@ -306,6 +365,7 @@ struct MultiLayerSecurityGateView: View {
                 Text(err)
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
             }
 
             // Verify Key Button
@@ -336,6 +396,101 @@ struct MultiLayerSecurityGateView: View {
                 .background(RoundedRectangle(cornerRadius: 12).fill(activeTheme.primaryColor))
             }
             .disabled(licenseManager.isVerifying || inputKey.trimmingCharacters(in: .whitespaces).isEmpty)
+
+            // KHO KEY VƯỢT LINK HỆ THỐNG
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Image(systemName: "shippingbox.fill")
+                            .foregroundStyle(Color.orange)
+                        Text("KHO KEY VƯỢT LINK HỆ THỐNG")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .foregroundStyle(Color.orange)
+                    }
+
+                    Spacer()
+
+                    Button {
+                        Task { await licenseManager.fetchBypassKeys() }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                            Text("Làm mới")
+                        }
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(activeTheme.primaryColor)
+                    }
+                }
+
+                if licenseManager.isLoadingBypassKeys {
+                    HStack {
+                        Spacer()
+                        ProgressView().tint(Color.orange)
+                        Text("Đang kiểm tra kho key...")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                    .padding(.vertical, 6)
+                } else if licenseManager.bypassKeys.isEmpty {
+                    VStack(spacing: 4) {
+                        Text("Kho key tạm thời chưa có key công khai sẵn.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                        Text("👉 Hãy nhấn nút 'Vượt Link' ở trên để nhận key riêng cho máy bạn!")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(Color.orange)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(licenseManager.bypassKeys.prefix(4), id: \.key) { bKey in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(bKey.key)
+                                        .font(.system(size: 12, weight: .black, design: .monospaced))
+                                        .foregroundStyle(.white)
+                                    Text("Thời hạn: \(bKey.remainingTimeFormatted)")
+                                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                        .foregroundStyle(Color.green)
+                                }
+
+                                Spacer()
+
+                                Button {
+                                    inputKey = bKey.key
+                                    UIPasteboard.general.string = bKey.key
+                                    let gen = UIImpactFeedbackGenerator(style: .medium)
+                                    gen.impactOccurred()
+                                    Task {
+                                        let result = await licenseManager.activateKey(bKey.key)
+                                        if result.success {
+                                            securityService.confirmLayer2Success()
+                                        }
+                                    }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "doc.on.clipboard.fill")
+                                        Text("Dán & Dùng")
+                                    }
+                                    .font(.system(size: 10, weight: .black))
+                                    .foregroundStyle(.black)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.orange.cornerRadius(8))
+                                }
+                            }
+                            .padding(10)
+                            .background(Color.white.opacity(0.04).cornerRadius(10))
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.08), lineWidth: 1))
+                        }
+                    }
+                }
+            }
+            .padding(12)
+            .background(Color(red: 0.08, green: 0.09, blue: 0.13).cornerRadius(14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.orange.opacity(0.35), lineWidth: 1))
 
             // HWID Copy helper
             HStack {

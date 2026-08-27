@@ -23,17 +23,9 @@ struct ThreeOneOSFiveApp: App {
 
     @State private var showSplash = true
 
-    private var isAdminApp: Bool {
-        Bundle.main.object(forInfoDictionaryKey: "IsAdminApp") as? Bool ?? false ||
-        (Bundle.main.bundleIdentifier ?? "").lowercased().contains("admin")
-    }
-
     var body: some Scene {
         WindowGroup {
-            if isAdminApp {
-                AdminManagerView()
-                    .preferredColorScheme(.dark)
-            } else if licenseManager.isSystemMaintenance {
+            if licenseManager.isSystemMaintenance {
                 SystemMaintenanceGateView()
                     .preferredColorScheme(.dark)
                     .transition(.opacity)

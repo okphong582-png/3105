@@ -183,12 +183,6 @@ struct SplashLoadingView: View {
                 }
             } else {
                 timer.invalidate()
-                
-                // Enforce strict validity before dismissing splash
-                let licManager = LicenseManager.shared
-                if !licManager.isAuthorized || licManager.currentLicense == nil || licManager.currentLicense?.isExpired == true || licManager.currentLicense?.status != "active" {
-                    MultiLayerSecurityService.shared.lockdown()
-                }
 
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                     withAnimation(.easeInOut(duration: 0.45)) {

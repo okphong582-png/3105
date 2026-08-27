@@ -14,7 +14,6 @@ struct MainInjectorView: View {
     @State private var selectedTab: Int = 0 // 0: Aim Bot, 1: Mod Skin, 2: Mod Đồ
     @State private var showSettings = false
     @State private var showLogs = false
-    @State private var showAdminManager = false
     @State private var showWelcomeDialog = false
 
     private var activeTheme: AppColorTheme {
@@ -99,13 +98,6 @@ struct MainInjectorView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 12) {
-                        // Admin Server Manager Button
-                        Button { showAdminManager = true } label: {
-                            Image(systemName: "server.rack")
-                                .foregroundStyle(activeTheme.primaryColor)
-                        }
-                        .accessibilityLabel("Admin Server Key")
-
                         Button { showSettings = true } label: {
                             Image(systemName: "gearshape.fill")
                                 .foregroundStyle(activeTheme.primaryColor)
@@ -116,7 +108,6 @@ struct MainInjectorView: View {
             }
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showLogs) { LogView() }
-            .sheet(isPresented: $showAdminManager) { AdminManagerView() }
             .sheet(item: $store.passwordRequest, onDismiss: store.cancelUnlock) { _ in
                 PatchUnlockView(store: store)
             }
