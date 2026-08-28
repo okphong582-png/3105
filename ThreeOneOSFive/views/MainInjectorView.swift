@@ -84,20 +84,16 @@ struct MainInjectorView: View {
                         // Selected Game Info Card (Icon + Free Fire / com.dts.freefireth)
                         selectedGameHeaderCard
 
-                        // Segmented Tab Bar (Pills style: Aim Bot | Mod Skin | Cài Đặt)
+                        // Segmented Tab Bar (Pills style: Tiêm File | Cài Đặt)
                         horizontalTabBar
 
                         // Tab Content Cards
                         if selectedTab == 0 {
                             aimBotCardSection
-                        } else if selectedTab == 1 {
-                            modSkinCardSection
+                            openGameButton
                         } else {
                             settingsCardSection
                         }
-
-                        // Bottom Big Action Button: ▶ OPEN GAME
-                        openGameButton
 
                         Spacer(minLength: 20)
                     }
@@ -247,76 +243,67 @@ struct MainInjectorView: View {
         )
     }
 
-    // MARK: - Horizontal Tab Bar (Pill style y hệt ảnh)
+    // MARK: - Horizontal Tab Bar (Chuẩn 100% Y Hệt Ảnh 1: [ 💉 Tiêm File ] [ ⚙️ Cài Đặt ])
     private var horizontalTabBar: some View {
-        let canUseMods = licenseManager.currentLicense?.canUseMods ?? false
-
-        return HStack(spacing: 8) {
-            tabPillButton(
-                index: 0,
-                title: "Aim Bot",
-                icon: "location.north.fill",
-                accentColor: Color.green,
-                isLocked: false
-            )
-
-            tabPillButton(
-                index: 1,
-                title: "Mod Skin",
-                icon: "person.fill",
-                accentColor: Color.cyan,
-                isLocked: !canUseMods
-            )
-
-            tabPillButton(
-                index: 2,
-                title: "Cài Đặt",
-                icon: "gearshape.fill",
-                accentColor: Color.orange,
-                isLocked: false
-            )
-        }
-    }
-
-    @ViewBuilder
-    private func tabPillButton(
-        index: Int,
-        title: String,
-        icon: String,
-        accentColor: Color,
-        isLocked: Bool
-    ) -> some View {
-        let isSelected = selectedTab == index
-
-        Button {
-            let gen = UIImpactFeedbackGenerator(style: .light)
-            gen.impactOccurred()
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                selectedTab = index
+        HStack(spacing: 0) {
+            // Nút 1: Tiêm File (Icon ống tiêm + Chữ Tiêm File)
+            Button {
+                let gen = UIImpactFeedbackGenerator(style: .light)
+                gen.impactOccurred()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    selectedTab = 0
+                }
+            } label: {
+                VStack(spacing: 4) {
+                    Image(systemName: "syringe")
+                        .font(.system(size: 19, weight: .semibold))
+                        .rotationEffect(.degrees(-45))
+                    Text("Tiêm File")
+                        .font(.system(size: 11, weight: .bold))
+                }
+                .foregroundStyle(selectedTab == 0 ? Color(red: 0.0, green: 0.95, blue: 1.0) : Color.white.opacity(0.85))
+                .padding(.vertical, 8)
+                .padding(.horizontal, 28)
+                .background(
+                    Capsule()
+                        .fill(selectedTab == 0 ? Color(red: 0.23, green: 0.22, blue: 0.29) : Color.clear)
+                )
             }
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: isLocked ? "lock.fill" : icon)
-                    .font(.system(size: 12, weight: .bold))
-                Text(title)
-                    .font(.system(size: 12, weight: .black, design: .rounded))
+            .buttonStyle(.plain)
+
+            // Nút 2: Cài Đặt (Icon bánh răng + Chữ Cài Đặt)
+            Button {
+                let gen = UIImpactFeedbackGenerator(style: .light)
+                gen.impactOccurred()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    selectedTab = 1
+                }
+            } label: {
+                VStack(spacing: 4) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 19, weight: .semibold))
+                    Text("Cài Đặt")
+                        .font(.system(size: 11, weight: .bold))
+                }
+                .foregroundStyle(selectedTab == 1 ? Color(red: 0.0, green: 0.95, blue: 1.0) : Color.white)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 28)
+                .background(
+                    Capsule()
+                        .fill(selectedTab == 1 ? Color(red: 0.23, green: 0.22, blue: 0.29) : Color.clear)
+                )
             }
-            .foregroundStyle(isSelected ? accentColor : Color.secondary)
-            .padding(.vertical, 10)
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(isSelected ? accentColor.opacity(0.15) : Color(red: 0.08, green: 0.09, blue: 0.13))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(
-                        isSelected ? accentColor : Color.white.opacity(0.06),
-                        lineWidth: isSelected ? 1.5 : 1
-                    )
-            )
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+        .padding(4)
+        .background(
+            Capsule()
+                .fill(Color(red: 0.11, green: 0.10, blue: 0.16).opacity(0.9))
+        )
+        .overlay(
+            Capsule()
+                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 
     // MARK: - Tab 1: Aim Bot Card (Giao diện viền xanh neon y hệt ảnh)
@@ -378,9 +365,6 @@ struct MainInjectorView: View {
                             isProcessing: isProcessing
                         )
                     }
-
-                    // TÍNH NĂNG ĐỊNH VỊ ĐỎ (DV_đỏ_ff.3105, Tự động mở khóa YaBao)
-                    redLocatorRow
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 10)
