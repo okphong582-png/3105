@@ -48,7 +48,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             AD_HOC_CODE_SIGNING_ALLOWED=YES
 
-      - name: Package Client IPA
+      - name: Package Client IPA & TIPA
         run: |
           set -e
           APP_PATH=$(find build/Build/Products/Release-iphoneos -name "*.app" -type d | head -n 1)
@@ -61,22 +61,27 @@ jobs:
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
           zip -r9 OniAkuma_Client.ipa Payload
+          cp OniAkuma_Client.ipa OniAkuma_Client.tipa
 
-          echo "=== CLIENT IPA ARTIFACT GENERATED ==="
-          ls -lh OniAkuma_Client.ipa
+          echo "=== CLIENT IPA & TIPA ARTIFACTS GENERATED ==="
+          ls -lh OniAkuma_Client.ipa OniAkuma_Client.tipa
 
-      - name: Upload Client IPA
+      - name: Upload Client IPA & TIPA
         uses: actions/upload-artifact@v4
         with:
-          name: OniAkuma_Client_IPA
-          path: OniAkuma_Client.ipa
+          name: OniAkuma_Client_IPA_TIPA
+          path: |
+            OniAkuma_Client.ipa
+            OniAkuma_Client.tipa
           retention-days: 30
 
       - name: Create GitHub Release (On tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: OniAkuma_Client.ipa
+          files: |
+            OniAkuma_Client.ipa
+            OniAkuma_Client.tipa
           draft: false
           prerelease: false
           generate_release_notes: true
