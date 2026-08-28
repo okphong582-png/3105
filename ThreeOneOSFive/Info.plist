@@ -24,7 +24,7 @@
     <array>
         <dict>
             <key>CFBundleTypeName</key>
-            <string>3105 &amp; HoangHaTrongKien Package</string>
+            <string>OniAkuma Package</string>
             <key>CFBundleTypeRole</key>
             <string>Editor</string>
             <key>LSHandlerRank</key>
@@ -55,7 +55,7 @@
                 <string>public.data</string>
             </array>
             <key>UTTypeDescription</key>
-            <string>3105 Patch Package</string>
+            <string>OniAkuma Patch Package</string>
             <key>UTTypeIdentifier</key>
             <string>com.yangjiii.3105.patch-package</string>
             <key>UTTypeTagSpecification</key>
@@ -97,9 +97,9 @@
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>3105 needs access to photos for wallpaper customization.</string>
+    <string>OniAkuma needs access to photos for wallpaper customization.</string>
     <key>NSDocumentsFolderUsageDescription</key>
-    <string>3105 needs access to documents.</string>
+    <string>OniAkuma needs access to documents.</string>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>

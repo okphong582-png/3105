@@ -69,6 +69,7 @@
 		3105A228 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3105A120; };
 		3105Z200 /* SplashLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105Z100; };
 		3105ONI2 /* MainInjectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105ONI1; };
+		3105GSV2 /* GameSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105GSV1; };
 		3105LIC2 /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105LIC1; };
 		3105KEY2 /* KeyAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105KEY1; };
 		3105VPN2 /* VPNGuardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105VPN1; };
@@ -160,6 +161,7 @@
 		3105F105 /* WallpaperLabService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLabService.swift; sourceTree = "<group>"; };
 		3105Z100 /* SplashLoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashLoadingView.swift; sourceTree = "<group>"; };
 		3105ONI1 /* MainInjectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainInjectorView.swift; sourceTree = "<group>"; };
+		3105GSV1 /* GameSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectionView.swift; sourceTree = "<group>"; };
 		3105LIC1 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		3105KEY1 /* KeyAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyAuthView.swift; sourceTree = "<group>"; };
 		3105VPN1 /* VPNGuardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNGuardService.swift; sourceTree = "<group>"; };
@@ -276,6 +278,7 @@
 				3105F108 /* OnboardingView.swift */,
 				3105Z100 /* SplashLoadingView.swift */,
 				3105ONI1 /* MainInjectorView.swift */,
+				3105GSV1 /* GameSelectionView.swift */,
 				3105KEY1 /* KeyAuthView.swift */,
 				3105VPB1 /* VPNBlockedView.swift */,
 				3105MLG1 /* MultiLayerSecurityGateView.swift */,
@@ -481,6 +484,7 @@
 				3105I201,
 				3105Z200,
 				3105ONI2,
+				3105GSV2,
 				3105LIC2,
 				3105KEY2,
 				3105VPN2,

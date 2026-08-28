@@ -242,7 +242,7 @@ private struct DashboardView: View {
                 AppLogo(size: 48)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("3105")
+                    Text("OniAkuma")
                         .font(.title3.weight(.bold))
                         .foregroundStyle(
                             LinearGradient(
@@ -255,7 +255,7 @@ private struct DashboardView: View {
                     HStack(spacing: 4) {
                         Image(systemName: "sparkles")
                             .font(.system(size: 9, weight: .bold))
-                        Text("3105 x HoangHaMod,TrongKien")
+                        Text("OniAkuma x HoangHaMod,TrongKien")
                             .font(.caption2.weight(.bold).monospaced())
                     }
                     .foregroundStyle(AppTheme.accent)

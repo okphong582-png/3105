@@ -95,7 +95,7 @@ struct VPNBlockedView: View {
                     Text("Hệ Thống Bảo Mật OniAkuma Anti-Tamper")
                         .font(.caption2.weight(.medium))
                         .foregroundStyle(.secondary.opacity(0.6))
-                    Text("Exploit Kernel By 3105")
+                    Text("Exploit Kernel By OniAkuma")
                         .font(.caption2.monospaced())
                         .foregroundStyle(.secondary.opacity(0.4))
                 }

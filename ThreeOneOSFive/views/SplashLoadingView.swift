@@ -12,7 +12,7 @@ struct SplashLoadingView: View {
     private let statusMessages = [
         "Initializing System...",
         "Connecting Container Bridge...",
-        "3105 x HoangHaMod,TrongKien",
+        "OniAkuma x HoangHaMod,TrongKien",
         "Ready"
     ]
 
@@ -81,7 +81,7 @@ struct SplashLoadingView: View {
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(Color(red: 0.0, green: 0.86, blue: 1.0))
 
-                        Text("3105 x HoangHaMod,TrongKien")
+                        Text("OniAkuma x HoangHaMod,TrongKien")
                             .font(.system(size: 13, weight: .bold, design: .monospaced))
                             .foregroundStyle(
                                 LinearGradient(

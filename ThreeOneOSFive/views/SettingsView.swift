@@ -23,7 +23,7 @@ struct SettingsView: View {
                             Text("HoangHaMod & TrongKien")
                                 .font(.caption.weight(.semibold).monospaced())
                                 .foregroundStyle(activeTheme.primaryColor)
-                            Text("Exploit Kernel By 3105 • v\(appVersion)")
+                            Text("OniAkuma Core • v\(appVersion)")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
@@ -85,7 +85,7 @@ struct SettingsView: View {
                         Text(appState.isSupported ? "Đã Kích Hoạt" : "Sẵn Sàng")
                             .foregroundStyle(appState.isSupported ? Color.green : activeTheme.primaryColor)
                     }
-                    LabeledContent("Nhân Khai Thác", value: "Exploit Kernel By 3105")
+                    LabeledContent("Nhân Khai Thác", value: "Exploit Kernel By OniAkuma")
                     LabeledContent("iOS 17", value: ExploitSupportPolicy.verifiedIOS17Range)
                     LabeledContent("iOS 18", value: ExploitSupportPolicy.verifiedIOS18Range)
                     LabeledContent("iOS 26", value: ExploitSupportPolicy.verifiedIOS26Range)

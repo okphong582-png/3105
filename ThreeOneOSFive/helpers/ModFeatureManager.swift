@@ -32,6 +32,16 @@ enum AimModType: String, CaseIterable, Identifiable {
         }
     }
 
+    var shortTitle: String {
+        switch self {
+        case .body: return "Aim Body"
+        case .drag: return "Aim Drag"
+        case .chest: return "Aim Chest"
+        case .magic: return "Aim Magic"
+        case .neck: return "Aim Neck"
+        }
+    }
+
     var filename: String {
         switch self {
         case .body: return "Aim Body.3105"
@@ -214,7 +224,7 @@ final class ModFeatureManager: ObservableObject {
                     }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
-                    ModFeatureManager.shared.triggerToast("Đã bật \(type.filename) trên \(targetName)!")
+                    ModFeatureManager.shared.triggerToast("Đã bật \(type.shortTitle) trên \(targetName)!")
                 }
             } catch let error as PatchPackageError {
                 await MainActor.run {
@@ -257,7 +267,7 @@ final class ModFeatureManager: ObservableObject {
                 }
                 let notif = UINotificationFeedbackGenerator()
                 notif.notificationOccurred(.success)
-                ModFeatureManager.shared.triggerToast("Đã tắt \(type.filename)!")
+                ModFeatureManager.shared.triggerToast("Đã tắt \(type.shortTitle)!")
             }
         }
     }
@@ -278,18 +288,18 @@ final class ModFeatureManager: ObservableObject {
 
     private func injectModSkin(store: PatchProjectStore) {
         guard let item = findItem(forFilename: "Modskin.3105", altKey: "modskin", store: store) else {
-            triggerToast("Không tìm thấy file Modskin.3105!")
+            triggerToast("Không tìm thấy gói Mod Skin!")
             return
         }
 
         if item.isLocked {
             store.requestUnlock(for: item)
-            triggerToast("Gói Modskin.3105 yêu cầu nhập mật khẩu!")
+            triggerToast("Gói Mod Skin yêu cầu nhập mật khẩu!")
             return
         }
 
         guard let proj = item.project else {
-            triggerToast("Không tìm thấy cấu hình Modskin.3105!")
+            triggerToast("Không tìm thấy cấu hình Mod Skin!")
             return
         }
 
@@ -377,18 +387,18 @@ final class ModFeatureManager: ObservableObject {
     private func injectModOutfit(store: PatchProjectStore) {
         let outfitFilename = "Mod đồ chỉ sử dụng nhân vật Ignis.3105"
         guard let item = findItem(forFilename: outfitFilename, altKey: "ignis", store: store) else {
-            triggerToast("Không tìm thấy file Mod đồ Ignis!")
+            triggerToast("Không tìm thấy gói Trang Phục Ignis!")
             return
         }
 
         if item.isLocked {
             store.requestUnlock(for: item)
-            triggerToast("Gói Mod đồ Ignis yêu cầu nhập mật khẩu!")
+            triggerToast("Gói Trang Phục Ignis yêu cầu nhập mật khẩu!")
             return
         }
 
         guard let proj = item.project else {
-            triggerToast("Không tìm thấy cấu hình Mod đồ Ignis!")
+            triggerToast("Không tìm thấy cấu hình Trang Phục Ignis!")
             return
         }
 
@@ -412,7 +422,7 @@ final class ModFeatureManager: ObservableObject {
                     }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
-                    ModFeatureManager.shared.triggerToast("Đã kích hoạt Mod Đồ Nhân Vật Ignis trên \(targetName)!")
+                    ModFeatureManager.shared.triggerToast("Đã kích hoạt Trang Phục Ignis trên \(targetName)!")
                 }
             } catch let error as PatchPackageError {
                 await MainActor.run {
@@ -426,7 +436,7 @@ final class ModFeatureManager: ObservableObject {
                     ModFeatureManager.shared.isProcessingModOutfit = false
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast("Lỗi khi kích hoạt Mod đồ: \(error.localizedDescription)")
+                    ModFeatureManager.shared.triggerToast("Lỗi khi kích hoạt trang phục: \(error.localizedDescription)")
                 }
             }
         }
@@ -455,7 +465,7 @@ final class ModFeatureManager: ObservableObject {
                 }
                 let notif = UINotificationFeedbackGenerator()
                 notif.notificationOccurred(.success)
-                ModFeatureManager.shared.triggerToast("Đã tắt Mod Đồ Ignis!")
+                ModFeatureManager.shared.triggerToast("Đã tắt Trang Phục Ignis!")
             }
         }
     }
