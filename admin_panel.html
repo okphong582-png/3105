@@ -1010,6 +1010,19 @@
                             </div>
                         </div>
 
+                        <div class="form-group">
+                            <label>
+                                <span>Mật Khẩu Của Key (Pass Key)</span>
+                                <span class="tag" style="background: rgba(244, 162, 97, 0.15); color: var(--gold);">BẢO MẬT TUYỆT ĐỐI</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="text" id="premKeyPass" class="mono" placeholder="VD: 888888 hoặc tự nhập">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="generatePass('premKeyPass')">
+                                    <i class="fa-solid fa-key"></i> Sinh Pass
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- Preset Durations -->
                         <div class="form-group">
                             <label>Chọn Thời Hạn Nhanh</label>
@@ -1068,6 +1081,19 @@
                                 <input type="text" id="liteKeyInput" class="mono" placeholder="VD: LITE-AKUMA-2026">
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="generateLiteKey()">
                                     <i class="fa-solid fa-dice"></i> Sinh Mã
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <span>Mật Khẩu Của Key (Pass Key)</span>
+                                <span class="tag" style="background: rgba(82, 183, 136, 0.15); color: var(--success);">BẢO MẬT</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="text" id="liteKeyPass" class="mono" placeholder="VD: 888888 hoặc tự nhập">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="generatePass('liteKeyPass')">
+                                    <i class="fa-solid fa-key"></i> Sinh Pass
                                 </button>
                             </div>
                         </div>
@@ -1131,6 +1157,19 @@
                                 <input type="text" id="bypassRealKey" class="mono" placeholder="PASS-XXXX-YYYY" required>
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="generateBypassKey()">
                                     <i class="fa-solid fa-dice"></i> Đổi Mã
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <span style="color: var(--accent); font-weight: 800;">MẬT KHẨU KEY (Pass Key)</span>
+                                <span class="tag" style="background: rgba(212, 163, 115, 0.2); color: var(--accent);">PASS KEY</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="text" id="bypassKeyPass" class="mono" placeholder="VD: 888888" value="888888">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="generatePass('bypassKeyPass')">
+                                    <i class="fa-solid fa-key"></i> Sinh Pass
                                 </button>
                             </div>
                         </div>
@@ -1380,8 +1419,11 @@
         // Initialize Keys
         window.addEventListener('DOMContentLoaded', () => {
             generatePremKey();
+            generatePass('premKeyPass');
             generateLiteKey();
+            generatePass('liteKeyPass');
             generateBypassKey();
+            generatePass('bypassKeyPass');
         });
 
         // Tab Switching
@@ -1424,6 +1466,22 @@
 
             const panel = document.getElementById(`tierPanel-${tier}`);
             if (panel) panel.classList.add('active');
+        }
+
+        function generatePass(fieldId) {
+            const pass = Math.floor(100000 + Math.random() * 900000).toString();
+            const el = document.getElementById(fieldId);
+            if (el) el.value = pass;
+            return pass;
+        }
+
+        function copyKeyAndPass(key, pass) {
+            let text = key;
+            if (pass && pass.trim() !== '') {
+                text = `Key: ${key} | Pass: ${pass}`;
+            }
+            navigator.clipboard.writeText(text);
+            showToast(`Đã sao chép: ${text}`, 'gold');
         }
 
         // Generate Premium Key
@@ -1496,13 +1554,17 @@
             e.preventDefault();
             let key = document.getElementById('premKeyInput').value.trim().toUpperCase();
             if (!key) key = document.getElementById('premKeyInput').placeholder;
+            let pass = document.getElementById('premKeyPass').value.trim();
+            if (!pass) pass = generatePass('premKeyPass');
             const maxDevices = parseInt(document.getElementById('premMaxDevices').value) || 1;
             const note = document.getElementById('premNote').value.trim() || 'Key Premium VIP';
 
-            createKeyInDatabase(key, currentPremSeconds, maxDevices, note, 'premium', () => {
-                navigator.clipboard.writeText(key);
-                showToast(`Đã tạo & Copy Key VIP: ${key}`, 'gold');
+            createKeyInDatabase(key, pass, currentPremSeconds, maxDevices, note, 'premium', () => {
+                const copyText = `Key: ${key} | Pass: ${pass}`;
+                navigator.clipboard.writeText(copyText);
+                showToast(`Đã tạo & Copy: ${copyText}`, 'gold');
                 generatePremKey();
+                generatePass('premKeyPass');
             });
         }
 
@@ -1531,13 +1593,17 @@
             e.preventDefault();
             let key = document.getElementById('liteKeyInput').value.trim().toUpperCase();
             if (!key) key = document.getElementById('liteKeyInput').placeholder;
+            let pass = document.getElementById('liteKeyPass').value.trim();
+            if (!pass) pass = generatePass('liteKeyPass');
             const maxDevices = parseInt(document.getElementById('liteMaxDevices').value) || 1;
             const note = document.getElementById('liteNote').value.trim() || 'Key Lite (Aim Neck, Drag, Body)';
 
-            createKeyInDatabase(key, currentLiteSeconds, maxDevices, note, 'lite', () => {
-                navigator.clipboard.writeText(key);
-                showToast(`Đã tạo & Copy Key Lite: ${key}`, 'success');
+            createKeyInDatabase(key, pass, currentLiteSeconds, maxDevices, note, 'lite', () => {
+                const copyText = `Key: ${key} | Pass: ${pass}`;
+                navigator.clipboard.writeText(copyText);
+                showToast(`Đã tạo & Copy: ${copyText}`, 'success');
                 generateLiteKey();
+                generatePass('liteKeyPass');
             });
         }
 
@@ -1545,6 +1611,8 @@
         function handleCreateBypassKey(e) {
             e.preventDefault();
             const realKey = document.getElementById('bypassRealKey').value.trim().toUpperCase();
+            let pass = document.getElementById('bypassKeyPass') ? document.getElementById('bypassKeyPass').value.trim() : '888888';
+            if (!pass) pass = '888888';
             const shortLink = document.getElementById('bypassShortLink').value.trim();
             const syncDefault = document.getElementById('syncDefaultBypassCheck').checked;
 
@@ -1554,18 +1622,20 @@
             }
 
             const note = `Vượt Link (Link4m) - ${Math.round(currentBypassSeconds / 3600)}h`;
-            createKeyInDatabase(realKey, currentBypassSeconds, 1, note, 'bypass', () => {
+            createKeyInDatabase(realKey, pass, currentBypassSeconds, 1, note, 'bypass', () => {
                 if (syncDefault && shortLink) {
                     configRef.update({ bypass_link: shortLink });
                 }
-                navigator.clipboard.writeText(realKey);
-                showToast(`Đã tạo Key Vượt Link: ${realKey}`, 'orange');
+                const copyText = `Key: ${realKey} | Pass: ${pass}`;
+                navigator.clipboard.writeText(copyText);
+                showToast(`Đã tạo Key: ${copyText}`, 'orange');
                 generateBypassKey();
+                generatePass('bypassKeyPass');
             });
         }
 
-        // Create Key in Firebase
-        function createKeyInDatabase(rawKey, durationSeconds, maxDevices, note, tier, onSuccess) {
+        // Create Key in Firebase (Kèm Pass Key)
+        function createKeyInDatabase(rawKey, password, durationSeconds, maxDevices, note, tier, onSuccess) {
             const sanitizedKey = rawKey.replace(/[.#$\[\]\/]/g, '_');
             const now = Date.now();
 
@@ -1577,6 +1647,7 @@
 
             const keyData = {
                 key: rawKey,
+                password: password || '888888',
                 status: 'active',
                 tier: tier, // 'premium' or 'bypass'
                 duration: durationStr,
@@ -1703,7 +1774,7 @@
                 return `
                     <div class="key-item ${isBanned ? 'banned' : ''} ${itemClass}">
                         <div class="key-top">
-                            <div class="key-code" onclick="copyText('${k.key}')" title="Bấm để sao chép">
+                            <div class="key-code" onclick="copyKeyAndPass('${k.key}', '${k.password || ''}')" title="Bấm để sao chép Key và Pass">
                                 <i class="fa-solid ${iconClass}" style="color: ${iconColor}; font-size: 13px;"></i>
                                 <span class="mono">${k.key}</span>
                                 <i class="fa-regular fa-copy" style="font-size: 12px; color: var(--text-muted);"></i>
@@ -1713,6 +1784,9 @@
 
                         <div class="key-details">
                             <span><i class="fa-solid fa-clock"></i> ${remainingTime}</span>
+                            <span style="color: var(--gold); font-weight: 700; background: rgba(244, 162, 97, 0.12); padding: 2px 8px; border-radius: 6px;">
+                                <i class="fa-solid fa-key"></i> Pass: <span class="mono">${k.password || '---'}</span>
+                            </span>
                             <span style="color: ${devicesUsed > 0 ? 'var(--accent)' : 'inherit'}; cursor: pointer;" onclick="openHWIDModal('${k.key}')">
                                 <i class="fa-solid fa-mobile-screen"></i> ${devicesUsed}/${maxDevices} Thiết Bị
                             </span>

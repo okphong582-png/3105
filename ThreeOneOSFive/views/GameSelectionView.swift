@@ -1,104 +1,70 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Game Logo Component
+// MARK: - Game Logo Component (Hiển thị đúng logo thật của Free Fire Thường & MAX)
 struct GameAppIconBadge: View {
     let isMax: Bool
     let size: CGFloat
 
+    private var loadedLogo: UIImage? {
+        if let assetImg = UIImage(named: isMax ? "FFMAXLogo" : "FFTHLogo") {
+            return assetImg
+        }
+        let imageName = isMax ? "ffmax" : "ffth"
+        if let p = Bundle.main.path(forResource: imageName, ofType: "png"), let img = UIImage(contentsOfFile: p) {
+            return img
+        }
+        if let p = Bundle.main.path(forResource: imageName, ofType: "webp"), let img = UIImage(contentsOfFile: p) {
+            return img
+        }
+        return nil
+    }
+
     var body: some View {
         ZStack {
-            // Base Gradient Background
-            RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: isMax
-                            ? [Color(red: 0.15, green: 0.08, blue: 0.25), Color(red: 0.08, green: 0.05, blue: 0.15)]
-                            : [Color(red: 0.25, green: 0.12, blue: 0.04), Color(red: 0.12, green: 0.05, blue: 0.02)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+            if let img = loadedLogo {
+                Image(uiImage: img)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: size, height: size)
+                    .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                            .stroke(
+                                LinearGradient(
+                                    colors: isMax
+                                        ? [Color.cyan, Color.purple]
+                                        : [Color.orange, Color.yellow],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                ),
+                                lineWidth: 2
+                            )
                     )
-                )
-                .frame(width: size, height: size)
-                .overlay(
-                    RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
-                        .stroke(
-                            LinearGradient(
-                                colors: isMax
-                                    ? [Color.cyan.opacity(0.8), Color.purple.opacity(0.5)]
-                                    : [Color.orange.opacity(0.8), Color.yellow.opacity(0.5)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 2
-                        )
-                )
-                .shadow(
-                    color: (isMax ? Color.purple : Color.orange).opacity(0.4),
-                    radius: 12,
-                    y: 4
-                )
-
-            // Inner Fire & Energy Layers
-            ZStack {
-                // Background Flame Glow
-                Circle()
+                    .shadow(
+                        color: (isMax ? Color.purple : Color.orange).opacity(0.5),
+                        radius: 10,
+                        y: 3
+                    )
+            } else {
+                // Vector fallback if image cannot be loaded
+                RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
                     .fill(
-                        RadialGradient(
-                            colors: [
-                                (isMax ? Color.purple : Color.orange).opacity(0.5),
-                                Color.clear
-                            ],
-                            center: .center,
-                            startRadius: 5,
-                            endRadius: size * 0.4
+                        LinearGradient(
+                            colors: isMax
+                                ? [Color(red: 0.15, green: 0.08, blue: 0.25), Color(red: 0.08, green: 0.05, blue: 0.15)]
+                                : [Color(red: 0.25, green: 0.12, blue: 0.04), Color(red: 0.12, green: 0.05, blue: 0.02)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: size * 0.8, height: size * 0.8)
-
-                // Hero Crest Silhouette / Icon
-                VStack(spacing: size * 0.03) {
-                    Image(systemName: isMax ? "bolt.shield.fill" : "flame.fill")
-                        .font(.system(size: size * 0.36, weight: .black))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: isMax
-                                    ? [Color.white, Color(red: 0.7, green: 0.85, blue: 1.0), Color.cyan]
-                                    : [Color.white, Color.yellow, Color.orange],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .shadow(color: (isMax ? Color.cyan : Color.orange).opacity(0.6), radius: 6)
-
-                    // Text Tag
-                    Text(isMax ? "FREE FIRE MAX" : "FREE FIRE")
-                        .font(.system(size: size * 0.11, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
-                        .tracking(0.5)
-                }
-
-                // Top-Right Corner Badge (Garena or MAX)
-                VStack {
-                    HStack {
-                        Spacer()
-                        Text(isMax ? "MAX" : "GARENA")
-                            .font(.system(size: size * 0.08, weight: .black, design: .monospaced))
-                            .foregroundStyle(.black)
-                            .padding(.horizontal, size * 0.06)
-                            .padding(.vertical, size * 0.02)
-                            .background(
-                                (isMax ? Color.cyan : Color.yellow)
-                                    .cornerRadius(size * 0.06)
-                            )
-                            .shadow(color: .black.opacity(0.4), radius: 2)
-                    }
-                    Spacer()
-                }
-                .padding(size * 0.08)
+                    .frame(width: size, height: size)
+                    .overlay(
+                        Image(systemName: isMax ? "bolt.shield.fill" : "flame.fill")
+                            .font(.system(size: size * 0.4, weight: .bold))
+                            .foregroundStyle(isMax ? Color.cyan : Color.orange)
+                    )
             }
-            .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
         }
     }
 }
@@ -108,8 +74,6 @@ struct GameSelectionView: View {
     var onSelectGame: (String) -> Void
 
     @ObservedObject private var modManager = ModFeatureManager.shared
-    @State private var hoveredGame: String? = nil
-    @State private var pulseAnimation = false
 
     var body: some View {
         ZStack {
@@ -117,7 +81,7 @@ struct GameSelectionView: View {
             Color(red: 0.04, green: 0.05, blue: 0.07)
                 .ignoresSafeArea()
 
-            // Glowing Ambient Glows
+            // Glowing Ambient Lights
             VStack {
                 Circle()
                     .fill(Color.orange.opacity(0.12))
@@ -153,7 +117,7 @@ struct GameSelectionView: View {
                             )
                             .tracking(2.0)
 
-                        Text("Hệ Thống Tiêm Tính Năng Độc Quyền • HoangHaMod & TrongKien")
+                        Text("Hệ Thống Hỗ Trợ Độc Quyền • HoangHaMod & TrongKien")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -272,7 +236,7 @@ struct GameSelectionView: View {
     ) -> some View {
         Button(action: action) {
             HStack(spacing: 16) {
-                // Game App Logo Badge
+                // Real Game App Logo Badge
                 GameAppIconBadge(isMax: isMax, size: 84)
 
                 // Game Info Details
@@ -302,9 +266,9 @@ struct GameSelectionView: View {
                         .foregroundStyle(.secondary)
 
                     HStack(spacing: 4) {
-                        Image(systemName: "syringe.fill")
+                        Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 10, weight: .bold))
-                        Text("Bấm để tiêm mod vào bản này")
+                        Text("Bấm để kích hoạt bản này")
                             .font(.system(size: 11, weight: .bold))
                     }
                     .foregroundStyle(accentColor)

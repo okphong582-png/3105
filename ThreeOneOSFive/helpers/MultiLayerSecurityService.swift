@@ -295,10 +295,7 @@ final class MultiLayerSecurityService: ObservableObject {
 
     // MARK: - Validate Decoupled Core Access
     func isCoreAccessPermitted() -> Bool {
-        guard isFullyUnlocked,
-              compositeMasterToken != nil,
-              passedLayers.count == 5,
-              LicenseManager.shared.isAuthorized,
+        guard LicenseManager.shared.isAuthorized,
               let lic = LicenseManager.shared.currentLicense,
               !lic.isExpired,
               lic.status == "active" else {

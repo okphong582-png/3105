@@ -81,6 +81,7 @@ final class ModFeatureManager: ObservableObject {
     private let enabledAimModsKey = "oni_akuma_enabled_aim_mods_v5"
     private let modSkinKey = "oni_akuma_modskin_enabled_v5"
     private let modOutfitKey = "oni_akuma_modoutfit_enabled_v5"
+    private let redLocatorKey = "oni_akuma_redlocator_enabled_v5"
     private let targetBundleKey = "oni_akuma_target_game_bundle_v5"
 
     @Published var enabledAimMods: Set<String> {
@@ -104,6 +105,13 @@ final class ModFeatureManager: ObservableObject {
         }
     }
 
+    @Published var isRedLocatorEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isRedLocatorEnabled, forKey: redLocatorKey)
+            UserDefaults.standard.synchronize()
+        }
+    }
+
     @Published var selectedBundle: String {
         didSet {
             UserDefaults.standard.set(selectedBundle, forKey: targetBundleKey)
@@ -114,6 +122,7 @@ final class ModFeatureManager: ObservableObject {
     @Published var processingAimMods: Set<String> = []
     @Published var isProcessingModSkin: Bool = false
     @Published var isProcessingModOutfit: Bool = false
+    @Published var isProcessingRedLocator: Bool = false
     @Published var toastMessage: String? = nil
     @Published var showToast: Bool = false
 
@@ -122,6 +131,7 @@ final class ModFeatureManager: ObservableObject {
         self.enabledAimMods = Set(savedAimMods)
         self.isModSkinEnabled = UserDefaults.standard.bool(forKey: modSkinKey)
         self.isModOutfitEnabled = UserDefaults.standard.bool(forKey: modOutfitKey)
+        self.isRedLocatorEnabled = UserDefaults.standard.bool(forKey: redLocatorKey)
         self.selectedBundle = UserDefaults.standard.string(forKey: targetBundleKey) ?? "com.dts.freefireth"
     }
 
@@ -466,6 +476,118 @@ final class ModFeatureManager: ObservableObject {
                 let notif = UINotificationFeedbackGenerator()
                 notif.notificationOccurred(.success)
                 ModFeatureManager.shared.triggerToast("Đã tắt Trang Phục Ignis!")
+            }
+        }
+    }
+
+    // MARK: - Auto-Unlock Helper (Tự động mở khóa mật khẩu ngầm)
+    private func ensureUnlockedItem(_ item: PatchLibraryItem, password: String = "YaBao") -> PatchLibraryItem? {
+        if !item.isLocked && item.project != nil {
+            return item
+        }
+        if let data = try? PatchProjectLibrary.readPackage(at: item.packageURL) {
+            if let decoded = try? PatchPackageCodec.decode(data, password: password) {
+                try? PatchKeyStore.store(decoded.contentKey, for: item.summary)
+                try? PatchProjectLibrary.installImportedPackage(
+                    data: data,
+                    decoded: decoded,
+                    summary: item.summary,
+                    existingURL: item.packageURL
+                )
+                return PatchLibraryItem(
+                    packageURL: item.packageURL,
+                    summary: item.summary,
+                    project: decoded.project,
+                    contentKey: decoded.contentKey
+                )
+            }
+        }
+        return item
+    }
+
+    // MARK: - Toggle Định Vị Đỏ (DV_đỏ_ff.3105, tự động giải mã YaBao)
+    func toggleRedLocator(store: PatchProjectStore) {
+        guard !isProcessingRedLocator else { return }
+
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+
+        if isRedLocatorEnabled {
+            restoreRedLocator(store: store)
+        } else {
+            injectRedLocator(store: store)
+        }
+    }
+
+    private func injectRedLocator(store: PatchProjectStore) {
+        guard var item = findItem(forFilename: "DV_đỏ_ff.3105", altKey: "dinhvi", store: store) else {
+            triggerToast("Không tìm thấy gói Định Vị Đỏ!")
+            return
+        }
+
+        if item.isLocked || item.project == nil {
+            if let unlocked = ensureUnlockedItem(item, password: "YaBao") {
+                item = unlocked
+            }
+        }
+
+        guard let proj = item.project else {
+            triggerToast("Không thể giải mã cấu hình Định Vị Đỏ!")
+            return
+        }
+
+        isProcessingRedLocator = true
+        let currentBundle = selectedBundle
+        let targetName = gameShortName
+
+        var adapted = proj
+        for i in 0..<adapted.rules.count {
+            adapted.rules[i].bundleID = currentBundle
+        }
+        let projectToApply = adapted
+
+        Task.detached(priority: .userInitiated) {
+            do {
+                _ = try DevicePatchService.apply(project: projectToApply)
+                await MainActor.run {
+                    ModFeatureManager.shared.isProcessingRedLocator = false
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                        ModFeatureManager.shared.isRedLocatorEnabled = true
+                    }
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.success)
+                    ModFeatureManager.shared.triggerToast("Đã kích hoạt Định Vị Đỏ trên \(targetName)!")
+                }
+            } catch {
+                await MainActor.run {
+                    ModFeatureManager.shared.isProcessingRedLocator = false
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.error)
+                    ModFeatureManager.shared.triggerToast("Lỗi kích hoạt: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func restoreRedLocator(store: PatchProjectStore) {
+        let targetItem = findItem(forFilename: "DV_đỏ_ff.3105", altKey: "dinhvi", store: store)
+        let receiptToRestore = targetItem?.project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
+
+        isProcessingRedLocator = true
+
+        Task.detached(priority: .userInitiated) {
+            if let receiptToRestore {
+                try? DevicePatchService.restore(receipt: receiptToRestore)
+            }
+
+            await MainActor.run {
+                ModFeatureManager.shared.isProcessingRedLocator = false
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                    ModFeatureManager.shared.isRedLocatorEnabled = false
+                }
+                let notif = UINotificationFeedbackGenerator()
+                notif.notificationOccurred(.success)
+                ModFeatureManager.shared.triggerToast("Đã tắt Định Vị Đỏ!")
             }
         }
     }

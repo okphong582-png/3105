@@ -4,6 +4,8 @@ import UIKit
 struct KeyAuthView: View {
     @ObservedObject var licenseManager = LicenseManager.shared
     @State private var inputKey = ""
+    @State private var inputPassword = ""
+    @State private var isPasswordVisible = false
     @State private var showSuccessToast = false
     @State private var successToastMessage = ""
     @State private var showHWIDCopied = false
@@ -163,6 +165,62 @@ struct KeyAuthView: View {
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                                             .stroke(isFieldFocused ? activeTheme.primaryColor : Color.white.opacity(0.1), lineWidth: 1.5)
+                                    )
+                            )
+                        }
+
+                        // Pass Key (Mật khẩu của Key)
+                        VStack(spacing: 8) {
+                            HStack(spacing: 10) {
+                                Image(systemName: "lock.fill")
+                                    .foregroundStyle(activeTheme.primaryColor)
+
+                                if isPasswordVisible {
+                                    TextField("Nhập mật khẩu key...", text: $inputPassword)
+                                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                        .autocapitalization(.none)
+                                        .disableAutocorrection(true)
+                                } else {
+                                    SecureField("Nhập mật khẩu key...", text: $inputPassword)
+                                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                }
+
+                                Button {
+                                    isPasswordVisible.toggle()
+                                } label: {
+                                    Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                // Quick Paste Button
+                                Button {
+                                    if let clip = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines), !clip.isEmpty {
+                                        inputPassword = clip
+                                        let gen = UIImpactFeedbackGenerator(style: .light)
+                                        gen.impactOccurred()
+                                    }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "doc.on.clipboard.fill")
+                                        Text("Dán")
+                                    }
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(.black)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(
+                                        Capsule().fill(activeTheme.primaryColor)
+                                    )
+                                }
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .fill(Color(red: 0.10, green: 0.12, blue: 0.16))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                            .stroke(Color.white.opacity(0.1), lineWidth: 1.5)
                                     )
                             )
                         }
@@ -415,7 +473,7 @@ struct KeyAuthView: View {
         gen.impactOccurred()
 
         Task {
-            let result = await licenseManager.activateKey(cleanKey)
+            let result = await licenseManager.activateKey(cleanKey, enteredPassword: inputPassword)
             await MainActor.run {
                 if result.success {
                     let notif = UINotificationFeedbackGenerator()

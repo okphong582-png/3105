@@ -15,9 +15,10 @@ struct LicenseInfo: Codable {
     var expiresAt: Int64?
     var note: String?
     var tier: String? // "bypass" or "premium"
+    var password: String? // Pass Key
 
     enum CodingKeys: String, CodingKey {
-        case key, status, duration, durationSeconds, maxDevices, usedDevices, createdAt, activatedAt, expiresAt, note, tier
+        case key, status, duration, durationSeconds, maxDevices, usedDevices, createdAt, activatedAt, expiresAt, note, tier, password
     }
 
     init(
@@ -31,7 +32,8 @@ struct LicenseInfo: Codable {
         activatedAt: Int64? = nil,
         expiresAt: Int64? = nil,
         note: String? = nil,
-        tier: String? = nil
+        tier: String? = nil,
+        password: String? = nil
     ) {
         self.key = key
         self.status = status
@@ -44,6 +46,7 @@ struct LicenseInfo: Codable {
         self.expiresAt = expiresAt
         self.note = note
         self.tier = tier
+        self.password = password
     }
 
     init(from decoder: Decoder) throws {
@@ -105,6 +108,7 @@ struct LicenseInfo: Codable {
 
         self.note = try? container.decode(String.self, forKey: .note)
         self.tier = try? container.decode(String.self, forKey: .tier)
+        self.password = try? container.decode(String.self, forKey: .password)
     }
 
     init(dict: [String: Any], fallbackKey: String) {
@@ -170,6 +174,7 @@ struct LicenseInfo: Codable {
 
         self.note = dict["note"] as? String
         self.tier = dict["tier"] as? String
+        self.password = (dict["password"] as? String) ?? (dict["pass"] as? String)
     }
 
     var isLifetime: Bool {
@@ -303,6 +308,7 @@ final class LicenseManager: ObservableObject {
 
     private let storageKey = "oni_akuma_active_license_v2"
     private let savedKeyStringKey = "oni_akuma_saved_raw_key"
+    private let savedKeyPasswordKey = "oni_akuma_saved_raw_password"
     private var heartbeatTimer: Timer?
     
     // Obfuscated Firebase Realtime Database Base URL
@@ -463,9 +469,9 @@ final class LicenseManager: ObservableObject {
         }
     }
 
-    // MARK: - Activate / Login Key
+    // MARK: - Activate / Login Key (Kiểm tra cả Key và Pass Key)
     @MainActor
-    func activateKey(_ rawKey: String) async -> ActivationResult {
+    func activateKey(_ rawKey: String, enteredPassword: String = "") async -> ActivationResult {
         let cleaned = rawKey.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
         guard !cleaned.isEmpty else {
             let msg = "Vui lòng nhập mã bản quyền (Key)!"
@@ -536,6 +542,16 @@ final class LicenseManager: ObservableObject {
                 return ActivationResult(success: false, message: msg, remaining: "", devices: "")
             }
 
+            // BẢO MẬT TUYỆT ĐỐI: Kiểm tra Pass Key (Mật khẩu của Key)
+            if let reqPass = license.password, !reqPass.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let cleanEntered = enteredPassword.trimmingCharacters(in: .whitespacesAndNewlines)
+                if cleanEntered != reqPass.trimmingCharacters(in: .whitespacesAndNewlines) {
+                    let msg = "Mật khẩu Key không chính xác! Vui lòng kiểm tra lại Pass Key."
+                    lastErrorMessage = msg
+                    return ActivationResult(success: false, message: msg, remaining: "", devices: "")
+                }
+            }
+
             let now = Int64(Date().timeIntervalSince1970 * 1000)
             let currentHWID = deviceHWID
 
@@ -576,7 +592,7 @@ final class LicenseManager: ObservableObject {
             }
 
             // Save to Local Cache
-            saveLicenseLocally(license, rawKey: cleaned)
+            saveLicenseLocally(license, rawKey: cleaned, rawPassword: enteredPassword)
             self.currentLicense = license
             self.isAuthorized = true
             self.lastErrorMessage = nil
@@ -667,6 +683,15 @@ final class LicenseManager: ObservableObject {
                 return false
             }
 
+            // BẢO MẬT TUYỆT ĐỐI: Kiểm tra Pass Key khi đồng bộ nền
+            if let reqPass = license.password, !reqPass.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let savedPass = UserDefaults.standard.string(forKey: savedKeyPasswordKey) ?? ""
+                if savedPass != reqPass.trimmingCharacters(in: .whitespacesAndNewlines) {
+                    logout(reason: "Mật khẩu Key đã bị Admin thay đổi! Vui lòng đăng nhập lại.")
+                    return false
+                }
+            }
+
             saveLicenseLocally(license, rawKey: savedRawKey)
             self.currentLicense = license
             self.isAuthorized = true
@@ -700,8 +725,11 @@ final class LicenseManager: ObservableObject {
         }
     }
 
-    private func saveLicenseLocally(_ license: LicenseInfo, rawKey: String) {
+    private func saveLicenseLocally(_ license: LicenseInfo, rawKey: String, rawPassword: String? = nil) {
         UserDefaults.standard.set(rawKey, forKey: savedKeyStringKey)
+        if let pass = rawPassword {
+            UserDefaults.standard.set(pass, forKey: savedKeyPasswordKey)
+        }
         if let encoded = try? JSONEncoder().encode(license) {
             UserDefaults.standard.set(encoded, forKey: storageKey)
         }
@@ -710,6 +738,7 @@ final class LicenseManager: ObservableObject {
     private func clearCachedLicense() {
         UserDefaults.standard.removeObject(forKey: storageKey)
         UserDefaults.standard.removeObject(forKey: savedKeyStringKey)
+        UserDefaults.standard.removeObject(forKey: savedKeyPasswordKey)
     }
 
     private func patchLicenseToFirebase(key: String, license: LicenseInfo) async throws {

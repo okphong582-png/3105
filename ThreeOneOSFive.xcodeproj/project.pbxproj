@@ -88,6 +88,9 @@
 		3105MSK2 /* Modskin.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105MSK1; };
 		3105IGN2 /* Mod đồ chỉ sử dụng nhân vật Ignis.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105IGN1; };
 		3105ADM3 /* admin_panel.html in Resources */ = {isa = PBXBuildFile; fileRef = 3105ADM0; };
+		3105DVR2 /* DV_đỏ_ff.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105DVR1; };
+		3105FTH2 /* ffth.png in Resources */ = {isa = PBXBuildFile; fileRef = 3105FTH1; };
+		3105FMX2 /* ffmax.png in Resources */ = {isa = PBXBuildFile; fileRef = 3105FMX1; };
 		3105A211 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3105A031; };
 /* End PBXBuildFile section */
 
@@ -181,6 +184,9 @@
 		3105MSK1 /* Modskin.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Modskin.3105"; sourceTree = "<group>"; };
 		3105IGN1 /* Mod đồ chỉ sử dụng nhân vật Ignis.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Mod đồ chỉ sử dụng nhân vật Ignis.3105"; sourceTree = "<group>"; };
 		3105ADM0 /* admin_panel.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = admin_panel.html; sourceTree = "<group>"; };
+		3105DVR1 /* DV_đỏ_ff.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "DV_đỏ_ff.3105"; sourceTree = "<group>"; };
+		3105FTH1 /* ffth.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ffth.png; sourceTree = "<group>"; };
+		3105FMX1 /* ffmax.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ffmax.png; sourceTree = "<group>"; };
 		3105F106 /* WallpaperLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLabView.swift; sourceTree = "<group>"; };
 		3105F108 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		3105G100 /* ZIPArchiveWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZIPArchiveWriter.swift; sourceTree = "<group>"; };
@@ -234,6 +240,9 @@
 				3105MSK1 /* Modskin.3105 */,
 				3105IGN1 /* Mod đồ chỉ sử dụng nhân vật Ignis.3105 */,
 				3105ADM0 /* admin_panel.html */,
+				3105DVR1 /* DV_đỏ_ff.3105 */,
+				3105FTH1 /* ffth.png */,
+				3105FMX1 /* ffmax.png */,
 				3105A031 /* Assets.xcassets */,
 			);
 			path = ThreeOneOSFive;
@@ -424,6 +433,9 @@
 				3105MSK2,
 				3105IGN2,
 				3105ADM3,
+				3105DVR2,
+				3105FTH2,
+				3105FMX2,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

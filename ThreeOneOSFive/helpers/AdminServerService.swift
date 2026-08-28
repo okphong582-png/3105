@@ -157,9 +157,10 @@ final class AdminServerService: ObservableObject {
         return ("", "")
     }
 
-    // MARK: - Create Key (Standard or Custom Duration)
+    // MARK: - Create Key (Standard or Custom Duration with Pass Key)
     func createKey(
         keyText: String? = nil,
+        passwordText: String? = nil,
         durationSeconds: Int64,
         maxDevices: Int = 1,
         note: String? = nil,
@@ -170,6 +171,9 @@ final class AdminServerService: ObservableObject {
 
         let cleanKey = (keyText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "")
         let finalKey = cleanKey.isEmpty ? generateRandomKey(isBypass: isBypass) : cleanKey.uppercased()
+
+        let cleanPass = (passwordText?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "")
+        let finalPassword = cleanPass.isEmpty ? String(format: "%06d", Int.random(in: 100000...999999)) : cleanPass
 
         var durationDesc = "1d"
         if durationSeconds == -1 {
@@ -195,7 +199,9 @@ final class AdminServerService: ObservableObject {
             createdAt: now,
             activatedAt: nil,
             expiresAt: nil,
-            note: finalNote
+            note: finalNote,
+            tier: isBypass ? "bypass" : "premium",
+            password: finalPassword
         )
 
         let targetURL = URL(string: "\(baseURL)/keys/\(finalKey).json")!
@@ -211,8 +217,8 @@ final class AdminServerService: ObservableObject {
                 // Update local list
                 self.keys.removeAll { $0.key == finalKey }
                 self.keys.append(license)
-                UIPasteboard.general.string = finalKey
-                return (true, license, "Đã tạo thành công key: \(finalKey)")
+                UIPasteboard.general.string = "Key: \(finalKey) | Pass: \(finalPassword)"
+                return (true, license, "Đã tạo thành công Key: \(finalKey) | Pass: \(finalPassword)")
             } else {
                 return (false, nil, "Server từ chối (Mã HTTP: \((response as? HTTPURLResponse)?.statusCode ?? 0))")
             }

@@ -213,7 +213,7 @@ struct MainInjectorView: View {
                     Circle()
                         .fill(Color.green)
                         .frame(width: 7, height: 7)
-                    Text("Ready • Sẵn Sàng Tiêm")
+                    Text("Ready • Sẵn Sàng")
                         .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(Color.green)
                 }
@@ -379,6 +379,9 @@ struct MainInjectorView: View {
                             isProcessing: isProcessing
                         )
                     }
+
+                    // TÍNH NĂNG ĐỊNH VỊ ĐỎ (DV_đỏ_ff.3105, Tự động mở khóa YaBao)
+                    redLocatorRow
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 10)
@@ -496,12 +499,75 @@ struct MainInjectorView: View {
                     )
                 )
                 .labelsHidden()
-                .toggleStyle(SwitchToggleStyle(tint: Color.green))
+                .tint(Color.green)
             }
         }
+        .padding(.vertical, 3)
     }
 
-    // MARK: - Tab 2: Mod Skin Card (Viền Cyan Neon)
+    // MARK: - Red Locator Row (Định Vị Đỏ - DV_đỏ_ff.3105)
+    private var redLocatorRow: some View {
+        HStack(spacing: 12) {
+            // Square Red Icon Box
+            ZStack {
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .fill(Color(red: 0.95, green: 0.2, blue: 0.2))
+                    .frame(width: 42, height: 42)
+                    .shadow(color: Color.red.opacity(0.4), radius: 6)
+
+                Image(systemName: "scope")
+                    .font(.system(size: 19, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+
+            // Title and Subtitle
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text("Định Vị Đỏ")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Color.white)
+
+                    Text("VỊ TRÍ")
+                        .font(.system(size: 9, weight: .black, design: .monospaced))
+                        .foregroundStyle(Color.red)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.red.opacity(0.16))
+                        .cornerRadius(4)
+                }
+
+                Text("Hiện vị trí mục tiêu")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.secondary)
+            }
+
+            Spacer()
+
+            // Native iOS Toggle
+            if modManager.isProcessingRedLocator {
+                ProgressView()
+                    .tint(Color.red)
+                    .scaleEffect(0.9)
+                    .padding(.trailing, 6)
+            } else {
+                Toggle(
+                    "",
+                    isOn: Binding(
+                        get: { modManager.isRedLocatorEnabled },
+                        set: { newVal in
+                            if newVal {
+                                lastActivatedAimName = "Định Vị Đỏ"
+                            }
+                            modManager.toggleRedLocator(store: store)
+                        }
+                    )
+                )
+                .labelsHidden()
+                .tint(Color.red)
+            }
+        }
+        .padding(.vertical, 3)
+    }// MARK: - Tab 2: Mod Skin Card (Viền Cyan Neon)
     private var modSkinCardSection: some View {
         let canUseMods = licenseManager.currentLicense?.canUseMods ?? false
 
@@ -786,7 +852,7 @@ struct MainInjectorView: View {
             UIApplication.shared.open(url)
         } else {
             let targetName = isMax ? "Free Fire MAX" : "Free Fire"
-            modManager.triggerToast("Đã tiêm tính năng xong! Hãy mở game \(targetName) để bắt đầu.")
+            modManager.triggerToast("Đã kích hoạt tính năng xong! Hãy mở game \(targetName) để bắt đầu.")
         }
     }
 
