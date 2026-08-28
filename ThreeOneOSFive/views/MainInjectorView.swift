@@ -11,7 +11,6 @@ struct MainInjectorView: View {
 
     // Game Selection State (Sau khi nhập key -> Hiện 2 Logo chọn Game)
     @State private var hasSelectedGame = false
-    @State private var selectedTab: Int = 0 // 0: Aim Bot, 1: Mod Skin, 2: Cài Đặt
     @State private var showSettings = false
     @State private var showLogs = false
     @State private var lastActivatedAimName: String? = nil
@@ -84,7 +83,7 @@ struct MainInjectorView: View {
                         // Selected Game Info Card (Icon + Free Fire / com.dts.freefireth)
                         selectedGameHeaderCard
 
-                        // Main Content Card: Aim Bot & Định Vị Đỏ
+                        // Main Content Card: Aim Bot
                         aimBotCardSection
 
                         // Bottom Big Action Button: ▶ OPEN GAME
@@ -238,69 +237,6 @@ struct MainInjectorView: View {
         )
     }
 
-    // MARK: - Horizontal Tab Bar (Chuẩn 100% Y Hệt Ảnh 1: [ 💉 Tiêm File ] [ ⚙️ Cài Đặt ])
-    private var horizontalTabBar: some View {
-        HStack(spacing: 0) {
-            // Nút 1: Tiêm File (Icon ống tiêm + Chữ Tiêm File)
-            Button {
-                let gen = UIImpactFeedbackGenerator(style: .light)
-                gen.impactOccurred()
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    selectedTab = 0
-                }
-            } label: {
-                VStack(spacing: 4) {
-                    Image(systemName: "syringe")
-                        .font(.system(size: 19, weight: .semibold))
-                        .rotationEffect(.degrees(-45))
-                    Text("Tiêm File")
-                        .font(.system(size: 11, weight: .bold))
-                }
-                .foregroundStyle(selectedTab == 0 ? Color(red: 0.0, green: 0.95, blue: 1.0) : Color.white.opacity(0.85))
-                .padding(.vertical, 8)
-                .padding(.horizontal, 28)
-                .background(
-                    Capsule()
-                        .fill(selectedTab == 0 ? Color(red: 0.23, green: 0.22, blue: 0.29) : Color.clear)
-                )
-            }
-            .buttonStyle(.plain)
-
-            // Nút 2: Cài Đặt (Icon bánh răng + Chữ Cài Đặt)
-            Button {
-                let gen = UIImpactFeedbackGenerator(style: .light)
-                gen.impactOccurred()
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    selectedTab = 1
-                }
-            } label: {
-                VStack(spacing: 4) {
-                    Image(systemName: "gearshape.fill")
-                        .font(.system(size: 19, weight: .semibold))
-                    Text("Cài Đặt")
-                        .font(.system(size: 11, weight: .bold))
-                }
-                .foregroundStyle(selectedTab == 1 ? Color(red: 0.0, green: 0.95, blue: 1.0) : Color.white)
-                .padding(.vertical, 8)
-                .padding(.horizontal, 28)
-                .background(
-                    Capsule()
-                        .fill(selectedTab == 1 ? Color(red: 0.23, green: 0.22, blue: 0.29) : Color.clear)
-                )
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(4)
-        .background(
-            Capsule()
-                .fill(Color(red: 0.11, green: 0.10, blue: 0.16).opacity(0.9))
-        )
-        .overlay(
-            Capsule()
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-        )
-    }
-
     // MARK: - Tab 1: Aim Bot Card (Giao diện viền xanh neon y hệt ảnh)
     private var aimBotCardSection: some View {
         let visibleAims = AimModType.allCases.filter { licenseManager.isAimVisible($0) }
@@ -360,9 +296,6 @@ struct MainInjectorView: View {
                             isProcessing: isProcessing
                         )
                     }
-
-                    // TÍNH NĂNG ĐỊNH VỊ ĐỎ (DV_đỏ_ff.3105, Tự động mở khóa / nhập pass theo 3105-main)
-                    redLocatorRow
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 10)
@@ -486,69 +419,7 @@ struct MainInjectorView: View {
         .padding(.vertical, 3)
     }
 
-    // MARK: - Red Locator Row (Định Vị Đỏ - DV_đỏ_ff.3105)
-    private var redLocatorRow: some View {
-        HStack(spacing: 12) {
-            // Square Red Icon Box
-            ZStack {
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .fill(Color(red: 0.95, green: 0.2, blue: 0.2))
-                    .frame(width: 42, height: 42)
-                    .shadow(color: Color.red.opacity(0.4), radius: 6)
-
-                Image(systemName: "scope")
-                    .font(.system(size: 19, weight: .bold))
-                    .foregroundStyle(.white)
-            }
-
-            // Title and Subtitle
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text("Định Vị Đỏ")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color.white)
-
-                    Text("VỊ TRÍ")
-                        .font(.system(size: 9, weight: .black, design: .monospaced))
-                        .foregroundStyle(Color.red)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.red.opacity(0.16))
-                        .cornerRadius(4)
-                }
-
-                Text("Hiện vị trí mục tiêu")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color.secondary)
-            }
-
-            Spacer()
-
-            // Native iOS Toggle
-            if modManager.isProcessingRedLocator {
-                ProgressView()
-                    .tint(Color.red)
-                    .scaleEffect(0.9)
-                    .padding(.trailing, 6)
-            } else {
-                Toggle(
-                    "",
-                    isOn: Binding(
-                        get: { modManager.isRedLocatorEnabled },
-                        set: { newVal in
-                            if newVal {
-                                lastActivatedAimName = "Định Vị Đỏ"
-                            }
-                            modManager.toggleRedLocator(store: store)
-                        }
-                    )
-                )
-                .labelsHidden()
-                .tint(Color.red)
-            }
-        }
-        .padding(.vertical, 3)
-    }// MARK: - Tab 2: Mod Skin Card (Viền Cyan Neon)
+    // MARK: - Tab 2: Mod Skin Card (Viền Cyan Neon)
     private var modSkinCardSection: some View {
         let canUseMods = licenseManager.currentLicense?.canUseMods ?? false
 

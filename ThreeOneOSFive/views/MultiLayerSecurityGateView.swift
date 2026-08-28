@@ -191,7 +191,7 @@ struct MultiLayerSecurityGateView: View {
                     .foregroundStyle(Color.green)
                     .multilineTextAlignment(.center)
             } else {
-                Text("Vượt link nhanh nhận ngay Key miễn phí 100% (Mở khóa Aim Bot & Định Vị)")
+                Text("Vượt link nhanh nhận ngay Key miễn phí 100% (Mở khóa Aim Bot Full VIP)")
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(Color.orange.opacity(0.85))
             }

@@ -84,8 +84,7 @@ enum PatchProjectLibrary {
             "Aim Magic.3105",
             "Aim Neck.3105",
             "Modskin.3105",
-            "Mod đồ chỉ sử dụng nhân vật Ignis.3105",
-            "DV_đỏ_ff.3105"
+            "Mod đồ chỉ sử dụng nhân vật Ignis.3105"
         ]
         for filename in knownFiles {
             let base = (filename as NSString).deletingPathExtension
