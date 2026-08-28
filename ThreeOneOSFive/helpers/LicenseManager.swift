@@ -736,10 +736,12 @@ final class LicenseManager: ObservableObject {
         }
     }
 
-    private func clearCachedLicense() {
+    func clearCachedLicense() {
         UserDefaults.standard.removeObject(forKey: storageKey)
         UserDefaults.standard.removeObject(forKey: savedKeyStringKey)
         UserDefaults.standard.removeObject(forKey: savedKeyPasswordKey)
+        self.currentLicense = nil
+        self.isAuthorized = false
     }
 
     private func patchLicenseToFirebase(key: String, license: LicenseInfo) async throws {

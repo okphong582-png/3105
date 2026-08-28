@@ -61,27 +61,22 @@ jobs:
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
           zip -r9 OniAkuma_Client.ipa Payload
-          cp OniAkuma_Client.ipa OniAkuma_Client.tipa
 
-          echo "=== CLIENT IPA & TIPA ARTIFACTS GENERATED ==="
-          ls -lh OniAkuma_Client.ipa OniAkuma_Client.tipa
+          echo "=== CLIENT IPA ARTIFACT GENERATED ==="
+          ls -lh OniAkuma_Client.ipa
 
-      - name: Upload Client IPA & TIPA
+      - name: Upload Client IPA
         uses: actions/upload-artifact@v4
         with:
-          name: OniAkuma_Client_IPA_TIPA
-          path: |
-            OniAkuma_Client.ipa
-            OniAkuma_Client.tipa
+          name: OniAkuma_Client_IPA
+          path: OniAkuma_Client.ipa
           retention-days: 30
 
       - name: Create GitHub Release (On tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            OniAkuma_Client.ipa
-            OniAkuma_Client.tipa
+          files: OniAkuma_Client.ipa
           draft: false
           prerelease: false
           generate_release_notes: true

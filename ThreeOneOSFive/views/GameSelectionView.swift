@@ -59,9 +59,6 @@ struct GameSelectionView: View {
     @ObservedObject private var modManager = ModFeatureManager.shared
     @ObservedObject private var licenseManager = LicenseManager.shared
 
-    @State private var showKeyDetails = false
-    @State private var showChangeKeyConfirm = false
-
     private var maskedKeyText: String {
         let raw = licenseManager.currentLicense?.key ?? UserDefaults.standard.string(forKey: "oni_saved_key") ?? ""
         let clean = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -146,24 +143,9 @@ struct GameSelectionView: View {
 
                 Spacer()
 
-                // 3. BOTTOM BAR: THÔNG TIN KEY + NÚT ĐỔI KEY (Y HỆT ẢNH 2)
+                // 3. BOTTOM BAR: THÔNG TIN KEY (CHẤM XANH + DÒNG 1 + DÒNG 2)
                 bottomKeyInfoBar
             }
-        }
-        .alert("Chi Tiết Bản Quyền", isPresented: $showKeyDetails) {
-            Button("Đóng", role: .cancel) {}
-        } message: {
-            if let lic = licenseManager.currentLicense {
-                Text("Mã Key: \(lic.key)\nThời hạn: \(lic.duration)\nTrạng thái: \(lic.status.uppercased())\nSố thiết bị: \(lic.usedDevices.count)/\(lic.maxDevices)\n\(remainingTimeText)")
-            } else {
-                Text("Chưa có thông tin bản quyền.")
-            }
-        }
-        .confirmationDialog("Bạn có chắc chắn muốn đổi Key khác?", isPresented: $showChangeKeyConfirm, titleVisibility: .visible) {
-            Button("Đổi Key (Đăng Xuất)", role: .destructive) {
-                licenseManager.clearCachedLicense()
-            }
-            Button("Hủy", role: .cancel) {}
         }
     }
 
