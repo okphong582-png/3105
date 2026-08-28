@@ -39,6 +39,8 @@ DerivedData/
 
 # Temporary files
 *.tmp
+*.bak
+3105-main/
 *.swp
 *~
 AdminStandalone/

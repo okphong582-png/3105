@@ -84,16 +84,11 @@ struct MainInjectorView: View {
                         // Selected Game Info Card (Icon + Free Fire / com.dts.freefireth)
                         selectedGameHeaderCard
 
-                        // Segmented Tab Bar (Pills style: Tiêm File | Cài Đặt)
-                        horizontalTabBar
+                        // Main Content Card: Aim Bot & Định Vị Đỏ
+                        aimBotCardSection
 
-                        // Tab Content Cards
-                        if selectedTab == 0 {
-                            aimBotCardSection
-                            openGameButton
-                        } else {
-                            settingsCardSection
-                        }
+                        // Bottom Big Action Button: ▶ OPEN GAME
+                        openGameButton
 
                         Spacer(minLength: 20)
                     }
@@ -365,6 +360,9 @@ struct MainInjectorView: View {
                             isProcessing: isProcessing
                         )
                     }
+
+                    // TÍNH NĂNG ĐỊNH VỊ ĐỎ (DV_đỏ_ff.3105, Tự động mở khóa / nhập pass theo 3105-main)
+                    redLocatorRow
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 10)

@@ -532,7 +532,8 @@ final class ModFeatureManager: ObservableObject {
         }
 
         guard let proj = item.project else {
-            triggerToast("Không thể giải mã cấu hình Định Vị Đỏ!")
+            // Mở cửa sổ nhập mật khẩu chuẩn của 3105-main để người dùng mở khóa
+            store.requestUnlock(for: item)
             return
         }
 

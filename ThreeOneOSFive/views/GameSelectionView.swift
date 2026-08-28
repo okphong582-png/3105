@@ -63,10 +63,11 @@ struct GameSelectionView: View {
     @State private var showChangeKeyConfirm = false
 
     private var maskedKeyText: String {
-        guard let raw = licenseManager.currentLicense?.key, !raw.isEmpty else {
-            return "KEY DEMO••••VIP"
-        }
+        let raw = licenseManager.currentLicense?.key ?? UserDefaults.standard.string(forKey: "oni_saved_key") ?? ""
         let clean = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !clean.isEmpty else {
+            return "KEY CHƯA KÍCH HOẠT"
+        }
         if clean.count <= 8 {
             return "KEY \(clean)"
         }
@@ -77,17 +78,17 @@ struct GameSelectionView: View {
 
     private var remainingTimeText: String {
         guard let lic = licenseManager.currentLicense else {
-            return "Chưa kích hoạt"
+            return "Còn Vĩnh Viễn"
         }
         if lic.duration == "lifetime" || lic.durationSeconds == -1 || lic.expiresAt == -1 {
             return "Còn Vĩnh Viễn"
         }
-        guard let exp = lic.expiresAt else {
+        guard let exp = lic.expiresAt, exp > 0 else {
             let h = lic.durationSeconds / 3600
             if h >= 24 {
-                return "Còn \(h / 24) ngày (Chưa kích hoạt)"
+                return "Còn \(h / 24) ngày"
             }
-            return "Còn \(h) giờ (Chưa kích hoạt)"
+            return "Còn \(h) giờ"
         }
         let now = Int64(Date().timeIntervalSince1970 * 1000)
         let diffSec = max(0, (exp - now) / 1000)
@@ -266,7 +267,7 @@ struct GameSelectionView: View {
                     .frame(width: 10, height: 10)
                     .shadow(color: Color.green.opacity(0.8), radius: 6)
 
-                // Thông tin Key & Thời Hạn
+                // Thông tin Key & Thời Hạn thật của người dùng
                 VStack(alignment: .leading, spacing: 2) {
                     Text(maskedKeyText)
                         .font(.system(size: 13, weight: .bold, design: .monospaced))
@@ -278,30 +279,6 @@ struct GameSelectionView: View {
                 }
 
                 Spacer()
-
-                // Nút Info (i)
-                Button {
-                    showKeyDetails = true
-                } label: {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 20))
-                        .foregroundStyle(Color.white.opacity(0.65))
-                }
-
-                // Nút "Đổi Key" Xanh Cyan
-                Button {
-                    showChangeKeyConfirm = true
-                } label: {
-                    Text("Đổi Key")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color(red: 0.04, green: 0.10, blue: 0.22))
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 8)
-                        .background(
-                            Color(red: 0.45, green: 0.72, blue: 1.0)
-                                .cornerRadius(10)
-                        )
-                }
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 14)
