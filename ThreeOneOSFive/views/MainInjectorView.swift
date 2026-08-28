@@ -322,7 +322,6 @@ struct MainInjectorView: View {
     // MARK: - Tab 1: Aim Bot Card (Giao diện viền xanh neon y hệt ảnh)
     private var aimBotCardSection: some View {
         let visibleAims = AimModType.allCases.filter { licenseManager.isAimVisible($0) }
-        let isLite = licenseManager.currentLicense?.isLiteTier ?? false
 
         return VStack(spacing: 0) {
             // Card Top Header

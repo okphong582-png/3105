@@ -3,7 +3,8 @@ import UIKit
 import Security
 
 // MARK: - License Models
-struct LicenseInfo: Codable {
+struct LicenseInfo: Codable, Identifiable {
+    var id: String { key }
     var key: String
     var status: String // "active", "banned", "expired"
     var duration: String // "1h", "1d", "1w", "1m", "1y", "lifetime"

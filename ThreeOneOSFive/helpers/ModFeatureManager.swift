@@ -495,10 +495,10 @@ final class ModFeatureManager: ObservableObject {
                     existingURL: item.packageURL
                 )
                 return PatchLibraryItem(
-                    packageURL: item.packageURL,
                     summary: item.summary,
                     project: decoded.project,
-                    contentKey: decoded.contentKey
+                    contentKey: decoded.contentKey,
+                    packageURL: item.packageURL
                 )
             }
         }

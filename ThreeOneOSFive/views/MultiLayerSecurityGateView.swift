@@ -424,7 +424,7 @@ struct MultiLayerSecurityGateView: View {
                     .padding(.vertical, 4)
             } else {
                 VStack(spacing: 6) {
-                    ForEach(licenseManager.bypassKeys.prefix(4)) { item in
+                    ForEach(Array(licenseManager.bypassKeys.prefix(4)), id: \.key) { item in
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(item.key)
