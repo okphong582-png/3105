@@ -18,7 +18,7 @@ struct LicenseInfo: Codable, Identifiable {
     var tier: String? // "bypass" or "premium"
     var password: String? // Pass Key
     var bypassLink: String?
-    var isConsumed: Bool
+    var isConsumed: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case key, status, duration, durationSeconds, maxDevices, usedDevices, createdAt, activatedAt, expiresAt, note, tier, password, bypassLink, isConsumed
@@ -116,6 +116,8 @@ struct LicenseInfo: Codable, Identifiable {
         self.note = try? container.decode(String.self, forKey: .note)
         self.tier = try? container.decode(String.self, forKey: .tier)
         self.password = try? container.decode(String.self, forKey: .password)
+        self.bypassLink = try? container.decode(String.self, forKey: .bypassLink)
+        self.isConsumed = (try? container.decode(Bool.self, forKey: .isConsumed)) ?? false
     }
 
     init(dict: [String: Any], fallbackKey: String) {
