@@ -27,11 +27,11 @@ struct GameAppIconBadge: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: size, height: size)
-                    .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
-                    .shadow(color: Color.black.opacity(0.35), radius: 6, y: 3)
+                    .clipShape(RoundedRectangle(cornerRadius: size * 0.24, style: .continuous))
+                    .shadow(color: Color.black.opacity(0.5), radius: 8, y: 4)
             } else {
-                RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
-                    .fill(Color.black.opacity(0.3))
+                RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
+                    .fill(Color.black.opacity(0.4))
                     .frame(width: size, height: size)
                     .overlay(
                         Image(systemName: isMax ? "bolt.shield.fill" : "flame.fill")
@@ -47,12 +47,12 @@ struct GameAppIconBadge: View {
 struct CardScaleButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(.spring(response: 0.25, dampingFraction: 0.75), value: configuration.isPressed)
     }
 }
 
-// MARK: - Game Selection View (Chuẩn 100% Giao Diện Ảnh 2)
+// MARK: - Game Selection View (Giao Diện Cyber Tactical Độc Quyền - Không Đạo Bất Kỳ App Nào)
 struct GameSelectionView: View {
     var onSelectGame: (String) -> Void
 
@@ -104,133 +104,258 @@ struct GameSelectionView: View {
 
     var body: some View {
         ZStack {
-            // Dark Obsidian Ambient Background
-            Color(red: 0.04, green: 0.05, blue: 0.07)
+            // Obsidian Cyber Ambient Background
+            Color(red: 0.03, green: 0.04, blue: 0.07)
                 .ignoresSafeArea()
 
+            // Futuristic Radial Glows
+            VStack {
+                Circle()
+                    .fill(Color.cyan.opacity(0.12))
+                    .frame(width: 320, height: 320)
+                    .blur(radius: 80)
+                    .offset(x: -80, y: -60)
+                Spacer()
+                Circle()
+                    .fill(Color.orange.opacity(0.12))
+                    .frame(width: 320, height: 320)
+                    .blur(radius: 80)
+                    .offset(x: 80, y: 60)
+            }
+            .ignoresSafeArea()
+
             VStack(spacing: 0) {
-                // 1. TOP CARD: THÔNG TIN THIẾT BỊ (Y HỆT ẢNH 2)
-                topDeviceInfoCard
+                // 1. TOP TACTICAL HUD
+                topTacticalHUD
 
-                Spacer()
+                Spacer(minLength: 12)
 
-                // 2. HAI CARD GAME GIỮA MÀN HÌNH (MAX Ở TRÊN, THƯỜNG Ở DƯỚI)
-                VStack(spacing: 20) {
-                    // Card 1: Free Fire Max (Nửa trên Xanh Dương, nửa dưới Đen)
-                    gameCard(
+                // 2. DUAL HOLOGRAPHIC GAME MODULES (FF MAX & FF THƯỜNG)
+                VStack(spacing: 16) {
+                    // Module 1: Free Fire MAX (Electric Cyan & Neon Sapphire)
+                    cyberGamePod(
                         isMax: true,
-                        title: "Free Fire Max",
-                        subtitle: "com.dts.freefiremax",
-                        topColor: Color(red: 0.05, green: 0.52, blue: 0.98),
-                        borderColor: Color.blue,
-                        action: {
-                            selectGame(bundleID: "com.dts.freefiremax")
-                        }
+                        title: "FREE FIRE MAX",
+                        bundleID: "com.dts.freefiremax",
+                        badge: "ULTRA HD",
+                        accentColor: Color.cyan,
+                        secondaryColor: Color.blue,
+                        specs: ["FULL AIM ASSIST (5 AIM)", "ĐỊNH VỊ CHẤM TRẮNG 3105"],
+                        action: { selectGame(bundleID: "com.dts.freefiremax") }
                     )
 
-                    // Card 2: Free Fire Thường (Nửa trên Cam, nửa dưới Đen)
-                    gameCard(
+                    // Module 2: Free Fire Thường (Sunset Flame & Cyber Amber)
+                    cyberGamePod(
                         isMax: false,
-                        title: "Free Fire Thường",
-                        subtitle: "com.dts.freefireth",
-                        topColor: Color(red: 1.0, green: 0.46, blue: 0.05),
-                        borderColor: Color.orange,
-                        action: {
-                            selectGame(bundleID: "com.dts.freefireth")
-                        }
+                        title: "FREE FIRE THƯỜNG",
+                        bundleID: "com.dts.freefireth",
+                        badge: "STANDARD FPS",
+                        accentColor: Color.orange,
+                        secondaryColor: Color.red,
+                        specs: ["FULL AIM ASSIST (5 AIM)", "ĐỊNH VỊ CHẤM TRẮNG 3105"],
+                        action: { selectGame(bundleID: "com.dts.freefireth") }
                     )
                 }
+                .padding(.horizontal, 20)
 
-                Spacer()
+                Spacer(minLength: 12)
 
-                // 3. BOTTOM BAR: THÔNG TIN KEY (CHẤM XANH + DÒNG 1 + DÒNG 2)
-                bottomKeyInfoBar
+                // 3. BOTTOM KEY TERMINAL BAR (CHUẨN 100% YÊU CẦU: CHẤM XANH + DÒNG 1 + DÒNG 2)
+                bottomKeyTerminalBar
             }
         }
     }
 
-    // MARK: - 1. Top Device Info Card (Y hệt ảnh 2)
-    private var topDeviceInfoCard: some View {
+    // MARK: - 1. Top Tactical HUD
+    private var topTacticalHUD: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Image(systemName: "applelogo")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color(red: 0.72, green: 0.45, blue: 0.98))
-                    Text("iOS \(UIDevice.current.systemVersion)")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Color.white.opacity(0.85))
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 7, height: 7)
+                        .shadow(color: Color.green, radius: 4)
+
+                    Text("HỆ THỐNG ONI AKUMA")
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                        .foregroundStyle(Color.cyan)
+                        .tracking(1.5)
                 }
-                HStack(spacing: 8) {
-                    Image(systemName: "iphone")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color(red: 0.0, green: 0.85, blue: 1.0))
-                    Text("Device \(UIDevice.current.model)")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Color.white.opacity(0.65))
+
+                HStack(spacing: 12) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "applelogo")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.purple)
+                        Text("iOS \(UIDevice.current.systemVersion)")
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(Color.white.opacity(0.8))
+                    }
+
+                    Text("•")
+                        .foregroundStyle(Color.white.opacity(0.3))
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "shield.lefthalf.filled")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.cyan)
+                        Text("ACTIVE")
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                            .foregroundStyle(Color.green)
+                    }
                 }
             }
+
             Spacer()
+
+            // Tactical Target Switcher Hint
+            VStack(alignment: .trailing, spacing: 2) {
+                Text("CHỌN MỤC TIÊU")
+                    .font(.system(size: 10, weight: .black, design: .monospaced))
+                    .foregroundStyle(Color.secondary)
+                Text("2 BẢN GAME")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.white.opacity(0.05).cornerRadius(10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.08), lineWidth: 1))
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(red: 0.09, green: 0.10, blue: 0.14).opacity(0.92))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-        )
         .padding(.horizontal, 20)
-        .padding(.top, 10)
+        .padding(.top, 14)
+        .padding(.bottom, 6)
     }
 
-    // MARK: - 2. Game Selection Card (Nửa trên Màu + Nửa dưới Đen)
+    // MARK: - 2. Cyber Game Pod (Thiết Kế Mới Toàn Diện - Phong Cách Tactical Cyberpunk)
     @ViewBuilder
-    private func gameCard(
+    private func cyberGamePod(
         isMax: Bool,
         title: String,
-        subtitle: String,
-        topColor: Color,
-        borderColor: Color,
+        bundleID: String,
+        badge: String,
+        accentColor: Color,
+        secondaryColor: Color,
+        specs: [String],
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            VStack(spacing: 0) {
-                // Top Half: Màu khối nổi bật chứa Logo Game
-                ZStack {
-                    topColor
-                    GameAppIconBadge(isMax: isMax, size: 66)
-                }
-                .frame(width: 250, height: 105)
+            ZStack {
+                // Carbon Texture Background
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(red: 0.08, green: 0.09, blue: 0.13), Color(red: 0.05, green: 0.06, blue: 0.09)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
 
-                // Bottom Half: Nền đen sang trọng chứa Tên Game & Bundle ID
-                VStack(spacing: 5) {
-                    Text(title)
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                // Cyber Grid Border & Accent Glow
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [accentColor.opacity(0.6), secondaryColor.opacity(0.2)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.5
+                    )
 
-                    Text(subtitle)
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(Color.white.opacity(0.55))
+                VStack(spacing: 14) {
+                    HStack(spacing: 16) {
+                        // Game App Logo Badge
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .fill(accentColor.opacity(0.15))
+                                .frame(width: 72, height: 72)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                        .stroke(accentColor.opacity(0.4), lineWidth: 1.5)
+                                )
+
+                            GameAppIconBadge(isMax: isMax, size: 64)
+                        }
+
+                        // Info Column
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 6) {
+                                Text(badge)
+                                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                                    .foregroundStyle(accentColor)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(accentColor.opacity(0.16).cornerRadius(5))
+
+                                Spacer()
+
+                                Image(systemName: "chevron.right.circle.fill")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundStyle(accentColor.opacity(0.8))
+                            }
+
+                            Text(title)
+                                .font(.system(size: 17, weight: .black, design: .rounded))
+                                .foregroundStyle(Color.white)
+
+                            Text(bundleID)
+                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .foregroundStyle(Color.white.opacity(0.5))
+                        }
+                    }
+
+                    // Divider
+                    Rectangle()
+                        .fill(Color.white.opacity(0.06))
+                        .frame(height: 1)
+
+                    // Specs & Action
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            ForEach(specs, id: \.self) { item in
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill(accentColor)
+                                        .frame(width: 4, height: 4)
+                                    Text(item)
+                                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                                        .foregroundStyle(Color.white.opacity(0.7))
+                                }
+                            }
+                        }
+
+                        Spacer()
+
+                        // Action Pill
+                        HStack(spacing: 5) {
+                            Image(systemName: isMax ? "bolt.fill" : "flame.fill")
+                                .font(.system(size: 11, weight: .black))
+                            Text("CHỌN")
+                                .font(.system(size: 12, weight: .black, design: .monospaced))
+                        }
+                        .foregroundStyle(Color.black)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            LinearGradient(
+                                colors: [accentColor, secondaryColor],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .clipShape(Capsule())
+                        .shadow(color: accentColor.opacity(0.4), radius: 8)
+                    }
                 }
-                .frame(width: 250, height: 85)
-                .background(Color(red: 0.08, green: 0.09, blue: 0.12))
+                .padding(16)
             }
-            .frame(width: 250, height: 190)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(borderColor.opacity(0.45), lineWidth: 1.5)
-            )
-            .shadow(color: borderColor.opacity(0.25), radius: 12, y: 6)
+            .shadow(color: accentColor.opacity(0.15), radius: 14, y: 6)
         }
         .buttonStyle(CardScaleButtonStyle())
     }
 
-    // MARK: - 3. Bottom Key Info Bar (Y hệt ảnh 2)
-    private var bottomKeyInfoBar: some View {
+    // MARK: - 3. Bottom Key Terminal Bar (Chuẩn 100% Theo Yêu Cầu Người Dùng)
+    private var bottomKeyTerminalBar: some View {
         VStack(spacing: 0) {
             Rectangle()
                 .fill(
@@ -240,31 +365,44 @@ struct GameSelectionView: View {
                         endPoint: .trailing
                     )
                 )
-                .frame(height: 1)
+                .frame(height: 1.2)
 
-            HStack(spacing: 12) {
-                // Chấm xanh phát sáng
+            HStack(spacing: 14) {
+                // Chấm xanh lá phát sáng 🟢
                 Circle()
-                    .fill(Color(red: 0.15, green: 0.9, blue: 0.35))
-                    .frame(width: 10, height: 10)
-                    .shadow(color: Color.green.opacity(0.8), radius: 6)
+                    .fill(Color(red: 0.15, green: 0.95, blue: 0.4))
+                    .frame(width: 11, height: 11)
+                    .shadow(color: Color.green.opacity(0.9), radius: 6)
 
-                // Thông tin Key & Thời Hạn thật của người dùng
-                VStack(alignment: .leading, spacing: 2) {
+                // Dòng 1: KEY xxxx••••yyyy & Dòng 2: Còn ...
+                VStack(alignment: .leading, spacing: 3) {
                     Text(maskedKeyText)
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.white)
+                        .font(.system(size: 13, weight: .black, design: .monospaced))
+                        .foregroundStyle(Color.white)
+                        .tracking(0.5)
 
                     Text(remainingTimeText)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color(red: 0.2, green: 0.85, blue: 0.4))
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color(red: 0.2, green: 0.95, blue: 0.45))
                 }
 
                 Spacer()
+
+                // Verified Security Seal
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 12, weight: .bold))
+                    Text("ACTIVE")
+                        .font(.system(size: 10, weight: .black, design: .monospaced))
+                }
+                .foregroundStyle(Color.green)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.green.opacity(0.12).cornerRadius(6))
             }
-            .padding(.horizontal, 18)
+            .padding(.horizontal, 20)
             .padding(.vertical, 14)
-            .background(Color(red: 0.05, green: 0.06, blue: 0.09).opacity(0.95))
+            .background(Color(red: 0.05, green: 0.06, blue: 0.09).opacity(0.96))
         }
     }
 

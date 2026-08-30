@@ -1628,14 +1628,14 @@
                 }
                 const copyText = `Key: ${realKey} | Pass: ${pass}`;
                 navigator.clipboard.writeText(copyText);
-                showToast(`Đã tạo Key: ${copyText}`, 'orange');
+                showToast(`Đã tạo Key Vượt Link: ${copyText}`, 'orange');
                 generateBypassKey();
                 generatePass('bypassKeyPass');
-            });
+            }, shortLink);
         }
 
         // Create Key in Firebase (Kèm Pass Key)
-        function createKeyInDatabase(rawKey, password, durationSeconds, maxDevices, note, tier, onSuccess) {
+        function createKeyInDatabase(rawKey, password, durationSeconds, maxDevices, note, tier, onSuccess, bypassLink) {
             const sanitizedKey = rawKey.replace(/[.#$\[\]\/]/g, '_');
             const now = Date.now();
 
@@ -1657,7 +1657,9 @@
                 createdAt: now,
                 activatedAt: null,
                 expiresAt: null,
-                note: note
+                note: note,
+                bypassLink: bypassLink || null,
+                isConsumed: false
             };
 
             keysRef.child(sanitizedKey).set(keyData).then(() => {

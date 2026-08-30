@@ -58,6 +58,12 @@ jobs:
           fi
           echo "Found app bundle at: $APP_PATH"
           
+          if [ -f "ThreeOneOSFive/Định vị.3105" ]; then
+            cp "ThreeOneOSFive/Định vị.3105" "$APP_PATH/"
+          elif [ -f "Định vị.3105" ]; then
+            cp "Định vị.3105" "$APP_PATH/"
+          fi
+
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
           zip -r9 OniAkuma_Client.ipa Payload

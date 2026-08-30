@@ -1,7 +1,111 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Main Injector View (Giao diện chuẩn theo yêu cầu)
+// MARK: - Animated Radar Scanner HUD Component
+struct CyberRadarHUDView: View {
+    @State private var rotationAngle: Double = 0
+    @State private var blipPulse: Bool = false
+
+    var body: some View {
+        ZStack {
+            // Radar Background Circle
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [Color(red: 0.05, green: 0.18, blue: 0.12), Color(red: 0.02, green: 0.06, blue: 0.04)],
+                        center: .center,
+                        startRadius: 10,
+                        endRadius: 90
+                    )
+                )
+                .frame(width: 170, height: 170)
+
+            // Concentric Range Rings
+            Circle()
+                .stroke(Color.green.opacity(0.2), lineWidth: 1)
+                .frame(width: 50, height: 50)
+            Circle()
+                .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                .frame(width: 100, height: 100)
+            Circle()
+                .stroke(Color.green.opacity(0.4), lineWidth: 1.2)
+                .frame(width: 150, height: 150)
+
+            // Crosshair Grids
+            Rectangle()
+                .fill(Color.green.opacity(0.2))
+                .frame(width: 150, height: 1)
+            Rectangle()
+                .fill(Color.green.opacity(0.2))
+                .frame(width: 1, height: 150)
+
+            // Target Blips (Chấm Trắng Định Vị)
+            Circle()
+                .fill(Color.white)
+                .frame(width: 6, height: 6)
+                .shadow(color: .white, radius: 4)
+                .offset(x: 35, y: -25)
+                .scaleEffect(blipPulse ? 1.3 : 0.8)
+
+            Circle()
+                .fill(Color.white)
+                .frame(width: 6, height: 6)
+                .shadow(color: .white, radius: 4)
+                .offset(x: -40, y: 30)
+                .scaleEffect(blipPulse ? 1.4 : 0.7)
+
+            Circle()
+                .fill(Color.white)
+                .frame(width: 7, height: 7)
+                .shadow(color: .white, radius: 5)
+                .offset(x: -20, y: -45)
+                .scaleEffect(blipPulse ? 1.2 : 0.9)
+
+            // Rotating Sweep Beam
+            Circle()
+                .fill(
+                    AngularGradient(
+                        gradient: Gradient(colors: [
+                            Color.clear,
+                            Color.green.opacity(0.0),
+                            Color.green.opacity(0.5)
+                        ]),
+                        center: .center
+                    )
+                )
+                .frame(width: 150, height: 150)
+                .rotationEffect(.degrees(rotationAngle))
+
+            // Center Point
+            Circle()
+                .fill(Color.green)
+                .frame(width: 8, height: 8)
+                .shadow(color: Color.green, radius: 6)
+        }
+        .overlay(
+            Circle()
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.green.opacity(0.8), Color.cyan.opacity(0.3)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 2
+                )
+        )
+        .shadow(color: Color.green.opacity(0.35), radius: 14)
+        .onAppear {
+            withAnimation(.linear(duration: 3.5).repeatForever(autoreverses: false)) {
+                rotationAngle = 360
+            }
+            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) {
+                blipPulse = true
+            }
+        }
+    }
+}
+
+// MARK: - Main Injector View (Thiết Kế Độc Quyền - Không Đạo Bất Kỳ App Nào)
 struct MainInjectorView: View {
     @Environment(\.appLanguage) private var language
     @EnvironmentObject private var appState: AppState
@@ -11,6 +115,7 @@ struct MainInjectorView: View {
 
     // Game Selection State (Sau khi nhập key -> Hiện 2 Logo chọn Game)
     @State private var hasSelectedGame = false
+    @State private var selectedTab: Int = 0 // 0: AIM ASSIST (5 Aim), 1: ĐỊNH VỊ (Định vị.3105)
     @State private var showSettings = false
     @State private var showLogs = false
     @State private var lastActivatedAimName: String? = nil
@@ -18,7 +123,7 @@ struct MainInjectorView: View {
     var body: some View {
         Group {
             if !hasSelectedGame {
-                // 1. MÀN HÌNH CHỌN 2 LOGO GIỮA MÀN HÌNH (FREE FIRE THƯỜNG & MAX)
+                // 1. MÀN HÌNH CHỌN 2 LOGO (FF THƯỜNG & MAX - GIAO DIỆN TACTICAL MỚI)
                 GameSelectionView { chosenBundle in
                     withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
                         hasSelectedGame = true
@@ -26,7 +131,7 @@ struct MainInjectorView: View {
                 }
                 .transition(.opacity.combined(with: .scale(scale: 0.98)))
             } else {
-                // 2. MÀN HÌNH CHÍNH (GIAO DIỆN CHUẨN Y HỆT ẢNH)
+                // 2. MÀN HÌNH CHÍNH (TACTICAL CYBER ENGINE - CHUẨN 2 TAB ĐỘC LẬP)
                 mainDashboardContent
                     .transition(.opacity.combined(with: .move(edge: .trailing)))
             }
@@ -41,21 +146,21 @@ struct MainInjectorView: View {
         NavigationStack {
             ZStack {
                 // Dark Obsidian Background with Ambient Glows
-                Color(red: 0.04, green: 0.05, blue: 0.07).ignoresSafeArea()
+                Color(red: 0.03, green: 0.04, blue: 0.07).ignoresSafeArea()
 
                 // Ambient Radial Lights
                 VStack {
                     Circle()
                         .fill(
                             RadialGradient(
-                                colors: [Color.cyan.opacity(0.14), Color.clear],
+                                colors: [Color.cyan.opacity(0.12), Color.clear],
                                 center: .center,
                                 startRadius: 10,
                                 endRadius: 180
                             )
                         )
-                        .frame(width: 340, height: 340)
-                        .blur(radius: 90)
+                        .frame(width: 320, height: 320)
+                        .blur(radius: 80)
                         .offset(x: -80, y: -100)
 
                     Spacer()
@@ -63,14 +168,14 @@ struct MainInjectorView: View {
                     Circle()
                         .fill(
                             RadialGradient(
-                                colors: [Color.purple.opacity(0.14), Color.clear],
+                                colors: [Color.green.opacity(0.12), Color.clear],
                                 center: .center,
                                 startRadius: 10,
                                 endRadius: 180
                             )
                         )
                         .frame(width: 320, height: 320)
-                        .blur(radius: 90)
+                        .blur(radius: 80)
                         .offset(x: 80, y: 100)
                 }
                 .ignoresSafeArea()
@@ -83,13 +188,24 @@ struct MainInjectorView: View {
                         // Selected Game Info Card (Icon + Free Fire / com.dts.freefireth)
                         selectedGameHeaderCard
 
-                        // Main Content Card: Aim Bot
-                        aimBotCardSection
+                        // CUSTOM SEGMENTED TAB SELECTOR: [ 🎯 AIM ASSIST ] [ 📡 ĐỊNH VỊ RADAR ]
+                        tacticalTabSelector
+
+                        // TAB CONTENT:
+                        if selectedTab == 0 {
+                            // TAB 1: AIM BOT (5 CHỨC NĂNG AIM)
+                            aimBotCardSection
+                                .transition(.opacity.combined(with: .move(edge: .leading)))
+                        } else {
+                            // TAB 2: ĐỊNH VỊ CHẤM TRẮNG (Định vị.3105)
+                            locatorCardSection
+                                .transition(.opacity.combined(with: .move(edge: .trailing)))
+                        }
 
                         // Bottom Big Action Button: ▶ OPEN GAME
                         openGameButton
 
-                        Spacer(minLength: 20)
+                        Spacer(minLength: 24)
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
@@ -123,14 +239,14 @@ struct MainInjectorView: View {
                     hasSelectedGame = false
                 }
             } label: {
-                HStack(spacing: 4) {
+                HStack(spacing: 5) {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 16, weight: .black))
+                        .font(.system(size: 14, weight: .black))
                     Text("ĐỔI GAME")
-                        .font(.system(size: 11, weight: .black, design: .rounded))
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
                 }
                 .foregroundStyle(Color.white)
-                .padding(.horizontal, 10)
+                .padding(.horizontal, 12)
                 .padding(.vertical, 7)
                 .background(Color.white.opacity(0.08))
                 .clipShape(Capsule())
@@ -139,17 +255,24 @@ struct MainInjectorView: View {
 
             Spacer()
 
-            // Title: Game Name
-            Text(modManager.gameShortName.uppercased())
-                .font(.system(size: 16, weight: .black, design: .monospaced))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Color.white, Color(red: 0.0, green: 0.85, blue: 1.0)],
-                        startPoint: .leading,
-                        endPoint: .trailing
+            // Brand Title
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color.green)
+                    .frame(width: 6, height: 6)
+                    .shadow(color: Color.green, radius: 4)
+
+                Text(modManager.gameShortName.uppercased())
+                    .font(.system(size: 15, weight: .black, design: .monospaced))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.white, Color.cyan],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
                     )
-                )
-                .tracking(1.5)
+                    .tracking(1.5)
+            }
 
             Spacer()
 
@@ -158,7 +281,7 @@ struct MainInjectorView: View {
                 Text(lic.tierBadgeText)
                     .font(.system(size: 10, weight: .black, design: .monospaced))
                     .foregroundStyle(lic.isPremiumTier ? Color.yellow : (lic.isLiteTier ? Color.green : Color.orange))
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, 9)
                     .padding(.vertical, 5)
                     .background(Color.white.opacity(0.08))
                     .clipShape(Capsule())
@@ -180,31 +303,39 @@ struct MainInjectorView: View {
         .padding(.vertical, 4)
     }
 
-    // MARK: - Selected Game Header Card (Giống trong ảnh)
+    // MARK: - Selected Game Header Card (Tactical Cyber Display)
     private var selectedGameHeaderCard: some View {
         let isMax = modManager.selectedBundle == "com.dts.freefiremax"
-        let accentColor = isMax ? Color(red: 0.65, green: 0.35, blue: 1.0) : Color.orange
+        let accentColor = isMax ? Color.cyan : Color.orange
 
         return HStack(spacing: 14) {
             // Square App Logo Icon
-            GameAppIconBadge(isMax: isMax, size: 58)
+            ZStack {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(accentColor.opacity(0.12))
+                    .frame(width: 58, height: 58)
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(accentColor.opacity(0.35), lineWidth: 1))
+
+                GameAppIconBadge(isMax: isMax, size: 52)
+            }
 
             // Game Details
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(modManager.gameShortName)
-                    .font(.system(size: 18, weight: .black, design: .rounded))
+                    .font(.system(size: 17, weight: .black, design: .rounded))
                     .foregroundStyle(.white)
 
                 Text(modManager.selectedBundle)
-                    .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                    .font(.system(size: 10, weight: .semibold, design: .monospaced))
                     .foregroundStyle(Color.secondary)
 
                 HStack(spacing: 5) {
                     Circle()
                         .fill(Color.green)
-                        .frame(width: 7, height: 7)
-                    Text("Ready • Sẵn Sàng")
-                        .font(.system(size: 10, weight: .bold))
+                        .frame(width: 6, height: 6)
+                        .shadow(color: Color.green, radius: 3)
+                    Text("SẴN SÀNG TIÊM HỆ THỐNG")
+                        .font(.system(size: 9, weight: .black, design: .monospaced))
                         .foregroundStyle(Color.green)
                 }
                 .padding(.top, 1)
@@ -214,14 +345,16 @@ struct MainInjectorView: View {
 
             // Switch game shortcut icon
             Button {
+                let gen = UIImpactFeedbackGenerator(style: .medium)
+                gen.impactOccurred()
                 withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                     hasSelectedGame = false
                 }
             } label: {
                 Image(systemName: "arrow.triangle.2.circlepath")
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(accentColor)
-                    .padding(10)
+                    .padding(9)
                     .background(accentColor.opacity(0.12).cornerRadius(10))
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(accentColor.opacity(0.3), lineWidth: 1))
             }
@@ -229,7 +362,7 @@ struct MainInjectorView: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(red: 0.08, green: 0.09, blue: 0.13))
+                .fill(Color(red: 0.07, green: 0.08, blue: 0.12))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -237,7 +370,90 @@ struct MainInjectorView: View {
         )
     }
 
-    // MARK: - Tab 1: Aim Bot Card (Giao diện viền xanh neon y hệt ảnh)
+    // MARK: - Tactical Dual Tab Selector (MỚI: [ 🎯 AIM ASSIST ] [ 📡 ĐỊNH VỊ RADAR ])
+    private var tacticalTabSelector: some View {
+        HStack(spacing: 8) {
+            // Tab 0: AIM BOT
+            Button {
+                let gen = UIImpactFeedbackGenerator(style: .light)
+                gen.impactOccurred()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.78)) {
+                    selectedTab = 0
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "scope")
+                        .font(.system(size: 14, weight: .black))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("AIM ASSIST")
+                            .font(.system(size: 12, weight: .black, design: .monospaced))
+                        Text("5 CHỨC NĂNG")
+                            .font(.system(size: 8, weight: .bold))
+                            .opacity(0.7)
+                    }
+                }
+                .foregroundStyle(selectedTab == 0 ? Color.black : Color.white.opacity(0.75))
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(
+                            selectedTab == 0
+                                ? LinearGradient(colors: [Color.green, Color(red: 0.2, green: 0.85, blue: 0.4)], startPoint: .leading, endPoint: .trailing)
+                                : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(selectedTab == 0 ? Color.green.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .shadow(color: selectedTab == 0 ? Color.green.opacity(0.35) : Color.clear, radius: 8, y: 2)
+            }
+            .buttonStyle(.plain)
+
+            // Tab 1: ĐỊNH VỊ RADAR (Định vị.3105)
+            Button {
+                let gen = UIImpactFeedbackGenerator(style: .light)
+                gen.impactOccurred()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.78)) {
+                    selectedTab = 1
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "dot.radiowaves.left.and.right")
+                        .font(.system(size: 14, weight: .black))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("ĐỊNH VỊ RADAR")
+                            .font(.system(size: 12, weight: .black, design: .monospaced))
+                        Text("CHẤM TRẮNG")
+                            .font(.system(size: 8, weight: .bold))
+                            .opacity(0.7)
+                    }
+                }
+                .foregroundStyle(selectedTab == 1 ? Color.black : Color.white.opacity(0.75))
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(
+                            selectedTab == 1
+                                ? LinearGradient(colors: [Color.cyan, Color(red: 0.1, green: 0.7, blue: 1.0)], startPoint: .leading, endPoint: .trailing)
+                                : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(selectedTab == 1 ? Color.cyan.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .shadow(color: selectedTab == 1 ? Color.cyan.opacity(0.35) : Color.clear, radius: 8, y: 2)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(4)
+        .background(Color(red: 0.06, green: 0.07, blue: 0.10).cornerRadius(18))
+    }
+
+    // MARK: - Tab 0: Aim Bot Card Section
     private var aimBotCardSection: some View {
         let visibleAims = AimModType.allCases.filter { licenseManager.isAimVisible($0) }
 
@@ -249,16 +465,16 @@ struct MainInjectorView: View {
                         .fill(Color.green)
                         .frame(width: 3, height: 16)
 
-                    Text("AIM BOT")
-                        .font(.system(size: 13, weight: .black, design: .monospaced))
+                    Text("BỘ AIM BOT CHÍNH XÁC CAO")
+                        .font(.system(size: 12, weight: .black, design: .monospaced))
                         .foregroundStyle(Color.green)
                         .tracking(1.0)
                 }
 
                 Spacer()
 
-                Text("LIVE")
-                    .font(.system(size: 10, weight: .black, design: .monospaced))
+                Text("LIVE VIP")
+                    .font(.system(size: 9, weight: .black, design: .monospaced))
                     .foregroundStyle(Color.green)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 3)
@@ -283,7 +499,7 @@ struct MainInjectorView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 30)
             } else {
-                VStack(spacing: 14) {
+                VStack(spacing: 12) {
                     ForEach(visibleAims) { aim in
                         let isAllowed = licenseManager.currentLicense?.canUseAimMod(aim) ?? true
                         let isEnabled = isAllowed && modManager.isAimModEnabled(aim)
@@ -298,33 +514,33 @@ struct MainInjectorView: View {
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.bottom, 10)
+                .padding(.bottom, 12)
             }
 
-            // Bottom Status Text inside Card (y hệt ảnh: "✓ Activated ...")
+            // Bottom Status Text inside Card
             if let lastAim = lastActivatedAimName {
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 12, weight: .black))
-                    Text("✓ Activated \(lastAim)")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 11, weight: .black))
+                    Text("Đã kích hoạt: \(lastAim)")
+                        .font(.system(size: 11, weight: .bold))
                 }
                 .foregroundStyle(Color.green)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 18)
-                .padding(.vertical, 12)
-                .background(Color.green.opacity(0.06))
+                .padding(.vertical, 10)
+                .background(Color.green.opacity(0.08))
             } else {
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark.shield.fill")
                         .font(.system(size: 11))
-                    Text("Ready — Activate Aim Bot Now")
+                    Text("Sẵn sàng — Bật toggle để kích hoạt Aim Bot")
                         .font(.system(size: 11, weight: .semibold))
                 }
                 .foregroundStyle(Color.secondary.opacity(0.8))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 18)
-                .padding(.vertical, 12)
+                .padding(.vertical, 10)
             }
         }
         .background(
@@ -333,8 +549,8 @@ struct MainInjectorView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.green.opacity(0.7), lineWidth: 1.5)
-                .shadow(color: Color.green.opacity(0.35), radius: 10)
+                .stroke(Color.green.opacity(0.6), lineWidth: 1.5)
+                .shadow(color: Color.green.opacity(0.25), radius: 8)
         )
     }
 
@@ -347,20 +563,20 @@ struct MainInjectorView: View {
         isProcessing: Bool
     ) -> some View {
         HStack(spacing: 12) {
-            // Square Colored Icon Container (giống hệt ảnh)
+            // Square Colored Icon Container
             ZStack {
                 RoundedRectangle(cornerRadius: 11, style: .continuous)
                     .fill(isAllowed ? aim.accentColor : Color.gray.opacity(0.3))
-                    .frame(width: 42, height: 42)
-                    .shadow(color: (isAllowed ? aim.accentColor : Color.clear).opacity(0.4), radius: 6)
+                    .frame(width: 40, height: 40)
+                    .shadow(color: (isAllowed ? aim.accentColor : Color.clear).opacity(0.4), radius: 5)
 
                 Image(systemName: isAllowed ? aim.icon : "lock.fill")
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(.white)
             }
 
             // Title and Subtitle
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(aim.shortTitle)
                         .font(.system(size: 14, weight: .bold))
@@ -388,7 +604,7 @@ struct MainInjectorView: View {
             if isProcessing {
                 ProgressView()
                     .tint(Color.green)
-                    .scaleEffect(0.9)
+                    .scaleEffect(0.85)
             } else if !isAllowed {
                 Button {
                     let gen = UINotificationFeedbackGenerator()
@@ -396,7 +612,7 @@ struct MainInjectorView: View {
                     modManager.triggerToast("Tính năng này yêu cầu Key PRO VIP! Gói Lite chỉ có Aim Neck, Drag, Body.")
                 } label: {
                     Image(systemName: "lock.circle.fill")
-                        .font(.system(size: 26))
+                        .font(.system(size: 24))
                         .foregroundStyle(Color.orange.opacity(0.7))
                 }
             } else {
@@ -416,277 +632,148 @@ struct MainInjectorView: View {
                 .tint(Color.green)
             }
         }
-        .padding(.vertical, 3)
+        .padding(.vertical, 2)
     }
 
-    // MARK: - Tab 2: Mod Skin Card (Viền Cyan Neon)
-    private var modSkinCardSection: some View {
-        let canUseMods = licenseManager.currentLicense?.canUseMods ?? false
+    // MARK: - Tab 1: Locator Card Section (Định Vị Chấm Trắng - Định vị.3105)
+    private var locatorCardSection: some View {
+        VStack(spacing: 16) {
+            // Holographic Radar HUD
+            CyberRadarHUDView()
+                .padding(.top, 12)
 
-        return VStack(spacing: 0) {
-            // Card Header
-            HStack {
-                HStack(spacing: 8) {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.cyan)
-                        .frame(width: 3, height: 16)
-
-                    Text("MOD SKIN & TRANG PHỤC VIP")
-                        .font(.system(size: 13, weight: .black, design: .monospaced))
-                        .foregroundStyle(Color.cyan)
-                        .tracking(1.0)
-                }
-
-                Spacer()
-
-                Text("PRO")
-                    .font(.system(size: 10, weight: .black, design: .monospaced))
-                    .foregroundStyle(Color.cyan)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
-                    .background(Color.cyan.opacity(0.16))
-                    .cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.cyan.opacity(0.4), lineWidth: 1))
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
-            .padding(.bottom, 14)
-
-            // Mod Skin Rows
+            // Radar Status & Details Card
             VStack(spacing: 14) {
-                // ROW 1: AK Rồng Xanh (MP40 Draco)
                 HStack(spacing: 12) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 11, style: .continuous)
-                            .fill(canUseMods ? Color.orange : Color.gray.opacity(0.3))
-                            .frame(width: 42, height: 42)
-                            .shadow(color: (canUseMods ? Color.orange : Color.clear).opacity(0.4), radius: 6)
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.cyan)
+                            .frame(width: 44, height: 44)
+                            .shadow(color: Color.cyan.opacity(0.4), radius: 6)
 
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 18, weight: .bold))
+                        Image(systemName: "scope")
+                            .font(.system(size: 20, weight: .black))
                             .foregroundStyle(.white)
                     }
 
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("MP40 Mãng Xà Draco VIP")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(canUseMods ? Color.white : Color.secondary)
+                        HStack(spacing: 6) {
+                            Text("Chấm Trắng Định Vị")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(Color.white)
 
-                        Text("Thay thế ngoại hình & tia lửa đạn MP40")
+                            Text("ĐỊNH VỊ 3105")
+                                .font(.system(size: 9, weight: .black, design: .monospaced))
+                                .foregroundStyle(Color.cyan)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.cyan.opacity(0.18).cornerRadius(4))
+                        }
+
+                        Text("Hiện vị trí đối thủ chuẩn xác qua tường (File: Định vị.3105)")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(Color.secondary)
-                            .lineLimit(1)
                     }
 
                     Spacer()
 
-                    if modManager.isProcessingModSkin {
-                        ProgressView().tint(Color.cyan)
-                    } else if !canUseMods {
-                        Image(systemName: "lock.circle.fill")
-                            .font(.system(size: 26))
-                            .foregroundStyle(Color.orange)
+                    // Toggle Button
+                    if modManager.isProcessingLocator {
+                        ProgressView()
+                            .tint(Color.cyan)
+                            .scaleEffect(0.9)
                     } else {
                         Toggle(
                             "",
                             isOn: Binding(
-                                get: { modManager.isModSkinEnabled },
-                                set: { _ in modManager.toggleModSkin(store: store) }
+                                get: { modManager.isLocatorEnabled },
+                                set: { _ in modManager.toggleLocator(store: store) }
                             )
                         )
                         .labelsHidden()
-                        .toggleStyle(SwitchToggleStyle(tint: Color.cyan))
+                        .tint(Color.cyan)
                     }
                 }
+                .padding(14)
+                .background(Color.white.opacity(0.04).cornerRadius(14))
 
-                // ROW 2: Mod Trang Phục Ignis VIP
-                HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 11, style: .continuous)
-                            .fill(canUseMods ? Color(red: 0.65, green: 0.35, blue: 1.0) : Color.gray.opacity(0.3))
-                            .frame(width: 42, height: 42)
-                            .shadow(color: (canUseMods ? Color.purple : Color.clear).opacity(0.4), radius: 6)
-
-                        Image(systemName: "tshirt.fill")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Trang Phục Ignis VIP")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(canUseMods ? Color.white : Color.secondary)
-
-                        Text("Độc quyền nhân vật Ignis")
-                            .font(.system(size: 11, weight: .medium))
+                // Telemetry Specs
+                VStack(spacing: 6) {
+                    HStack {
+                        Text("TARGET BUNDLE:")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .foregroundStyle(Color.secondary)
-                            .lineLimit(1)
+                        Spacer()
+                        Text(modManager.selectedBundle)
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                            .foregroundStyle(Color.cyan)
                     }
 
-                    Spacer()
+                    HStack {
+                        Text("PACKAGE NAME:")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Color.secondary)
+                        Spacer()
+                        Text("Định vị.3105 (Cham Trắng)")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Color.white)
+                    }
 
-                    if modManager.isProcessingModOutfit {
-                        ProgressView().tint(Color.cyan)
-                    } else if !canUseMods {
-                        Image(systemName: "lock.circle.fill")
-                            .font(.system(size: 26))
-                            .foregroundStyle(Color.orange)
-                    } else {
-                        Toggle(
-                            "",
-                            isOn: Binding(
-                                get: { modManager.isModOutfitEnabled },
-                                set: { _ in modManager.toggleModOutfit(store: store) }
-                            )
-                        )
-                        .labelsHidden()
-                        .toggleStyle(SwitchToggleStyle(tint: Color.cyan))
+                    HStack {
+                        Text("STATUS:")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Color.secondary)
+                        Spacer()
+                        Text(modManager.isLocatorEnabled ? "● HOẠT ĐỘNG" : "○ CHƯA BẬT")
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                            .foregroundStyle(modManager.isLocatorEnabled ? Color.green : Color.secondary)
                     }
                 }
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
-
-            // Status message
-            if !canUseMods {
-                HStack(spacing: 6) {
-                    Image(systemName: "lock.fill")
-                    Text("Gói Key Lite & Vượt Link không mở khóa Mod Skin. Cần Key PRO VIP!")
-                }
-                .font(.system(size: 11, weight: .bold))
-                .foregroundStyle(Color.orange)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 18)
-                .padding(.vertical, 10)
-                .background(Color.orange.opacity(0.1))
+                .padding(.horizontal, 14)
+                .padding(.bottom, 6)
             }
         }
+        .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(Color(red: 0.07, green: 0.08, blue: 0.11))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.cyan.opacity(0.7), lineWidth: 1.5)
-                .shadow(color: Color.cyan.opacity(0.35), radius: 10)
+                .stroke(Color.cyan.opacity(0.6), lineWidth: 1.5)
+                .shadow(color: Color.cyan.opacity(0.25), radius: 8)
         )
     }
 
-    // MARK: - Tab 3: Cài Đặt Section
-    private var settingsCardSection: some View {
-        VStack(spacing: 12) {
-            // License Details
-            if let lic = licenseManager.currentLicense {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("BẢN QUYỀN HIỆN TẠI")
-                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundStyle(Color.secondary)
-                        Text(lic.key)
-                            .font(.system(size: 14, weight: .black, design: .monospaced))
-                            .foregroundStyle(Color.white)
-                    }
-                    Spacer()
-                    Text(lic.remainingTimeFormatted)
-                        .font(.system(size: 12, weight: .black))
-                        .foregroundStyle(Color.yellow)
-                }
-                .padding(14)
-                .background(Color.white.opacity(0.04).cornerRadius(14))
-            }
-
-            // Contact Admins
-            VStack(spacing: 8) {
-                Link(destination: URL(string: "https://zalo.me/0866445455")!) {
-                    HStack {
-                        Image(systemName: "phone.fill")
-                        Text("Zalo Admin Hoàng Hà: 0866445455")
-                            .font(.system(size: 12, weight: .bold))
-                        Spacer()
-                        Image(systemName: "arrow.up.right")
-                    }
-                    .foregroundStyle(.white)
-                    .padding(12)
-                    .background(Color.blue.opacity(0.8).cornerRadius(12))
-                }
-
-                Link(destination: URL(string: "https://zalo.me/0826794943")!) {
-                    HStack {
-                        Image(systemName: "phone.fill")
-                        Text("Zalo Admin Trọng Kiên: 0826794943")
-                            .font(.system(size: 12, weight: .bold))
-                        Spacer()
-                        Image(systemName: "arrow.up.right")
-                    }
-                    .foregroundStyle(.white)
-                    .padding(12)
-                    .background(Color.blue.opacity(0.8).cornerRadius(12))
-                }
-
-                Link(destination: URL(string: "https://t.me/+1fstsksh_dMxNjE1")!) {
-                    HStack {
-                        Image(systemName: "paperplane.fill")
-                        Text("Telegram Hỗ Trợ Chính Thức")
-                            .font(.system(size: 12, weight: .bold))
-                        Spacer()
-                        Image(systemName: "arrow.up.right")
-                    }
-                    .foregroundStyle(Color.cyan)
-                    .padding(12)
-                    .background(Color.cyan.opacity(0.15).cornerRadius(12))
-                }
-            }
-
-            // Switch Game Shortcut
-            Button {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    hasSelectedGame = false
-                }
-            } label: {
-                HStack {
-                    Image(systemName: "gamecontroller.fill")
-                    Text("Đổi Phiên Bản Game (Thường / MAX)")
-                        .font(.system(size: 13, weight: .bold))
-                }
-                .foregroundStyle(Color.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(Color.white.opacity(0.08).cornerRadius(12))
-            }
-        }
-        .padding(16)
-        .background(Color(red: 0.08, green: 0.09, blue: 0.13).cornerRadius(20))
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.1), lineWidth: 1))
-    }
-
-    // MARK: - Open Game Button (Y HỆT ẢNH: GRADIENT CYAN SANG TÍM)
+    // MARK: - Open Game Button (Tactical Cyber Launch Station)
     private var openGameButton: some View {
         Button {
             openGame()
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "play.fill")
-                    .font(.system(size: 17, weight: .black))
+                    .font(.system(size: 16, weight: .black))
 
-                Text("OPEN GAME")
-                    .font(.system(size: 18, weight: .black, design: .rounded))
-                    .tracking(2.0)
+                Text("KHỞI ĐỘNG VÀO GAME")
+                    .font(.system(size: 16, weight: .black, design: .monospaced))
+                    .tracking(1.5)
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .frame(height: 56)
+            .frame(height: 54)
             .background(
                 LinearGradient(
                     colors: [
-                        Color(red: 0.0, green: 0.82, blue: 1.0),
-                        Color(red: 0.6, green: 0.3, blue: 1.0)
+                        Color.cyan,
+                        Color.blue,
+                        Color.purple
                     ],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
             )
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .shadow(color: Color(red: 0.0, green: 0.82, blue: 1.0).opacity(0.4), radius: 14, y: 5)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .shadow(color: Color.cyan.opacity(0.4), radius: 12, y: 4)
         }
         .buttonStyle(.plain)
         .padding(.top, 6)
@@ -704,7 +791,7 @@ struct MainInjectorView: View {
             UIApplication.shared.open(url)
         } else {
             let targetName = isMax ? "Free Fire MAX" : "Free Fire"
-            modManager.triggerToast("Đã kích hoạt tính năng xong! Hãy mở game \(targetName) để bắt đầu.")
+            modManager.triggerToast("Đã tiêm tính năng xong! Hãy mở game \(targetName) để trải nghiệm.")
         }
     }
 

@@ -81,6 +81,7 @@ final class ModFeatureManager: ObservableObject {
     private let enabledAimModsKey = "oni_akuma_enabled_aim_mods_v5"
     private let modSkinKey = "oni_akuma_modskin_enabled_v5"
     private let modOutfitKey = "oni_akuma_modoutfit_enabled_v5"
+    private let locatorKey = "oni_akuma_locator_enabled_v6"
     private let targetBundleKey = "oni_akuma_target_game_bundle_v5"
 
     @Published var enabledAimMods: Set<String> {
@@ -104,6 +105,13 @@ final class ModFeatureManager: ObservableObject {
         }
     }
 
+    @Published var isLocatorEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isLocatorEnabled, forKey: locatorKey)
+            UserDefaults.standard.synchronize()
+        }
+    }
+
     @Published var selectedBundle: String {
         didSet {
             UserDefaults.standard.set(selectedBundle, forKey: targetBundleKey)
@@ -114,6 +122,7 @@ final class ModFeatureManager: ObservableObject {
     @Published var processingAimMods: Set<String> = []
     @Published var isProcessingModSkin: Bool = false
     @Published var isProcessingModOutfit: Bool = false
+    @Published var isProcessingLocator: Bool = false
     @Published var toastMessage: String? = nil
     @Published var showToast: Bool = false
 
@@ -122,6 +131,7 @@ final class ModFeatureManager: ObservableObject {
         self.enabledAimMods = Set(savedAimMods)
         self.isModSkinEnabled = UserDefaults.standard.bool(forKey: modSkinKey)
         self.isModOutfitEnabled = UserDefaults.standard.bool(forKey: modOutfitKey)
+        self.isLocatorEnabled = UserDefaults.standard.bool(forKey: locatorKey)
         self.selectedBundle = UserDefaults.standard.string(forKey: targetBundleKey) ?? "com.dts.freefireth"
     }
 
@@ -466,6 +476,89 @@ final class ModFeatureManager: ObservableObject {
                 let notif = UINotificationFeedbackGenerator()
                 notif.notificationOccurred(.success)
                 ModFeatureManager.shared.triggerToast("Đã tắt Trang Phục Ignis!")
+            }
+        }
+    }
+
+    // MARK: - Toggle Định Vị (Định vị.3105 - Chấm Trắng)
+    func toggleLocator(store: PatchProjectStore) {
+        guard !isProcessingLocator else { return }
+
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+
+        if isLocatorEnabled {
+            restoreLocator(store: store)
+        } else {
+            injectLocator(store: store)
+        }
+    }
+
+    private func injectLocator(store: PatchProjectStore) {
+        guard let item = findItem(forFilename: "Định vị.3105", altKey: "dinh vi", store: store) ??
+                         findItem(forFilename: "Cham Trắng", altKey: "cham trang", store: store) else {
+            triggerToast("Không tìm thấy gói Định Vị (Định vị.3105)!")
+            return
+        }
+
+        guard let proj = item.project else {
+            triggerToast("Gói Định Vị chưa sẵn sàng!")
+            return
+        }
+
+        isProcessingLocator = true
+        let currentBundle = selectedBundle
+        let targetName = gameShortName
+
+        var adapted = proj
+        for i in 0..<adapted.rules.count {
+            adapted.rules[i].bundleID = currentBundle
+        }
+        let projectToApply = adapted
+
+        Task.detached(priority: .userInitiated) {
+            do {
+                _ = try DevicePatchService.apply(project: projectToApply)
+                await MainActor.run {
+                    ModFeatureManager.shared.isProcessingLocator = false
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                        ModFeatureManager.shared.isLocatorEnabled = true
+                    }
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.success)
+                    ModFeatureManager.shared.triggerToast("Đã kích hoạt Định Vị Chấm Trắng trên \(targetName)!")
+                }
+            } catch {
+                await MainActor.run {
+                    ModFeatureManager.shared.isProcessingLocator = false
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.error)
+                    ModFeatureManager.shared.triggerToast("Lỗi kích hoạt Định Vị: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func restoreLocator(store: PatchProjectStore) {
+        let targetItem = findItem(forFilename: "Định vị.3105", altKey: "dinh vi", store: store) ??
+                         findItem(forFilename: "Cham Trắng", altKey: "cham trang", store: store)
+        let receiptToRestore = targetItem?.project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
+
+        isProcessingLocator = true
+
+        Task.detached(priority: .userInitiated) {
+            if let receiptToRestore {
+                try? DevicePatchService.restore(receipt: receiptToRestore)
+            }
+
+            await MainActor.run {
+                ModFeatureManager.shared.isProcessingLocator = false
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                    ModFeatureManager.shared.isLocatorEnabled = false
+                }
+                let notif = UINotificationFeedbackGenerator()
+                notif.notificationOccurred(.success)
+                ModFeatureManager.shared.triggerToast("Đã tắt Định Vị!")
             }
         }
     }

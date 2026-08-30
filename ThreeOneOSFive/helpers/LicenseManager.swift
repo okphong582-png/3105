@@ -17,9 +17,11 @@ struct LicenseInfo: Codable, Identifiable {
     var note: String?
     var tier: String? // "bypass" or "premium"
     var password: String? // Pass Key
+    var bypassLink: String?
+    var isConsumed: Bool
 
     enum CodingKeys: String, CodingKey {
-        case key, status, duration, durationSeconds, maxDevices, usedDevices, createdAt, activatedAt, expiresAt, note, tier, password
+        case key, status, duration, durationSeconds, maxDevices, usedDevices, createdAt, activatedAt, expiresAt, note, tier, password, bypassLink, isConsumed
     }
 
     init(
@@ -34,7 +36,9 @@ struct LicenseInfo: Codable, Identifiable {
         expiresAt: Int64? = nil,
         note: String? = nil,
         tier: String? = nil,
-        password: String? = nil
+        password: String? = nil,
+        bypassLink: String? = nil,
+        isConsumed: Bool = false
     ) {
         self.key = key
         self.status = status
@@ -48,6 +52,8 @@ struct LicenseInfo: Codable, Identifiable {
         self.note = note
         self.tier = tier
         self.password = password
+        self.bypassLink = bypassLink
+        self.isConsumed = isConsumed
     }
 
     init(from decoder: Decoder) throws {
@@ -176,6 +182,8 @@ struct LicenseInfo: Codable, Identifiable {
         self.note = dict["note"] as? String
         self.tier = dict["tier"] as? String
         self.password = (dict["password"] as? String) ?? (dict["pass"] as? String)
+        self.bypassLink = (dict["bypassLink"] as? String) ?? (dict["shortLink"] as? String)
+        self.isConsumed = (dict["isConsumed"] as? Bool) ?? (dict["consumed"] as? Bool) ?? false
     }
 
     var isLifetime: Bool {
@@ -408,7 +416,7 @@ final class LicenseManager: ObservableObject {
             for (key, val) in dict {
                 if let keyDict = val as? [String: Any] {
                     let info = LicenseInfo(dict: keyDict, fallbackKey: key)
-                    if info.isBypassTier && !info.isExpired && info.status != "banned" {
+                    if info.isBypassTier && !info.isExpired && info.status != "banned" && !info.isConsumed && (info.usedDevices.isEmpty || info.activatedAt == nil || info.activatedAt == 0) {
                         result.append(info)
                     }
                 }
@@ -569,6 +577,14 @@ final class LicenseManager: ObservableObject {
 
                 // Push update to Firebase
                 try await patchLicenseToFirebase(key: sanitizedKey, license: license)
+
+                // NẾU LÀ KEY VƯỢT LINK -> TỰ ĐỘNG XOÁ LINK & KEY KHỎI SERVER THEO YÊU CẦU
+                if license.isBypassTier {
+                    license.isConsumed = true
+                    Task {
+                        _ = try? await self.deleteBypassKeyFromServer(key: sanitizedKey)
+                    }
+                }
             } else {
                 // Already activated before -> Check Expiration
                 if license.isExpired {
@@ -655,6 +671,9 @@ final class LicenseManager: ObservableObject {
 
             let textContent = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
             if data.isEmpty || textContent == "null" || textContent == "{}" {
+                if let cached = currentLicense, cached.isBypassTier, !cached.isExpired {
+                    return true
+                }
                 logout(reason: "Key không tồn tại hoặc đã bị xoá bởi Admin!")
                 return false
             }
@@ -742,6 +761,13 @@ final class LicenseManager: ObservableObject {
         UserDefaults.standard.removeObject(forKey: savedKeyPasswordKey)
         self.currentLicense = nil
         self.isAuthorized = false
+    }
+
+    func deleteBypassKeyFromServer(key: String) async throws {
+        guard let url = URL(string: "\(databaseEndpoint)/\(key).json") else { return }
+        var req = URLRequest(url: url)
+        req.httpMethod = "DELETE"
+        _ = try await URLSession.shared.data(for: req)
     }
 
     private func patchLicenseToFirebase(key: String, license: LicenseInfo) async throws {

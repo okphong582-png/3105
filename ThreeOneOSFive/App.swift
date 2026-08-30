@@ -8,6 +8,7 @@ struct ThreeOneOSFiveApp: App {
     @StateObject private var fileOperationCoordinator = FileOperationCoordinator()
     @ObservedObject private var licenseManager = LicenseManager.shared
     @ObservedObject private var securityService = MultiLayerSecurityService.shared
+    @ObservedObject private var networkService = NetworkReachabilityService.shared
     @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.vietnamese.rawValue
     @Environment(\.scenePhase) private var scenePhase
 
@@ -25,7 +26,11 @@ struct ThreeOneOSFiveApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if licenseManager.isSystemMaintenance {
+            if !networkService.isConnected {
+                NoInternetGateView()
+                    .preferredColorScheme(.dark)
+                    .transition(.opacity)
+            } else if licenseManager.isSystemMaintenance {
                 SystemMaintenanceGateView()
                     .preferredColorScheme(.dark)
                     .transition(.opacity)

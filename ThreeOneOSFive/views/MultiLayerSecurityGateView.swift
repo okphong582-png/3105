@@ -381,14 +381,14 @@ struct MultiLayerSecurityGateView: View {
         )
     }
 
-    // MARK: - Bypass Key Warehouse Card (Kho Key Vượt Link)
+    // MARK: - Bypass Link Warehouse Card (Kho Link Vượt Lấy Key)
     private var bypassKeyWarehouseCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 HStack(spacing: 6) {
-                    Image(systemName: "shippingbox.fill")
+                    Image(systemName: "link.circle.fill")
                         .foregroundStyle(Color.orange)
-                    Text("KHO KEY VƯỢT LINK HỆ THỐNG")
+                    Text("KHO LINK VƯỢT LẤY KEY (MIỄN PHÍ)")
                         .font(.system(size: 11, weight: .black, design: .monospaced))
                         .foregroundStyle(Color.orange)
                 }
@@ -411,53 +411,104 @@ struct MultiLayerSecurityGateView: View {
                 HStack {
                     Spacer()
                     ProgressView().tint(Color.orange)
-                    Text("Đang kiểm tra kho key...")
+                    Text("Đang tải danh sách link vượt...")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                     Spacer()
                 }
                 .padding(.vertical, 6)
             } else if licenseManager.bypassKeys.isEmpty {
-                Text("Chưa có key vượt link có sẵn. Hãy bấm Vượt Link để nhận key mới nhất!")
+                Text("Hiện kho link đang trống. Hãy bấm 'Vượt Link Lấy Key' ở trên để mở link hệ thống!")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .padding(.vertical, 4)
             } else {
-                VStack(spacing: 6) {
-                    ForEach(Array(licenseManager.bypassKeys.prefix(4)), id: \.key) { item in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(item.key)
-                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                    .foregroundStyle(.white)
-                                if let pass = item.password, !pass.isEmpty {
-                                    Text("Pass: \(pass)")
-                                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                VStack(spacing: 8) {
+                    ForEach(Array(licenseManager.bypassKeys.prefix(4).enumerated()), id: \.element.key) { index, item in
+                        let linkUrl = item.bypassLink?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+                            ? item.bypassLink!
+                            : (licenseManager.bypassLink.isEmpty ? "https://link4m.co" : licenseManager.bypassLink)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack {
+                                HStack(spacing: 4) {
+                                    Text("⚡ LINK VƯỢT #\(index + 1)")
+                                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                                        .foregroundStyle(Color.orange)
+
+                                    Text("• \(item.durationFormatted)")
+                                        .font(.system(size: 10, weight: .bold))
                                         .foregroundStyle(Color.yellow)
                                 }
+
+                                Spacer()
+
+                                if let pass = item.password, !pass.isEmpty {
+                                    Text("Pass: \(pass)")
+                                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                        .foregroundStyle(Color.white.opacity(0.8))
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.white.opacity(0.1).cornerRadius(4))
+                                }
                             }
 
-                            Spacer()
+                            Text(linkUrl)
+                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .foregroundStyle(Color.cyan)
+                                .lineLimit(1)
 
-                            Button {
-                                inputKey = item.key
-                                if let pass = item.password {
-                                    inputPassword = pass
+                            HStack(spacing: 8) {
+                                // Nút Sao Chép Link Vượt
+                                Button {
+                                    UIPasteboard.general.string = linkUrl
+                                    let gen = UINotificationFeedbackGenerator()
+                                    gen.notificationOccurred(.success)
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                                        showLinkCopiedToast = true
+                                    }
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                                        withAnimation { showLinkCopiedToast = false }
+                                    }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "doc.on.doc")
+                                        Text("Sao Chép Link")
+                                    }
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(Color.black)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 6)
+                                    .background(Color.orange.cornerRadius(8))
                                 }
-                                let gen = UIImpactFeedbackGenerator(style: .light)
-                                gen.impactOccurred()
-                            } label: {
-                                Text("Dùng Key")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(.black)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.orange.cornerRadius(6))
+
+                                // Nút Mở Trực Tiếp Safari
+                                Button {
+                                    if let url = URL(string: linkUrl) {
+                                        UIApplication.shared.open(url)
+                                    }
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "safari")
+                                        Text("Mở Safari")
+                                    }
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(Color.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 6)
+                                    .background(Color.white.opacity(0.12).cornerRadius(8))
+                                }
                             }
                         }
-                        .padding(8)
-                        .background(Color.white.opacity(0.04).cornerRadius(8))
+                        .padding(10)
+                        .background(Color.white.opacity(0.04).cornerRadius(10))
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.orange.opacity(0.2), lineWidth: 1))
                     }
+
+                    Text("💡 Sau khi vượt link xong và lấy được Key Thật, hãy nhập Key vào ô trên. Sau khi nhập thành công, link & key này sẽ tự động bị xoá khỏi kho!")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color.secondary)
+                        .padding(.top, 2)
                 }
             }
         }
