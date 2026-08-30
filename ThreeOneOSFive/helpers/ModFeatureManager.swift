@@ -225,6 +225,8 @@ final class ModFeatureManager: ObservableObject {
         let projectToApply = adapted
 
         Task.detached(priority: .userInitiated) {
+            // Loading nhanh siêu mượt (0.35s) mang lại cảm giác phản hồi công nghệ cao
+            try? await Task.sleep(nanoseconds: 350_000_000)
             do {
                 _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
@@ -262,6 +264,8 @@ final class ModFeatureManager: ObservableObject {
         processingAimMods.insert(typeKey)
 
         Task.detached(priority: .userInitiated) {
+            // Loading nhanh siêu mượt (0.35s)
+            try? await Task.sleep(nanoseconds: 350_000_000)
             if let receiptToRestore {
                 do {
                     try DevicePatchService.restore(receipt: receiptToRestore)
@@ -497,7 +501,7 @@ final class ModFeatureManager: ObservableObject {
     private func injectLocator(store: PatchProjectStore) {
         guard let item = findItem(forFilename: "Định vị.3105", altKey: "dinh vi", store: store) ??
                          findItem(forFilename: "Cham Trắng", altKey: "cham trang", store: store) else {
-            triggerToast("Không tìm thấy gói Định Vị (Định vị.3105)!")
+            triggerToast("Không tìm thấy gói Định Vị!")
             return
         }
 
@@ -517,6 +521,8 @@ final class ModFeatureManager: ObservableObject {
         let projectToApply = adapted
 
         Task.detached(priority: .userInitiated) {
+            // Loading nhanh siêu mượt (0.35s)
+            try? await Task.sleep(nanoseconds: 350_000_000)
             do {
                 _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
@@ -547,6 +553,8 @@ final class ModFeatureManager: ObservableObject {
         isProcessingLocator = true
 
         Task.detached(priority: .userInitiated) {
+            // Loading nhanh siêu mượt (0.35s)
+            try? await Task.sleep(nanoseconds: 350_000_000)
             if let receiptToRestore {
                 try? DevicePatchService.restore(receipt: receiptToRestore)
             }

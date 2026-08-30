@@ -140,7 +140,7 @@ struct GameSelectionView: View {
                         badge: "ULTRA HD",
                         accentColor: Color.cyan,
                         secondaryColor: Color.blue,
-                        specs: ["FULL AIM ASSIST (5 AIM)", "ĐỊNH VỊ CHẤM TRẮNG 3105"],
+                        specs: ["FULL AIM ASSIST (5 AIM)", "ĐỊNH VỊ CHẤM TRẮNG VIP"],
                         action: { selectGame(bundleID: "com.dts.freefiremax") }
                     )
 
@@ -152,7 +152,7 @@ struct GameSelectionView: View {
                         badge: "STANDARD FPS",
                         accentColor: Color.orange,
                         secondaryColor: Color.red,
-                        specs: ["FULL AIM ASSIST (5 AIM)", "ĐỊNH VỊ CHẤM TRẮNG 3105"],
+                        specs: ["FULL AIM ASSIST (5 AIM)", "ĐỊNH VỊ CHẤM TRẮNG VIP"],
                         action: { selectGame(bundleID: "com.dts.freefireth") }
                     )
                 }

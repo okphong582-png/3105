@@ -600,12 +600,8 @@ struct MainInjectorView: View {
 
             Spacer()
 
-            // NÚT TOGGLE MẶC ĐỊNH CỦA IOS (THEO YÊU CẦU CỦA BẠN)
-            if isProcessing {
-                ProgressView()
-                    .tint(Color.green)
-                    .scaleEffect(0.85)
-            } else if !isAllowed {
+            // NÚT TOGGLE MẶC ĐỊNH CỦA IOS KÈM HIỆU ỨNG LOADING NHANH
+            if !isAllowed {
                 Button {
                     let gen = UINotificationFeedbackGenerator()
                     gen.notificationOccurred(.warning)
@@ -616,20 +612,31 @@ struct MainInjectorView: View {
                         .foregroundStyle(Color.orange.opacity(0.7))
                 }
             } else {
-                Toggle(
-                    "",
-                    isOn: Binding(
-                        get: { isEnabled },
-                        set: { newVal in
-                            if newVal {
-                                lastActivatedAimName = aim.shortTitle
+                HStack(spacing: 8) {
+                    if isProcessing {
+                        ProgressView()
+                            .tint(Color.green)
+                            .scaleEffect(0.85)
+                            .transition(.opacity.combined(with: .scale))
+                    }
+
+                    Toggle(
+                        "",
+                        isOn: Binding(
+                            get: { isEnabled },
+                            set: { newVal in
+                                guard !isProcessing else { return }
+                                if newVal {
+                                    lastActivatedAimName = aim.shortTitle
+                                }
+                                modManager.toggleAimMod(aim, store: store)
                             }
-                            modManager.toggleAimMod(aim, store: store)
-                        }
+                        )
                     )
-                )
-                .labelsHidden()
-                .tint(Color.green)
+                    .labelsHidden()
+                    .tint(Color.green)
+                    .disabled(isProcessing)
+                }
             }
         }
         .padding(.vertical, 2)
@@ -662,7 +669,7 @@ struct MainInjectorView: View {
                                 .font(.system(size: 15, weight: .bold))
                                 .foregroundStyle(Color.white)
 
-                            Text("ĐỊNH VỊ 3105")
+                            Text("RADAR VIP")
                                 .font(.system(size: 9, weight: .black, design: .monospaced))
                                 .foregroundStyle(Color.cyan)
                                 .padding(.horizontal, 6)
@@ -670,34 +677,41 @@ struct MainInjectorView: View {
                                 .background(Color.cyan.opacity(0.18).cornerRadius(4))
                         }
 
-                        Text("Hiện vị trí đối thủ chuẩn xác qua tường (File: Định vị.3105)")
+                        Text("Hiện vị trí đối thủ chuẩn xác qua tường")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(Color.secondary)
                     }
 
                     Spacer()
 
-                    // Toggle Button
-                    if modManager.isProcessingLocator {
-                        ProgressView()
-                            .tint(Color.cyan)
-                            .scaleEffect(0.9)
-                    } else {
+                    // Toggle Button Kèm Hiệu Ứng Loading Nhanh
+                    HStack(spacing: 8) {
+                        if modManager.isProcessingLocator {
+                            ProgressView()
+                                .tint(Color.cyan)
+                                .scaleEffect(0.85)
+                                .transition(.opacity.combined(with: .scale))
+                        }
+
                         Toggle(
                             "",
                             isOn: Binding(
                                 get: { modManager.isLocatorEnabled },
-                                set: { _ in modManager.toggleLocator(store: store) }
+                                set: { _ in
+                                    guard !modManager.isProcessingLocator else { return }
+                                    modManager.toggleLocator(store: store)
+                                }
                             )
                         )
                         .labelsHidden()
                         .tint(Color.cyan)
+                        .disabled(modManager.isProcessingLocator)
                     }
                 }
                 .padding(14)
                 .background(Color.white.opacity(0.04).cornerRadius(14))
 
-                // Telemetry Specs
+                // Telemetry Specs (Tuyệt đối không hiển thị 3105)
                 VStack(spacing: 6) {
                     HStack {
                         Text("TARGET BUNDLE:")
@@ -710,17 +724,17 @@ struct MainInjectorView: View {
                     }
 
                     HStack {
-                        Text("PACKAGE NAME:")
+                        Text("CHẾ ĐỘ RADAR:")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .foregroundStyle(Color.secondary)
                         Spacer()
-                        Text("Định vị.3105 (Cham Trắng)")
+                        Text("Chấm Trắng Toàn Bản Đồ")
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundStyle(Color.white)
                     }
 
                     HStack {
-                        Text("STATUS:")
+                        Text("TRẠNG THÁI:")
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .foregroundStyle(Color.secondary)
                         Spacer()
