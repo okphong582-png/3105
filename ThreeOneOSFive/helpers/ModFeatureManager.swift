@@ -42,13 +42,13 @@ enum AimModType: String, CaseIterable, Identifiable {
         }
     }
 
-    var filename: String {
+    var vaultTag: StealthPatchVault.ResourceTag {
         switch self {
-        case .body: return "Aim Body.3105"
-        case .drag: return "Aim Drag.3105"
-        case .chest: return "Aim Chest.3105"
-        case .magic: return "Aim Magic.3105"
-        case .neck: return "Aim Neck.3105"
+        case .body: return .aimBody
+        case .drag: return .aimDrag
+        case .chest: return .aimChest
+        case .magic: return .aimMagic
+        case .neck: return .aimNeck
         }
     }
 
@@ -198,19 +198,8 @@ final class ModFeatureManager: ObservableObject {
     private func injectAimMod(_ type: AimModType, store: PatchProjectStore) {
         let typeKey = type.rawValue
 
-        guard let item = findItem(forFilename: type.filename, altKey: type.rawValue, store: store) else {
-            triggerToast("Không tìm thấy file \(type.filename)!")
-            return
-        }
-
-        if item.isLocked {
-            store.requestUnlock(for: item)
-            triggerToast("Gói \(type.filename) yêu cầu nhập mật khẩu!")
-            return
-        }
-
-        guard let proj = item.project else {
-            triggerToast("Không tìm thấy dữ liệu cấu hình \(type.filename)!")
+        guard let proj = StealthPatchVault.loadProject(for: type.vaultTag) else {
+            triggerToast("Không thể tải cấu hình \(type.shortTitle)!")
             return
         }
 
@@ -258,8 +247,8 @@ final class ModFeatureManager: ObservableObject {
 
     private func restoreAimMod(_ type: AimModType, store: PatchProjectStore) {
         let typeKey = type.rawValue
-        let targetItem = findItem(forFilename: type.filename, altKey: type.rawValue, store: store)
-        let receiptToRestore = targetItem?.project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
+        let proj = StealthPatchVault.loadProject(for: type.vaultTag)
+        let receiptToRestore = proj.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
 
         processingAimMods.insert(typeKey)
 
@@ -286,7 +275,7 @@ final class ModFeatureManager: ObservableObject {
         }
     }
 
-    // MARK: - Toggle Mod Skin (MP40 Mãng Xà từ Phong Xà)
+    // MARK: - Toggle Mod Skin (MP40 Mãng Xà)
     func toggleModSkin(store: PatchProjectStore) {
         guard !isProcessingModSkin else { return }
 
@@ -301,18 +290,7 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func injectModSkin(store: PatchProjectStore) {
-        guard let item = findItem(forFilename: "Modskin.3105", altKey: "modskin", store: store) else {
-            triggerToast("Không tìm thấy gói Mod Skin!")
-            return
-        }
-
-        if item.isLocked {
-            store.requestUnlock(for: item)
-            triggerToast("Gói Mod Skin yêu cầu nhập mật khẩu!")
-            return
-        }
-
-        guard let proj = item.project else {
+        guard let proj = StealthPatchVault.loadProject(for: .modSkin) else {
             triggerToast("Không tìm thấy cấu hình Mod Skin!")
             return
         }
@@ -328,6 +306,8 @@ final class ModFeatureManager: ObservableObject {
         let projectToApply = adapted
 
         Task.detached(priority: .userInitiated) {
+            // Loading nhanh mượt mà (0.35s)
+            try? await Task.sleep(nanoseconds: 350_000_000)
             do {
                 _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
@@ -358,12 +338,14 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func restoreModSkin(store: PatchProjectStore) {
-        let targetItem = findItem(forFilename: "Modskin.3105", altKey: "modskin", store: store)
-        let receiptToRestore = targetItem?.project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
+        let proj = StealthPatchVault.loadProject(for: .modSkin)
+        let receiptToRestore = proj.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
 
         isProcessingModSkin = true
 
         Task.detached(priority: .userInitiated) {
+            // Loading nhanh mượt mà (0.35s)
+            try? await Task.sleep(nanoseconds: 350_000_000)
             if let receiptToRestore {
                 do {
                     try DevicePatchService.restore(receipt: receiptToRestore)
@@ -399,19 +381,7 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func injectModOutfit(store: PatchProjectStore) {
-        let outfitFilename = "Mod đồ chỉ sử dụng nhân vật Ignis.3105"
-        guard let item = findItem(forFilename: outfitFilename, altKey: "ignis", store: store) else {
-            triggerToast("Không tìm thấy gói Trang Phục Ignis!")
-            return
-        }
-
-        if item.isLocked {
-            store.requestUnlock(for: item)
-            triggerToast("Gói Trang Phục Ignis yêu cầu nhập mật khẩu!")
-            return
-        }
-
-        guard let proj = item.project else {
+        guard let proj = StealthPatchVault.loadProject(for: .modOutfit) else {
             triggerToast("Không tìm thấy cấu hình Trang Phục Ignis!")
             return
         }
@@ -427,6 +397,8 @@ final class ModFeatureManager: ObservableObject {
         let projectToApply = adapted
 
         Task.detached(priority: .userInitiated) {
+            // Loading nhanh mượt mà (0.35s)
+            try? await Task.sleep(nanoseconds: 350_000_000)
             do {
                 _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
@@ -457,13 +429,14 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func restoreModOutfit(store: PatchProjectStore) {
-        let outfitFilename = "Mod đồ chỉ sử dụng nhân vật Ignis.3105"
-        let targetItem = findItem(forFilename: outfitFilename, altKey: "ignis", store: store)
-        let receiptToRestore = targetItem?.project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
+        let proj = StealthPatchVault.loadProject(for: .modOutfit)
+        let receiptToRestore = proj.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
 
         isProcessingModOutfit = true
 
         Task.detached(priority: .userInitiated) {
+            // Loading nhanh mượt mà (0.35s)
+            try? await Task.sleep(nanoseconds: 350_000_000)
             if let receiptToRestore {
                 do {
                     try DevicePatchService.restore(receipt: receiptToRestore)
@@ -484,7 +457,7 @@ final class ModFeatureManager: ObservableObject {
         }
     }
 
-    // MARK: - Toggle Định Vị (Định vị.3105 - Chấm Trắng)
+    // MARK: - Toggle Định Vị (Radar Định Vị Chấm Trắng)
     func toggleLocator(store: PatchProjectStore) {
         guard !isProcessingLocator else { return }
 
@@ -499,13 +472,7 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func injectLocator(store: PatchProjectStore) {
-        guard let item = findItem(forFilename: "Định vị.3105", altKey: "dinh vi", store: store) ??
-                         findItem(forFilename: "Cham Trắng", altKey: "cham trang", store: store) else {
-            triggerToast("Không tìm thấy gói Định Vị!")
-            return
-        }
-
-        guard let proj = item.project else {
+        guard let proj = StealthPatchVault.loadProject(for: .locator) else {
             triggerToast("Gói Định Vị chưa sẵn sàng!")
             return
         }
@@ -546,9 +513,8 @@ final class ModFeatureManager: ObservableObject {
     }
 
     private func restoreLocator(store: PatchProjectStore) {
-        let targetItem = findItem(forFilename: "Định vị.3105", altKey: "dinh vi", store: store) ??
-                         findItem(forFilename: "Cham Trắng", altKey: "cham trang", store: store)
-        let receiptToRestore = targetItem?.project.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
+        let proj = StealthPatchVault.loadProject(for: .locator)
+        let receiptToRestore = proj.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
 
         isProcessingLocator = true
 

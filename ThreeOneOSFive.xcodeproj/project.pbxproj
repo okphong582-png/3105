@@ -80,15 +80,20 @@
 		3105MFM2 /* ModFeatureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105MFM1; };
 		3105ADM2 /* AdminServerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105ADM1; };
 		3105AMV2 /* AdminManagerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105AMV1; };
-		3105ABO2 /* Aim Body.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105ABO1; };
-		3105ADR2 /* Aim Drag.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105ADR1; };
-		3105ACH2 /* Aim Chest.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105ACH1; };
-		3105AMG2 /* Aim Magic.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105AMG1; };
-		3105ANE2 /* Aim Neck.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105ANE1; };
-		3105MSK2 /* Modskin.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105MSK1; };
-		3105IGN2 /* Mod đồ chỉ sử dụng nhân vật Ignis.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105IGN1; };
+		3105CA02 /* cr_a0.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CA01; };
+		3105CA12 /* cr_a1.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CA11; };
+		3105CA22 /* cr_a2.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CA21; };
+		3105CA32 /* cr_a3.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CA31; };
+		3105CA42 /* cr_a4.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CA41; };
+		3105CS12 /* cr_s1.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CS11; };
+		3105CO12 /* cr_o1.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CO11; };
 		3105ADM3 /* admin_panel.html in Resources */ = {isa = PBXBuildFile; fileRef = 3105ADM0; };
-		3105DVR2 /* Định vị.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105DVR1; };
+		3105CV12 /* cr_v1.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CV11; };
+		3105CV22 /* cr_v2.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CV21; };
+		3105NDN2 /* NextDNS.mobileconfig in Resources */ = {isa = PBXBuildFile; fileRef = 3105NDN1; };
+		3105NDS2 /* NextDNSInstallerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105NDS1; };
+		3105NDV2 /* NextDNSSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105NDV1; };
+		3105SPV2 /* StealthPatchVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105SPV1; };
 		3105FTH2 /* ffth.png in Resources */ = {isa = PBXBuildFile; fileRef = 3105FTH1; };
 		3105FMX2 /* ffmax.png in Resources */ = {isa = PBXBuildFile; fileRef = 3105FMX1; };
 		3105A211 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3105A031; };
@@ -179,15 +184,20 @@
 		3105MFM1 /* ModFeatureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModFeatureManager.swift; sourceTree = "<group>"; };
 		3105ADM1 /* AdminServerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminServerService.swift; sourceTree = "<group>"; };
 		3105AMV1 /* AdminManagerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminManagerView.swift; sourceTree = "<group>"; };
-		3105ABO1 /* Aim Body.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Body.3105"; sourceTree = "<group>"; };
-		3105ADR1 /* Aim Drag.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Drag.3105"; sourceTree = "<group>"; };
-		3105ACH1 /* Aim Chest.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Chest.3105"; sourceTree = "<group>"; };
-		3105AMG1 /* Aim Magic.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Magic.3105"; sourceTree = "<group>"; };
-		3105ANE1 /* Aim Neck.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Aim Neck.3105"; sourceTree = "<group>"; };
-		3105MSK1 /* Modskin.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Modskin.3105"; sourceTree = "<group>"; };
-		3105IGN1 /* Mod đồ chỉ sử dụng nhân vật Ignis.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Mod đồ chỉ sử dụng nhân vật Ignis.3105"; sourceTree = "<group>"; };
+		3105CA01 /* cr_a0.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_a0.dat"; sourceTree = "<group>"; };
+		3105CA11 /* cr_a1.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_a1.dat"; sourceTree = "<group>"; };
+		3105CA21 /* cr_a2.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_a2.dat"; sourceTree = "<group>"; };
+		3105CA31 /* cr_a3.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_a3.dat"; sourceTree = "<group>"; };
+		3105CA41 /* cr_a4.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_a4.dat"; sourceTree = "<group>"; };
+		3105CS11 /* cr_s1.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_s1.dat"; sourceTree = "<group>"; };
+		3105CO11 /* cr_o1.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_o1.dat"; sourceTree = "<group>"; };
 		3105ADM0 /* admin_panel.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = admin_panel.html; sourceTree = "<group>"; };
-		3105DVR1 /* Định vị.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Định vị.3105"; sourceTree = "<group>"; };
+		3105CV11 /* cr_v1.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_v1.dat"; sourceTree = "<group>"; };
+		3105CV21 /* cr_v2.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_v2.dat"; sourceTree = "<group>"; };
+		3105NDN1 /* NextDNS.mobileconfig */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NextDNS.mobileconfig"; sourceTree = "<group>"; };
+		3105NDS1 /* NextDNSInstallerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextDNSInstallerService.swift; sourceTree = "<group>"; };
+		3105NDV1 /* NextDNSSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextDNSSetupSheet.swift; sourceTree = "<group>"; };
+		3105SPV1 /* StealthPatchVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StealthPatchVault.swift; sourceTree = "<group>"; };
 		3105FTH1 /* ffth.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ffth.png; sourceTree = "<group>"; };
 		3105FMX1 /* ffmax.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ffmax.png; sourceTree = "<group>"; };
 		3105NRS1 /* NetworkReachabilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkReachabilityService.swift; sourceTree = "<group>"; };
@@ -238,15 +248,17 @@
 				3105A405 /* helpers */,
 				3105A406 /* kexploit */,
 				3105A120 /* Localizable.strings */,
-				3105ABO1 /* Aim Body.3105 */,
-				3105ADR1 /* Aim Drag.3105 */,
-				3105ACH1 /* Aim Chest.3105 */,
-				3105AMG1 /* Aim Magic.3105 */,
-				3105ANE1 /* Aim Neck.3105 */,
-				3105MSK1 /* Modskin.3105 */,
-				3105IGN1 /* Mod đồ chỉ sử dụng nhân vật Ignis.3105 */,
+				3105CA01 /* cr_a0.dat */,
+				3105CA11 /* cr_a1.dat */,
+				3105CA21 /* cr_a2.dat */,
+				3105CA31 /* cr_a3.dat */,
+				3105CA41 /* cr_a4.dat */,
+				3105CS11 /* cr_s1.dat */,
+				3105CO11 /* cr_o1.dat */,
+				3105CV11 /* cr_v1.dat */,
+				3105CV21 /* cr_v2.dat */,
+				3105NDN1 /* NextDNS.mobileconfig */,
 				3105ADM0 /* admin_panel.html */,
-				3105DVR1 /* Định vị.3105 */,
 				3105FTH1 /* ffth.png */,
 				3105FMX1 /* ffmax.png */,
 				3105A031 /* Assets.xcassets */,
@@ -299,6 +311,7 @@
 				3105MLG1 /* MultiLayerSecurityGateView.swift */,
 				3105AMV1 /* AdminManagerView.swift */,
 				3105NIG1 /* NoInternetGateView.swift */,
+				3105NDV1 /* NextDNSSetupSheet.swift */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -309,6 +322,8 @@
 				3105BSG0 /* BinarySecurityGuard.h */,
 				3105BSG1 /* BinarySecurityGuard.m */,
 				3105FSH1 /* FileShareHelper.swift */,
+				3105NDS1 /* NextDNSInstallerService.swift */,
+				3105SPV1 /* StealthPatchVault.swift */,
 				3105MLS1 /* MultiLayerSecurityService.swift */,
 				3105NRS1 /* NetworkReachabilityService.swift */,
 				3105MFM1 /* ModFeatureManager.swift */,
@@ -434,15 +449,17 @@
 			files = (
 				3105A211,
 				3105A228,
-				3105ABO2,
-				3105ADR2,
-				3105ACH2,
-				3105AMG2,
-				3105ANE2,
-				3105MSK2,
-				3105IGN2,
+				3105CA02,
+				3105CA12,
+				3105CA22,
+				3105CA32,
+				3105CA42,
+				3105CS12,
+				3105CO12,
+				3105CV12,
+				3105CV22,
+				3105NDN2,
 				3105ADM3,
-				3105DVR2,
 				3105FTH2,
 				3105FMX2,
 			);
@@ -519,6 +536,9 @@
 				3105NRS2,
 				3105NIG2,
 				3105FSH2,
+				3105NDS2,
+				3105NDV2,
+				3105SPV2,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

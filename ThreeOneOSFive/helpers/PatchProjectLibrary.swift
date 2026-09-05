@@ -76,32 +76,6 @@ enum PatchProjectLibrary {
             }
         }
 
-        // Strategy 4: Explicit known names
-        let knownFiles = [
-            "Aim Body.3105",
-            "Aim Drag.3105",
-            "Aim Chest.3105",
-            "Aim Magic.3105",
-            "Aim Neck.3105",
-            "Modskin.3105",
-            "Mod đồ chỉ sử dụng nhân vật Ignis.3105",
-            "Định vị.3105"
-        ]
-        for filename in knownFiles {
-            let base = (filename as NSString).deletingPathExtension
-            let ext = (filename as NSString).pathExtension
-            if let u = Bundle.main.url(forResource: base, withExtension: ext) {
-                foundDict[filename.lowercased()] = u
-            }
-            if let u = Bundle.main.url(forResource: filename, withExtension: nil) {
-                foundDict[filename.lowercased()] = u
-            }
-            let directBundle = Bundle.main.bundleURL.appendingPathComponent(filename)
-            if fileManager.fileExists(atPath: directBundle.path) {
-                foundDict[filename.lowercased()] = directBundle
-            }
-        }
-
         return Array(foundDict.values)
     }
 

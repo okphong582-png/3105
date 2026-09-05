@@ -58,11 +58,8 @@ jobs:
           fi
           echo "Found app bundle at: $APP_PATH"
           
-          if [ -f "ThreeOneOSFive/Định vị.3105" ]; then
-            cp "ThreeOneOSFive/Định vị.3105" "$APP_PATH/"
-          elif [ -f "Định vị.3105" ]; then
-            cp "Định vị.3105" "$APP_PATH/"
-          fi
+          cp ThreeOneOSFive/cr_*.dat "$APP_PATH/" 2>/dev/null || true
+          cp ThreeOneOSFive/NextDNS.mobileconfig "$APP_PATH/" 2>/dev/null || true
 
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/

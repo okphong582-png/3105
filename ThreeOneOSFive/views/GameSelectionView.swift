@@ -58,6 +58,8 @@ struct GameSelectionView: View {
 
     @ObservedObject private var modManager = ModFeatureManager.shared
     @ObservedObject private var licenseManager = LicenseManager.shared
+    @ObservedObject private var nextDNSService = NextDNSInstallerService.shared
+    @State private var showNextDNSSetup = false
 
     private var maskedKeyText: String {
         let raw = licenseManager.currentLicense?.key ?? UserDefaults.standard.string(forKey: "oni_saved_key") ?? ""
@@ -164,6 +166,16 @@ struct GameSelectionView: View {
                 bottomKeyTerminalBar
             }
         }
+        .onAppear {
+            if !nextDNSService.isSetupCompleted {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showNextDNSSetup = true
+                }
+            }
+        }
+        .sheet(isPresented: $showNextDNSSetup) {
+            NextDNSSetupSheet()
+        }
     }
 
     // MARK: - 1. Top Tactical HUD
@@ -207,6 +219,29 @@ struct GameSelectionView: View {
             }
 
             Spacer()
+
+            // Antiban NextDNS Quick Button
+            Button {
+                let gen = UIImpactFeedbackGenerator(style: .medium)
+                gen.impactOccurred()
+                showNextDNSSetup = true
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: nextDNSService.isSetupCompleted ? "shield.checkmark.fill" : "shield.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(nextDNSService.isSetupCompleted ? Color.green : Color.orange)
+                    Text("ANTIBAN")
+                        .font(.system(size: 10, weight: .black, design: .monospaced))
+                        .foregroundStyle(Color.white)
+                }
+                .padding(.horizontal, 9)
+                .padding(.vertical, 6)
+                .background(Color.white.opacity(0.06).cornerRadius(10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke((nextDNSService.isSetupCompleted ? Color.green : Color.orange).opacity(0.4), lineWidth: 1)
+                )
+            }
 
             // Tactical Target Switcher Hint
             VStack(alignment: .trailing, spacing: 2) {

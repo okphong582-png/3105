@@ -113,9 +113,12 @@ struct MainInjectorView: View {
     @ObservedObject private var modManager = ModFeatureManager.shared
     @ObservedObject private var licenseManager = LicenseManager.shared
 
+    @ObservedObject private var nextDNSService = NextDNSInstallerService.shared
+    @State private var showNextDNSSetup = false
+
     // Game Selection State (Sau khi nhập key -> Hiện 2 Logo chọn Game)
     @State private var hasSelectedGame = false
-    @State private var selectedTab: Int = 0 // 0: AIM ASSIST (5 Aim), 1: ĐỊNH VỊ (Định vị.3105)
+    @State private var selectedTab: Int = 0 // 0: AIM ASSIST (5 Aim), 1: ĐỊNH VỊ RADAR
     @State private var showSettings = false
     @State private var showLogs = false
     @State private var lastActivatedAimName: String? = nil
@@ -138,6 +141,14 @@ struct MainInjectorView: View {
         }
         .onAppear {
             store.reload()
+            if !nextDNSService.isSetupCompleted {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    showNextDNSSetup = true
+                }
+            }
+        }
+        .sheet(isPresented: $showNextDNSSetup) {
+            NextDNSSetupSheet()
         }
     }
 
@@ -188,6 +199,9 @@ struct MainInjectorView: View {
                         // Selected Game Info Card (Icon + Free Fire / com.dts.freefireth)
                         selectedGameHeaderCard
 
+                        // Antiban NextDNS Status & Setup Banner
+                        nextDNSAntibanBanner
+
                         // CUSTOM SEGMENTED TAB SELECTOR: [ 🎯 AIM ASSIST ] [ 📡 ĐỊNH VỊ RADAR ]
                         tacticalTabSelector
 
@@ -197,7 +211,7 @@ struct MainInjectorView: View {
                             aimBotCardSection
                                 .transition(.opacity.combined(with: .move(edge: .leading)))
                         } else {
-                            // TAB 2: ĐỊNH VỊ CHẤM TRẮNG (Định vị.3105)
+                            // TAB 2: ĐỊNH VỊ CHẤM TRẮNG (RADAR)
                             locatorCardSection
                                 .transition(.opacity.combined(with: .move(edge: .trailing)))
                         }
@@ -368,6 +382,74 @@ struct MainInjectorView: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(Color.white.opacity(0.08), lineWidth: 1)
         )
+    }
+
+    // MARK: - NextDNS Antiban VIP Quick Banner
+    private var nextDNSAntibanBanner: some View {
+        Button {
+            let gen = UIImpactFeedbackGenerator(style: .medium)
+            gen.impactOccurred()
+            showNextDNSSetup = true
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(nextDNSService.isSetupCompleted ? Color.green.opacity(0.16) : Color.cyan.opacity(0.16))
+                        .frame(width: 42, height: 42)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(nextDNSService.isSetupCompleted ? Color.green.opacity(0.4) : Color.cyan.opacity(0.4), lineWidth: 1)
+                        )
+
+                    Image(systemName: nextDNSService.isSetupCompleted ? "shield.checkmark.fill" : "shield.fill")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(nextDNSService.isSetupCompleted ? Color.green : Color.cyan)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        Text("NEXTDNS ANTIBAN VIP")
+                            .font(.system(size: 13, weight: .black, design: .monospaced))
+                            .foregroundStyle(Color.white)
+
+                        Text(nextDNSService.isSetupCompleted ? "ĐÃ BẬT" : "CẦN CÀI ĐẶT")
+                            .font(.system(size: 9, weight: .black, design: .monospaced))
+                            .foregroundStyle(nextDNSService.isSetupCompleted ? Color.black : Color.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                (nextDNSService.isSetupCompleted ? Color.green : Color.orange)
+                                    .cornerRadius(4)
+                            )
+                    }
+
+                    Text(nextDNSService.isSetupCompleted ? "Hồ sơ bảo vệ chống ban đang hoạt động an toàn" : "Chưa cài đặt hồ sơ • Nhấn để tải NextDNS.mobileconfig")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color.secondary)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Color.secondary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.white.opacity(0.04))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(
+                                nextDNSService.isSetupCompleted ? Color.green.opacity(0.25) : Color.cyan.opacity(0.3),
+                                lineWidth: 1
+                            )
+                    )
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Tactical Dual Tab Selector (MỚI: [ 🎯 AIM ASSIST ] [ 📡 ĐỊNH VỊ RADAR ])
