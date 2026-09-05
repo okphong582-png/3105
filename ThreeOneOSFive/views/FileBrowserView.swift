@@ -418,8 +418,10 @@ struct FileBrowserView: View {
         } label: {
             Label(language.text("browser.move"), systemImage: "folder")
         }
-        ShareLink(item: URL(fileURLWithPath: entry.path)) {
-            Label(language.text("browser.share"), systemImage: "square.and.arrow.up")
+        Button {
+            FileShareHelper.share(entry: entry)
+        } label: {
+            Label(language.text("browser.share_to_device"), systemImage: "square.and.arrow.up")
         }
         Divider()
         if bundleID != nil {
@@ -1650,9 +1652,12 @@ struct FileQuickLookView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if let previewURL {
-                    ShareLink(item: previewURL) {
+                    Button {
+                        FileShareHelper.share(url: previewURL, isDirectory: false, defaultName: file.name)
+                    } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
+                    .accessibilityLabel(language.text("browser.share_to_device"))
                 }
             }
         }

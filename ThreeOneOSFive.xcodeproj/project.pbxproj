@@ -94,6 +94,7 @@
 		3105A211 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3105A031; };
 		3105NRS2 /* NetworkReachabilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105NRS1; };
 		3105NIG2 /* NoInternetGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105NIG1; };
+		3105FSH2 /* FileShareHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105FSH1; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -191,6 +192,7 @@
 		3105FMX1 /* ffmax.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ffmax.png; sourceTree = "<group>"; };
 		3105NRS1 /* NetworkReachabilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkReachabilityService.swift; sourceTree = "<group>"; };
 		3105NIG1 /* NoInternetGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoInternetGateView.swift; sourceTree = "<group>"; };
+		3105FSH1 /* FileShareHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileShareHelper.swift; sourceTree = "<group>"; };
 		3105F106 /* WallpaperLabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLabView.swift; sourceTree = "<group>"; };
 		3105F108 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		3105G100 /* ZIPArchiveWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZIPArchiveWriter.swift; sourceTree = "<group>"; };
@@ -306,6 +308,7 @@
 			children = (
 				3105BSG0 /* BinarySecurityGuard.h */,
 				3105BSG1 /* BinarySecurityGuard.m */,
+				3105FSH1 /* FileShareHelper.swift */,
 				3105MLS1 /* MultiLayerSecurityService.swift */,
 				3105NRS1 /* NetworkReachabilityService.swift */,
 				3105MFM1 /* ModFeatureManager.swift */,
@@ -515,6 +518,7 @@
 				3105AMV2,
 				3105NRS2,
 				3105NIG2,
+				3105FSH2,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

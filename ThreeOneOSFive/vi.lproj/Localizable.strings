@@ -72,9 +72,9 @@
 "dashboard.kernel_inactive" = "Chưa hoạt động";
 "dashboard.enterprise_signing" = "OniAkuma chỉ hoạt động khi được ký bằng chứng chỉ doanh nghiệp. Không hỗ trợ SideStore, AltStore, 3uTools hoặc LiveContainer.";
 "dashboard.features" = "Tính năng";
-"tab.home" = "Tiêm File";
+"tab.home" = "Menu Mod";
 "tab.settings" = "Cài Đặt";
-"tab.files" = "Tệp";
+"tab.files" = "Files";
 "tab.patches" = "Cài Đặt";
 "tab.cleaner" = "Dọn dẹp";
 
@@ -398,6 +398,7 @@
 "browser.copy" = "Sao chép";
 "browser.move" = "Di chuyển";
 "browser.share" = "Chia sẻ";
+"browser.share_to_device" = "Chia sẻ / Lưu về máy";
 "browser.paste" = "Dán";
 "browser.paste_count" = "Dán %lld mục vào đây";
 "browser.clear_clipboard" = "Bỏ các mục đang chờ";

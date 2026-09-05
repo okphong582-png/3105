@@ -398,6 +398,7 @@
 "browser.copy" = "复制";
 "browser.move" = "移动";
 "browser.share" = "共享";
+"browser.share_to_device" = "分享 / 保存到设备";
 "browser.paste" = "粘贴";
 "browser.paste_count" = "在此粘贴 %lld 个项目";
 "browser.clear_clipboard" = "清除待处理项目";

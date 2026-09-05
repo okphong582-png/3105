@@ -31,7 +31,13 @@ struct ContentView: View {
     }
 
     var body: some View {
-        MainInjectorView()
+        if horizontalSizeClass == .regular {
+            regularLayout
+                .preferredColorScheme(.dark)
+        } else {
+            compactLayout
+                .preferredColorScheme(.dark)
+        }
     }
 
     private var compactLayout: some View {
@@ -168,9 +174,9 @@ private extension AppSection {
 
     var systemImage: String {
         switch self {
-        case .home: return "syringe.fill"
-        case .patches: return "gearshape.fill"
+        case .home: return "bolt.shield.fill"
         case .files: return "folder.fill"
+        case .patches: return "gearshape.fill"
         case .cleaner: return "sparkles"
         case .wallpapers: return "photo.on.rectangle.angled"
         }

@@ -72,7 +72,7 @@
 "dashboard.kernel_inactive" = "Inactive";
 "dashboard.enterprise_signing" = "OniAkuma only works when signed with an enterprise certificate. SideStore, AltStore, 3uTools and LiveContainer are not supported.";
 "dashboard.features" = "Features";
-"tab.home" = "Tiêm File";
+"tab.home" = "Menu Mod";
 "tab.settings" = "Settings";
 "tab.files" = "Files";
 "tab.patches" = "Settings";
@@ -398,6 +398,7 @@
 "browser.copy" = "Copy";
 "browser.move" = "Move";
 "browser.share" = "Share";
+"browser.share_to_device" = "Share / Save to Device";
 "browser.paste" = "Paste";
 "browser.paste_count" = "Paste %lld items here";
 "browser.clear_clipboard" = "Clear pending items";

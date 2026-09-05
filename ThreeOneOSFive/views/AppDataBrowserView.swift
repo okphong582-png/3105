@@ -137,6 +137,15 @@ struct AppDataBrowserView: View {
                     }
                     .contextMenu {
                         openInNewTabButton(workspaceDestination)
+                        Button {
+                            FileShareHelper.share(
+                                url: URL(fileURLWithPath: workspaceURL.path),
+                                isDirectory: true,
+                                defaultName: "Workspace_OniAkuma"
+                            )
+                        } label: {
+                            Label(language.text("browser.share_to_device"), systemImage: "square.and.arrow.up")
+                        }
                     }
                 }
             }
@@ -156,6 +165,15 @@ struct AppDataBrowserView: View {
                         }
                         .contextMenu {
                             openInNewTabButton(appDestination)
+                            Button {
+                                FileShareHelper.share(
+                                    url: URL(fileURLWithPath: app.containerPath),
+                                    isDirectory: true,
+                                    defaultName: "\(app.displayName)_Data"
+                                )
+                            } label: {
+                                Label(language.text("browser.share_to_device"), systemImage: "square.and.arrow.up")
+                            }
                         }
                     }
                 }
