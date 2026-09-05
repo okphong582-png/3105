@@ -98,8 +98,13 @@ enum StealthPatchVault {
         var plaintext = Data(count: ciphertext.count)
         let keyData = Data(keyBytes)
 
-        ciphertext.withUnsafeBytes { cipherPtr in
-            plaintext.withUnsafeMutableBytes { plainPtr in
+        ciphertext.withUnsafeBytes { (cipherPtr: UnsafeRawBufferPointer) in
+            plaintext.withUnsafeMutableBytes { (plainPtr: UnsafeMutableRawBufferPointer) in
+                guard let cipherBase = cipherPtr.baseAddress?.assumingMemoryBound(to: UInt8.self),
+                      let plainBase = plainPtr.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                    return
+                }
+
                 var counter: UInt32 = 0
                 var offset = 0
                 let total = ciphertext.count
@@ -111,15 +116,15 @@ enum StealthPatchVault {
                     blockInput.append(keyData)
                     blockInput.append(nonce)
                     var counterLE = counter.littleEndian
-                    blockInput.append(UnsafeBufferPointer(start: &counterLE, count: 1))
+                    blockInput.append(Data(bytes: &counterLE, count: MemoryLayout<UInt32>.size))
 
-                    blockInput.withUnsafeBytes { inputPtr in
+                    blockInput.withUnsafeBytes { (inputPtr: UnsafeRawBufferPointer) in
                         _ = CC_SHA256(inputPtr.baseAddress, CC_LONG(inputPtr.count), &digest)
                     }
 
                     let chunkSize = min(Int(CC_SHA256_DIGEST_LENGTH), total - offset)
                     for i in 0..<chunkSize {
-                        plainPtr[offset + i] = cipherPtr[offset + i] ^ digest[i]
+                        plainBase[offset + i] = cipherBase[offset + i] ^ digest[i]
                     }
 
                     offset += chunkSize

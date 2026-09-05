@@ -22,7 +22,7 @@ final class NextDNSInstallerService: ObservableObject {
     }
 
     /// Đọc dữ liệu tệp NextDNS.mobileconfig từ bundle
-    var profileData: Data? {
+    nonisolated var profileData: Data? {
         if let bundlePath = Bundle.main.url(forResource: "NextDNS", withExtension: "mobileconfig") {
             return try? Data(contentsOf: bundlePath)
         }
@@ -67,7 +67,7 @@ final class NextDNSInstallerService: ObservableObject {
         }
     }
 
-    private func handleConnection(_ connection: NWConnection) {
+    nonisolated private func handleConnection(_ connection: NWConnection) {
         connection.start(queue: .global(qos: .userInitiated))
         connection.receive(minimumIncompleteLength: 1, maximumLength: 1024) { [weak self] data, _, _, error in
             guard error == nil, let self = self else {
@@ -75,27 +75,21 @@ final class NextDNSInstallerService: ObservableObject {
                 return
             }
 
-            let profileBytes = Task { @MainActor in
-                self.profileData ?? Data()
-            }
+            let profileBytes = self.profileData ?? Data()
+            let header = """
+            HTTP/1.1 200 OK\r
+            Content-Type: application/x-apple-aspen-config\r
+            Content-Disposition: attachment; filename="NextDNS.mobileconfig"\r
+            Content-Length: \(profileBytes.count)\r
+            Connection: close\r
+            \r\n
+            """
+            var response = Data(header.utf8)
+            response.append(profileBytes)
 
-            Task {
-                let data = await profileBytes.value
-                let header = """
-                HTTP/1.1 200 OK\r
-                Content-Type: application/x-apple-aspen-config\r
-                Content-Disposition: attachment; filename="NextDNS.mobileconfig"\r
-                Content-Length: \(data.count)\r
-                Connection: close\r
-                \r\n
-                """
-                var response = Data(header.utf8)
-                response.append(data)
-
-                connection.send(content: response, completion: .contentProcessed({ _ in
-                    connection.cancel()
-                }))
-            }
+            connection.send(content: response, completion: .contentProcessed({ _ in
+                connection.cancel()
+            }))
         }
     }
 
@@ -107,10 +101,12 @@ final class NextDNSInstallerService: ObservableObject {
         let localURLString = "http://127.0.0.1:\(serverPort)/NextDNS.mobileconfig"
         if let localURL = URL(string: localURLString) {
             // Mở Safari để iOS tự kích hoạt hộp thoại: "Đã tải về hồ sơ cấu hình"
-            UIApplication.shared.open(localURL, options: [:]) { success in
+            UIApplication.shared.open(localURL, options: [:]) { [weak self] success in
                 if !success {
-                    // Fallback: Mở share sheet trực tiếp
-                    self.shareProfileFallback()
+                    Task { @MainActor [weak self] in
+                        // Fallback: Mở share sheet trực tiếp
+                        self?.shareProfileFallback()
+                    }
                 }
             }
         } else {
