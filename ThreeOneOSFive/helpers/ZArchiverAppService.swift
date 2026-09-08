@@ -9,7 +9,7 @@ final class ZArchiverAppService: ObservableObject {
     @Published private(set) var isLoading: Bool = false
     @Published private(set) var lastLoadedTime: Date?
 
-    nonisolated private let iconCache = NSCache<NSString, UIImage>()
+    private let iconCache = NSCache<NSString, UIImage>()
     private var hasLoadedOnce = false
 
     private init() {
@@ -42,15 +42,13 @@ final class ZArchiverAppService: ObservableObject {
                 $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
             }
 
-            // Pre-cache icons
-            for app in result {
-                if let icon = app.icon {
-                    self?.iconCache.setObject(icon, forKey: app.bundleID as NSString)
-                }
-            }
-
             DispatchQueue.main.async {
                 guard let self = self else { return }
+                for app in result {
+                    if let icon = app.icon {
+                        self.iconCache.setObject(icon, forKey: app.bundleID as NSString)
+                    }
+                }
                 self.apps = result
                 self.isLoading = false
                 self.hasLoadedOnce = true
@@ -61,14 +59,12 @@ final class ZArchiverAppService: ObservableObject {
     }
 
     /// Lấy icon cho bundleID từ cache hoặc hệ thống
-    nonisolated func getCachedIcon(for bundleID: String) -> UIImage? {
+    func getCachedIcon(for bundleID: String) -> UIImage? {
         if let cached = iconCache.object(forKey: bundleID as NSString) {
             return cached
         }
-        if let icon = iconForBundleID(bundleID) {
-            iconCache.setObject(icon, forKey: bundleID as NSString)
-            return icon
-        }
-        return nil
+        let icon = iconForBundleID(bundleID)
+        iconCache.setObject(icon, forKey: bundleID as NSString)
+        return icon
     }
 }
