@@ -109,6 +109,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		ZA01DS01 /* ZArchiverDesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZArchiverDesignSystem.swift; sourceTree = "<group>"; };
+		ZA01MV01 /* ZArchiverMainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZArchiverMainView.swift; sourceTree = "<group>"; };
+		ZA01TE01 /* ZArchiverTextEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZArchiverTextEditorView.swift; sourceTree = "<group>"; };
+		ZA01AS01 /* ZArchiverAppService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZArchiverAppService.swift; sourceTree = "<group>"; };
+		ZA01FE01 /* ZArchiverFileEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZArchiverFileEngine.swift; sourceTree = "<group>"; };
+		ZA01LG01 /* zarchiver_logo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = zarchiver_logo.png; sourceTree = "<group>"; };
 		3105A010 /* 3105.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "3105.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		3105A020 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		3105A021 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -459,6 +465,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ZA01LG02 /* zarchiver_logo.png in Resources */,
 				3105A211,
 				3105A228,
 				3105CA02,
@@ -484,6 +491,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ZA01DS02 /* ZArchiverDesignSystem.swift in Sources */,
+				ZA01MV02 /* ZArchiverMainView.swift in Sources */,
+				ZA01TE02 /* ZArchiverTextEditorView.swift in Sources */,
+				ZA01AS02 /* ZArchiverAppService.swift in Sources */,
+				ZA01FE02 /* ZArchiverFileEngine.swift in Sources */,
 				3105A200, 3105A201, 3105A203, 3105A204,
 				3105A205, 3105A206, 3105A207, 3105A209,
 				3105A210, 3105A220, 3105A221, 3105A222, 3105A223,
