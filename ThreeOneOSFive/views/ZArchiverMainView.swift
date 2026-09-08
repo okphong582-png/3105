@@ -633,7 +633,7 @@ struct ZArchiverMainView: View {
                         Text("Chưa tìm thấy container ứng dụng.")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.white)
-                        Text("Đang chạy kernel exploit ngầm để mở rộng quyền truy cập.")
+                        Text("Chạm vào biểu tượng làm mới trên thanh công cụ để thử lại.")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }
@@ -716,10 +716,38 @@ struct ZArchiverMainView: View {
     }
 
     private func selectApp(_ app: InstalledApp) {
-        guard !app.containerPath.isEmpty else { return }
-        selectedApp = app
-        activeAppBundleID = app.bundleID
-        let targetURL = URL(fileURLWithPath: app.containerPath)
+        var containerPath = app.containerPath
+        if containerPath.isEmpty {
+            containerPath = ContainerStore.resolveAppContainerPath(bundleID: app.bundleID) ?? ""
+        }
+        if containerPath.isEmpty {
+            var err: NSString?
+            containerPath = MCMContainerPathForIdentifier(2, app.bundleID, false, &err) ?? ""
+        }
+        if containerPath.isEmpty {
+            let dirs = (try? FileManager.default.contentsOfDirectory(atPath: ContainerStore.appDataRoot)) ?? []
+            for d in dirs {
+                let full = (ContainerStore.appDataRoot as NSString).appendingPathComponent(d)
+                if let meta = ContainerStore.readContainerMetadata(containerPath: full), meta.bundleID == app.bundleID {
+                    containerPath = full
+                    break
+                }
+            }
+        }
+        guard !containerPath.isEmpty else {
+            log("selectApp: không tìm thấy đường dẫn container cho \(app.bundleID)")
+            return
+        }
+        let resolvedApp = InstalledApp(
+            bundleID: app.bundleID,
+            name: app.displayName,
+            containerPath: containerPath,
+            version: app.version,
+            icon: app.icon
+        )
+        selectedApp = resolvedApp
+        activeAppBundleID = resolvedApp.bundleID
+        let targetURL = URL(fileURLWithPath: containerPath)
         currentDirectoryURL = targetURL
         reloadEntries()
     }

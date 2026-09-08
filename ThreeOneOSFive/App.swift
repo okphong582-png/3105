@@ -92,17 +92,11 @@ class AppState: ObservableObject {
         guard applicable else { return }
 
         refreshKernelExploitStatus()
-        maybeAutoRunKernelExploit()
+        // Do not auto-run kernel exploit to prevent panic/crash on device
     }
 
     private func maybeAutoRunKernelExploit() {
-        guard !kernelExploitRunning,
-              !exploitStatus.isSuccess,
-              !exploitStatus.isFailed,
-              !autoRunAttempted else { return }
-        autoRunAttempted = true
-        log("app: starting kernel exploit automatically")
-        runKernelExploitIfNeeded()
+        // Disabled for pure ZArchiver mode
     }
 
     private func refreshKernelExploitStatus() {

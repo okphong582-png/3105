@@ -66,18 +66,19 @@ enum ContainerStore {
             return nil
         }
         var lookupError: NSString?
+        if let path = MCMContainerPathForIdentifier(2, bundleID, false, &lookupError),
+           isApplicationContainerPath(path) {
+            log("patch: MCMContainerPath resolved \(bundleID)")
+            return path
+        }
         if let path = MCMActivateContainerPath(2, bundleID, false, &lookupError),
            isApplicationContainerPath(path) {
             log("patch: MHA-C2 resolved \(bundleID)")
             return path
         }
         let detail = lookupError.map(String.init) ?? "unavailable"
-        log("patch: MHA-C2 could not resolve \(bundleID), detail=\(detail)")
+        log("patch: MCM could not resolve \(bundleID), detail=\(detail)")
 
-        // Fallback for iOS builds where MCM refuses to hand out sandbox
-        // tokens (e.g. iOS 18.1.x): scan the app-data root with the inode
-        // walk and read each container's MCM metadata plist directly. The
-        // raw reads only succeed when the sandbox escape is active.
         if let scanned = resolveAppContainerPathByMetadataScan(bundleID: bundleID) {
             log("patch: filesystem metadata scan resolved \(bundleID)")
             return scanned
@@ -86,14 +87,8 @@ enum ContainerStore {
     }
 
     static func resolveAppContainerPathByMetadataScan(bundleID: String) -> String? {
-        // iOS < 26: kernel R/W is enough, no need to require full sandbox escape
-        if KernelExploit.requiresSandboxEscape, !KernelExploit.hasSandboxAccess() {
-            log("patch: metadata scan skipped — sandbox access not active")
-            return nil
-        }
         let dirs = enumerateDirectories(path: appDataRoot)
         guard !dirs.isEmpty else {
-            log("patch: metadata scan unavailable — no containers enumerated")
             return nil
         }
         for dir in dirs {
@@ -112,29 +107,27 @@ enum ContainerStore {
     static func installedAppsFromAPI() -> [InstalledApp] {
         let raw = installedAppInfo() as? [String: [String: Any]] ?? [:]
         var apps: [InstalledApp] = []
-        var missingContainer = 0
         for (bundleID, info) in raw {
             var containerPath = info["container"] as? String ?? ""
             if containerPath.isEmpty {
                 var lookupError: NSString?
-                if let resolved = MCMActivateContainerPath(2, bundleID, false, &lookupError),
+                if let resolved = MCMContainerPathForIdentifier(2, bundleID, false, &lookupError),
                    isApplicationContainerPath(resolved) {
                     containerPath = resolved
-                } else {
-                    missingContainer += 1
+                } else if let resolved = MCMActivateContainerPath(2, bundleID, false, &lookupError),
+                   isApplicationContainerPath(resolved) {
+                    containerPath = resolved
                 }
             }
-            // Skip entries we cannot browse — empty path is dropped by mergers anyway.
-            guard !containerPath.isEmpty else { continue }
             apps.append(InstalledApp(
                 bundleID: bundleID,
-                name: info["name"] as? String ?? "",
+                name: info["name"] as? String ?? bundleID,
                 containerPath: containerPath,
                 version: info["version"] as? String ?? "",
                 icon: info["icon"] as? UIImage
             ))
         }
-        log("browser: LS/API apps=\(apps.count) raw=\(raw.count) missingContainer=\(missingContainer)")
+        log("browser: LS/API apps=\(apps.count) raw=\(raw.count)")
         return apps
     }
 
@@ -413,45 +406,31 @@ enum ContainerStore {
 
     // MARK: Filesystem discovery
 
-    static func enumerateDirectories(path: String, maxInode: Int64 = 2_000_000) -> [String] {
+    static func enumerateDirectories(path: String) -> [String] {
         let clean = path.hasSuffix("/") ? String(path.dropLast()) : path
         guard clean.hasPrefix("/") else { return [] }
 
         if let names = try? FileManager.default.contentsOfDirectory(atPath: clean), !names.isEmpty {
             return names.map { (clean as NSString).appendingPathComponent($0) }
         }
-
-        var pathC = clean.utf8CString.map { Int8($0) }
-        guard let result = bad_query_list(&pathC, maxInode) else {
-            log("enumerate: NULL for \(clean)")
-            return []
-        }
-        defer { free(result) }
-        let list = String(cString: result).components(separatedBy: "\n").filter { !$0.isEmpty }
-        if !list.isEmpty {
-            log("enumerate: inode fallback for \(clean) -> \(list.count) entries")
-        } else {
-            log("enumerate: FileManager+inode unavailable for \(clean)")
-        }
-        return list
+        return []
     }
 
     static func enumerateDirectoriesWithTraversalGrant(path: String) -> [String] {
-        if !shouldUseBadQuery {
-            if let names = try? FileManager.default.contentsOfDirectory(atPath: path), !names.isEmpty {
-                return names.map { (path as NSString).appendingPathComponent($0) }
-            }
-            return enumerateDirectories(path: path)
+        if let names = try? FileManager.default.contentsOfDirectory(atPath: path), !names.isEmpty {
+            return names.map { (path as NSString).appendingPathComponent($0) }
         }
 
-        let handle = grantContainerAccess(path)
-        if handle >= 0 {
-            defer { bad_query_release(handle) }
-            if let names = try? FileManager.default.contentsOfDirectory(atPath: path), !names.isEmpty {
-                return names.map { (path as NSString).appendingPathComponent($0) }
+        if shouldUseBadQuery {
+            let handle = grantContainerAccess(path)
+            if handle >= 0 {
+                defer { bad_query_release(handle) }
+                if let names = try? FileManager.default.contentsOfDirectory(atPath: path), !names.isEmpty {
+                    return names.map { (path as NSString).appendingPathComponent($0) }
+                }
+            } else {
+                log("browser: root traversal grant failed \(path) -> \(handle)")
             }
-        } else {
-            log("browser: root traversal grant failed \(path) -> \(handle)")
         }
 
         return enumerateDirectories(path: path)
@@ -501,18 +480,20 @@ enum ContainerStore {
     }
 
     static func containersFromFilesystem() -> [InstalledApp] {
-        let grantedDirectories = enumerateDirectoriesWithTraversalGrant(path: appDataRoot)
-        let dirs: [String]
-        if grantedDirectories.isEmpty {
-            dirs = enumerateDirectories(path: appDataRoot)
-            log("browser: filesystem root=\(appDataRoot) inode fallback enumerated \(dirs.count) containers")
-        } else {
-            dirs = grantedDirectories
-            log("browser: filesystem root=\(appDataRoot) traversal enumerated \(dirs.count) containers")
-        }
+        let dirs = enumerateDirectoriesWithTraversalGrant(path: appDataRoot)
         let apps = dirs.compactMap { dir -> InstalledApp? in
             let uuid = (dir as NSString).lastPathComponent
             guard UUID(uuidString: uuid) != nil else { return nil }
+            if let metadata = readContainerMetadata(containerPath: dir),
+               !metadata.bundleID.isEmpty {
+                return InstalledApp(
+                    bundleID: metadata.bundleID,
+                    name: metadata.displayName.isEmpty ? metadata.bundleID : metadata.displayName,
+                    containerPath: dir,
+                    version: "",
+                    icon: nil
+                )
+            }
             let fallback = ContainerIdentityResolver.fallbackIdentity(containerPath: dir)
             return InstalledApp(
                 bundleID: fallback.bundleID,
