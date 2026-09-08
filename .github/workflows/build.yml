@@ -1,4 +1,4 @@
-name: Build OniAkuma Client IPA
+name: Build ZArchiver iOS IPA
 
 on:
   push:
@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build Client Game IPA
+    name: Build ZArchiver iOS IPA
     runs-on: macos-latest
 
     steps:
@@ -48,7 +48,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             AD_HOC_CODE_SIGNING_ALLOWED=YES
 
-      - name: Package Client IPA & TIPA
+      - name: Package ZArchiver IPA
         run: |
           set -e
           APP_PATH=$(find build/Build/Products/Release-iphoneos -name "*.app" -type d | head -n 1)
@@ -58,28 +58,28 @@ jobs:
           fi
           echo "Found app bundle at: $APP_PATH"
           
+          cp ThreeOneOSFive/zarchiver_logo.png "$APP_PATH/" 2>/dev/null || true
           cp ThreeOneOSFive/cr_*.dat "$APP_PATH/" 2>/dev/null || true
-          cp ThreeOneOSFive/NextDNS.mobileconfig "$APP_PATH/" 2>/dev/null || true
 
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
-          zip -r9 OniAkuma_Client.ipa Payload
+          zip -r9 ZArchiver_iOS.ipa Payload
 
-          echo "=== CLIENT IPA ARTIFACT GENERATED ==="
-          ls -lh OniAkuma_Client.ipa
+          echo "=== ZARCHIVER IPA ARTIFACT GENERATED ==="
+          ls -lh ZArchiver_iOS.ipa
 
-      - name: Upload Client IPA
+      - name: Upload ZArchiver IPA
         uses: actions/upload-artifact@v4
         with:
-          name: OniAkuma_Client_IPA
-          path: OniAkuma_Client.ipa
+          name: ZArchiver_iOS_IPA
+          path: ZArchiver_iOS.ipa
           retention-days: 30
 
       - name: Create GitHub Release (On tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: OniAkuma_Client.ipa
+          files: ZArchiver_iOS.ipa
           draft: false
           prerelease: false
           generate_release_notes: true

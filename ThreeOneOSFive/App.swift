@@ -13,90 +13,34 @@ struct ThreeOneOSFiveApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
-        enforce_binary_security()
         setupLogCapture()
-        log("app: OniAkuma launching — iOS \(AppInfo.osVersion) (\(AppInfo.osBuild)) \(AppInfo.machineName)")
+        log("app: ZArchiver launching — iOS \(AppInfo.osVersion) (\(AppInfo.osBuild)) \(AppInfo.machineName)")
     }
 
     private var language: AppLanguage {
         AppLanguage(rawValue: languageCode) ?? .vietnamese
     }
 
-    @State private var showSplash = true
-
     var body: some Scene {
         WindowGroup {
-            if !networkService.isConnected {
-                NoInternetGateView()
-                    .preferredColorScheme(.dark)
-                    .transition(.opacity)
-            } else if licenseManager.isSystemMaintenance {
-                SystemMaintenanceGateView()
-                    .preferredColorScheme(.dark)
-                    .transition(.opacity)
-            } else {
-                ZStack {
-                    if !securityService.isCoreAccessPermitted() && !showSplash {
-                        MultiLayerSecurityGateView()
-                            .environment(\.appLanguage, language)
-                            .environment(\.locale, language.locale)
-                            .transition(.opacity)
-                            .zIndex(0)
-                    } else {
-                        ContentView()
-                            .environmentObject(appState)
-                            .environmentObject(patchDraftCoordinator)
-                            .environmentObject(fileOperationCoordinator)
-                            .environment(\.appLanguage, language)
-                            .environment(\.locale, language.locale)
-                            .opacity(showSplash ? 0 : 1)
-                            .allowsHitTesting(!showSplash)
-                            .zIndex(0)
-                    }
-
-                    if showSplash {
-                        SplashLoadingView {
-                            withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
-                                showSplash = false
-                            }
-                            if securityService.isCoreAccessPermitted() {
-                                appState.detectSupport()
-                            }
-                        }
-                        .transition(.opacity.combined(with: .scale(scale: 1.05)))
-                        .zIndex(2)
-                    }
-                }
+            ContentView()
+                .environmentObject(appState)
+                .environmentObject(patchDraftCoordinator)
+                .environmentObject(fileOperationCoordinator)
+                .environment(\.appLanguage, language)
+                .environment(\.locale, language.locale)
                 .preferredColorScheme(.dark)
                 .onAppear {
-                    enforce_binary_security()
-                    licenseManager.startHeartbeat()
-                    if !showSplash && securityService.isCoreAccessPermitted() {
-                        appState.detectSupport()
-                    }
-                    Task {
-                        _ = await licenseManager.checkSystemMaintenance()
-                        await licenseManager.recheckLicense()
-                    }
+                    appState.detectSupport()
                 }
                 .onChange(of: scenePhase) { phase in
                     if phase == .active {
-                        enforce_binary_security()
-                        licenseManager.startHeartbeat()
-                        Task {
-                            _ = await licenseManager.checkSystemMaintenance()
-                            await licenseManager.recheckLicense()
-                        }
-                        guard !showSplash, securityService.isCoreAccessPermitted() else { return }
                         appState.detectSupport()
-                    } else {
-                        licenseManager.stopHeartbeat()
                     }
                 }
                 .onOpenURL { url in
                     patchDraftCoordinator.presentImport(url)
                 }
-            }
         }
     }
 }
