@@ -47,6 +47,13 @@ struct ZFileEntry: Identifiable, Hashable {
     }
 }
 
+// MARK: - Breadcrumb Model
+struct ZBreadcrumbItem: Identifiable, Hashable {
+    var id: String { url.path }
+    let name: String
+    let url: URL
+}
+
 // MARK: - ZArchiver Main View
 struct ZArchiverMainView: View {
     @StateObject private var fileEngine = ZArchiverFileEngine.shared
@@ -54,7 +61,11 @@ struct ZArchiverMainView: View {
 
     @State private var currentPartition: ZStoragePartition = .apps
     @State private var currentDirectoryURL: URL
+    @State private var selectedApp: InstalledApp? = nil
+    @State private var activeAppBundleID: String? = nil
+
     @State private var entries: [ZFileEntry] = []
+    @State private var isLoadingEntries: Bool = false
     @State private var searchText: String = ""
     @State private var isSearching: Bool = false
     @State private var isMultiSelecting: Bool = false
@@ -78,16 +89,14 @@ struct ZArchiverMainView: View {
 
     @State private var activeTextEditURL: URL?
     @State private var activeImagePreviewURL: URL?
-    @State private var activeQuickLookURL: URL?
     @State private var showDocumentPicker: Bool = false
 
     // Conflict apply to all toggle
     @State private var conflictApplyToAll: Bool = false
 
     init() {
-        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first
-            ?? URL(fileURLWithPath: NSHomeDirectory())
-        _currentDirectoryURL = State(initialValue: documents)
+        let appDataRoot = URL(fileURLWithPath: ContainerStore.appDataRoot)
+        _currentDirectoryURL = State(initialValue: appDataRoot)
     }
 
     // MARK: - Filtered & Sorted Entries
@@ -121,17 +130,47 @@ struct ZArchiverMainView: View {
     }
 
     // MARK: - Path Components for Breadcrumb
-    private var pathBreadcrumbs: [(name: String, url: URL)] {
-        var crumbs: [(name: String, url: URL)] = []
-        var cur = currentDirectoryURL
-        while cur.path != "/" && cur.path != "." && !cur.path.isEmpty {
-            crumbs.insert((cur.lastPathComponent, cur), at: 0)
-            let parent = cur.deletingLastPathComponent()
-            if parent == cur { break }
-            cur = parent
+    private var pathBreadcrumbs: [ZBreadcrumbItem] {
+        if currentPartition == .apps {
+            var crumbs: [ZBreadcrumbItem] = [
+                ZBreadcrumbItem(name: "Ứng Dụng", url: partitionRootURL(for: .apps))
+            ]
+            if let app = selectedApp {
+                let appRootURL = URL(fileURLWithPath: app.containerPath)
+                crumbs.append(ZBreadcrumbItem(name: app.displayName, url: appRootURL))
+
+                let curPath = currentDirectoryURL.path
+                let rootPath = appRootURL.path
+                if curPath != rootPath && curPath.hasPrefix(rootPath) {
+                    let relative = String(curPath.dropFirst(rootPath.count)).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                    var builtPath = rootPath
+                    for segment in relative.split(separator: "/") {
+                        builtPath += "/" + segment
+                        crumbs.append(ZBreadcrumbItem(name: String(segment), url: URL(fileURLWithPath: builtPath)))
+                    }
+                }
+            }
+            return crumbs
+        } else {
+            var crumbs: [ZBreadcrumbItem] = []
+            var cur = currentDirectoryURL
+            var loopGuard = 0
+            while cur.path != "/" && cur.path != "." && !cur.path.isEmpty && loopGuard < 20 {
+                loopGuard += 1
+                crumbs.insert(ZBreadcrumbItem(name: cur.lastPathComponent, url: cur), at: 0)
+                let parent = cur.deletingLastPathComponent()
+                if parent.path == cur.path { break }
+                cur = parent
+            }
+            crumbs.insert(
+                ZBreadcrumbItem(
+                    name: currentPartition == .device ? "Gốc (/)" : "Tài Liệu",
+                    url: partitionRootURL(for: currentPartition)
+                ),
+                at: 0
+            )
+            return crumbs
         }
-        crumbs.insert(("Gốc (/) ", URL(fileURLWithPath: "/")), at: 0)
-        return crumbs
     }
 
     var body: some View {
@@ -152,7 +191,7 @@ struct ZArchiverMainView: View {
                 }
 
                 // Main Content
-                if currentPartition == .apps && currentDirectoryURL.path == partitionRootURL(for: .apps).path {
+                if currentPartition == .apps && selectedApp == nil {
                     installedAppsListView
                 } else {
                     fileListView
@@ -180,7 +219,9 @@ struct ZArchiverMainView: View {
         .preferredColorScheme(.dark)
         .onAppear {
             appService.loadApps()
-            reloadEntries()
+            if currentPartition != .apps || selectedApp != nil {
+                reloadEntries()
+            }
         }
         // Sheets & Pickers
         .sheet(item: Binding(
@@ -362,10 +403,11 @@ struct ZArchiverMainView: View {
 
                 // Refresh Button
                 Button {
-                    if currentPartition == .apps {
+                    if currentPartition == .apps && selectedApp == nil {
                         appService.loadApps(forceRefresh: true)
+                    } else {
+                        reloadEntries()
                     }
-                    reloadEntries()
                 } label: {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 15, weight: .bold))
@@ -385,8 +427,12 @@ struct ZArchiverMainView: View {
                 Button {
                     withAnimation(.easeInOut(duration: 0.18)) {
                         currentPartition = partition
+                        selectedApp = nil
+                        activeAppBundleID = nil
                         currentDirectoryURL = partitionRootURL(for: partition)
-                        reloadEntries()
+                        if partition != .apps {
+                            reloadEntries()
+                        }
                     }
                 } label: {
                     HStack(spacing: 6) {
@@ -423,25 +469,27 @@ struct ZArchiverMainView: View {
                     .background(ZArchiverColor.surfaceSecondary)
                     .clipShape(Circle())
             }
-            .disabled(currentDirectoryURL.path == "/" || currentDirectoryURL.path == partitionRootURL(for: currentPartition).path)
+            .disabled(isAtPartitionRoot)
 
             // Horizontal Scroll of Breadcrumbs
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4) {
-                    ForEach(Array(pathBreadcrumbs.enumerated()), id: \.offset) { index, crumb in
+                    let crumbs = pathBreadcrumbs
+                    ForEach(crumbs) { crumb in
+                        let isLast = crumb.id == crumbs.last?.id
                         Button {
-                            navigateTo(crumb.url)
+                            handleBreadcrumbTap(crumb)
                         } label: {
                             Text(crumb.name)
-                                .font(.system(size: 12, weight: index == pathBreadcrumbs.count - 1 ? .bold : .regular))
-                                .foregroundStyle(index == pathBreadcrumbs.count - 1 ? ZArchiverColor.vibrantGreen : Color.white.opacity(0.8))
+                                .font(.system(size: 12, weight: isLast ? .bold : .regular))
+                                .foregroundStyle(isLast ? ZArchiverColor.vibrantGreen : Color.white.opacity(0.8))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 3)
                                 .background(ZArchiverColor.surfaceSecondary.opacity(0.6))
                                 .cornerRadius(4)
                         }
 
-                        if index < pathBreadcrumbs.count - 1 {
+                        if !isLast {
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 9))
                                 .foregroundStyle(Color.white.opacity(0.4))
@@ -454,6 +502,31 @@ struct ZArchiverMainView: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 6)
         .background(ZArchiverColor.surface)
+    }
+
+    private var isAtPartitionRoot: Bool {
+        if currentPartition == .apps {
+            return selectedApp == nil
+        }
+        return currentDirectoryURL.path == "/" || currentDirectoryURL.path == partitionRootURL(for: currentPartition).path
+    }
+
+    private func handleBreadcrumbTap(_ crumb: ZBreadcrumbItem) {
+        if currentPartition == .apps {
+            if crumb.url.path == partitionRootURL(for: .apps).path {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    selectedApp = nil
+                    activeAppBundleID = nil
+                    currentDirectoryURL = crumb.url
+                }
+                return
+            }
+            if let app = selectedApp, crumb.url.path == URL(fileURLWithPath: app.containerPath).path {
+                navigateTo(crumb.url)
+                return
+            }
+        }
+        navigateTo(crumb.url)
     }
 
     // MARK: - Search Bar
@@ -547,7 +620,7 @@ struct ZArchiverMainView: View {
                 if appService.isLoading && appService.apps.isEmpty {
                     VStack(spacing: 12) {
                         ProgressView().tint(ZArchiverColor.vibrantGreen).scaleEffect(1.2)
-                        Text("Đang quét ứng dụng trên thiết bị...")
+                        Text("Đang quét toàn bộ ứng dụng trên thiết bị...")
                             .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                     }
@@ -586,8 +659,7 @@ struct ZArchiverMainView: View {
 
     private func appRow(_ app: InstalledApp) -> some View {
         Button {
-            let containerURL = URL(fileURLWithPath: app.containerPath)
-            navigateTo(containerURL)
+            selectApp(app)
         } label: {
             HStack(spacing: 12) {
                 // App Logo Icon
@@ -643,11 +715,28 @@ struct ZArchiverMainView: View {
         .buttonStyle(.plain)
     }
 
+    private func selectApp(_ app: InstalledApp) {
+        guard !app.containerPath.isEmpty else { return }
+        selectedApp = app
+        activeAppBundleID = app.bundleID
+        let targetURL = URL(fileURLWithPath: app.containerPath)
+        currentDirectoryURL = targetURL
+        reloadEntries()
+    }
+
     // MARK: - File List View
     private var fileListView: some View {
         ScrollView {
             LazyVStack(spacing: 2) {
-                if displayedEntries.isEmpty {
+                if isLoadingEntries && entries.isEmpty {
+                    VStack(spacing: 12) {
+                        ProgressView().tint(ZArchiverColor.vibrantGreen).scaleEffect(1.2)
+                        Text("Đang nạp dữ liệu thư mục...")
+                            .font(.system(size: 13))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 60)
+                } else if displayedEntries.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "folder.badge.minus")
                             .font(.system(size: 40))
@@ -1114,6 +1203,24 @@ struct ZArchiverMainView: View {
     }
 
     private func navigateUp() {
+        if currentPartition == .apps {
+            if let app = selectedApp {
+                let curPath = currentDirectoryURL.path
+                let rootPath = URL(fileURLWithPath: app.containerPath).path
+                if curPath == rootPath || !curPath.hasPrefix(rootPath) {
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        selectedApp = nil
+                        activeAppBundleID = nil
+                        currentDirectoryURL = partitionRootURL(for: .apps)
+                    }
+                    return
+                } else {
+                    let parent = currentDirectoryURL.deletingLastPathComponent()
+                    navigateTo(parent)
+                    return
+                }
+            }
+        }
         let parent = currentDirectoryURL.deletingLastPathComponent()
         if parent != currentDirectoryURL {
             navigateTo(parent)
@@ -1136,7 +1243,6 @@ struct ZArchiverMainView: View {
         case "png", "jpg", "jpeg", "webp", "gif", "bmp", "heic":
             activeImagePreviewURL = url
         case "zip", "7z", "rar", "tar", "gz":
-            // Offer to extract or edit
             fileEngine.extractArchive(at: url, into: currentDirectoryURL, autoFolder: true) { _ in
                 reloadEntries()
             }
@@ -1146,32 +1252,43 @@ struct ZArchiverMainView: View {
     }
 
     private func reloadEntries() {
-        let fm = FileManager.default
-        let url = currentDirectoryURL
+        let path = currentDirectoryURL.path
+        let bundleID = activeAppBundleID
+        isLoadingEntries = true
+
         DispatchQueue.global(qos: .userInitiated).async {
-            var fetched: [ZFileEntry] = []
-            if let contents = try? fm.contentsOfDirectory(
-                at: url,
-                includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey]
-            ) {
-                for item in contents {
-                    let values = try? item.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey])
-                    let isDir = values?.isDirectory ?? false
-                    let size = Int64(values?.fileSize ?? 0)
-                    let modDate = values?.contentModificationDate ?? Date()
-                    let fileType = ZArchiverFileType.resolve(name: item.lastPathComponent, isDirectory: isDir)
-                    fetched.append(ZFileEntry(
-                        url: item,
-                        name: item.lastPathComponent,
-                        isDirectory: isDir,
-                        size: size,
-                        modifiedDate: modDate,
-                        fileType: fileType
-                    ))
-                }
+            // 1. Kích hoạt quyền truy cập container ứng dụng qua MCM & MobileHouseArrest
+            if let bundleID, ContainerAccessPolicy.shouldAttemptMCM(bundleID: bundleID) {
+                var activationError: NSString?
+                let handle = MCMActivateContainer(2, bundleID, false, &activationError)
+                log("ZArchiver: MCM activate \(bundleID) -> \(handle)")
             }
+            if path.contains("Containers/Data/Application") || path.hasPrefix("/var") || path.hasPrefix("/private/var") {
+                let handle = ContainerStore.grantContainerAccess(path)
+                log("ZArchiver: grantContainerAccess \(path) -> \(handle)")
+            }
+
+            // 2. Liệt kê danh sách tệp an toàn không gây crash
+            let rawItems = ContainerStore.listFiles(at: path)
+            let fm = FileManager.default
+            let mapped: [ZFileEntry] = rawItems.map { item in
+                let itemURL = URL(fileURLWithPath: item.path)
+                let date = (try? fm.attributesOfItem(atPath: item.path)[.modificationDate] as? Date) ?? Date()
+                let fileType = ZArchiverFileType.resolve(name: item.name, isDirectory: item.isDirectory)
+                return ZFileEntry(
+                    url: itemURL,
+                    name: item.name,
+                    isDirectory: item.isDirectory,
+                    size: item.size,
+                    modifiedDate: date,
+                    fileType: fileType
+                )
+            }
+
             DispatchQueue.main.async {
-                self.entries = fetched
+                guard currentDirectoryURL.path == path else { return }
+                self.entries = mapped
+                self.isLoadingEntries = false
             }
         }
     }
