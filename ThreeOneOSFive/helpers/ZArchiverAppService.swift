@@ -24,72 +24,109 @@ final class ZArchiverAppService: ObservableObject {
 
         isLoading = apps.isEmpty
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            // 1. Quét ứng dụng từ hệ thống thông qua LSApplicationWorkspace / MobileInstallation
-            // Đây là API gốc của iOS: cực nhanh (< 50ms), an toàn tuyệt đối, không crash,
-            // lấy đầy đủ logo chính thức, tên hiển thị, phiên bản của TẤT CẢ game và app (Free Fire, Roblox, PUBG...)
+            // 1. Quét thông tin metadata bundle
+            let bundleMetadata = ContainerStore.applicationBundleMetadataCatalog()
+
+            // 2. Quét nhanh từ API MobileInstallation / LaunchServices
             let apiApps = ContainerStore.installedAppsFromAPI()
 
-            // 2. Quét các container hiện diện trong filesystem /var/mobile/Containers/Data/Application
+            // 3. Quét từ MCM (MobileContainerManager) dynamic identifiers
+            let dynamicIdentifiers = ContainerStore.dynamicAppIdentifiers()
+            let mcmApps = ContainerStore.installedAppsFromMCM(
+                identifiers: dynamicIdentifiers,
+                bundleMetadata: bundleMetadata
+            )
+
+            // 4. Quét từ filesystem nếu có quyền truy cập
             let filesystemApps = ContainerStore.containersFromFilesystem()
 
-            // 3. Tạo bảng ánh xạ container path theo bundleID từ filesystem
-            var containerMap: [String: String] = [:]
-            for fsApp in filesystemApps {
-                if !fsApp.containerPath.isEmpty && !fsApp.bundleID.isEmpty {
-                    containerMap[fsApp.bundleID] = fsApp.containerPath
-                }
+            // 5. Kết hợp các nguồn nhận diện cơ bản
+            let baseIdentifiedApps = mcmApps + apiApps
+            var mergedApps = ContainerDiscoveryMerger.merge(
+                enumerated: filesystemApps,
+                identified: baseIdentifiedApps,
+                path: { $0.containerPath }
+            )
+
+            var preliminary = mergedApps.filter {
+                ContainerPresentationPolicy.shouldShow(bundleID: $0.bundleID)
+            }
+            preliminary.sort {
+                $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
             }
 
-            var mergedApps: [InstalledApp] = []
-            var seenBundleIDs = Set<String>()
-
-            // Duyệt danh sách app từ API trước (chứa đầy đủ icon, tên, version)
-            for app in apiApps {
-                guard seenBundleIDs.insert(app.bundleID).inserted else { continue }
-                var finalPath = app.containerPath
-                if finalPath.isEmpty, let matchedPath = containerMap[app.bundleID] {
-                    finalPath = matchedPath
-                }
-                if finalPath.isEmpty {
-                    var err: NSString?
-                    if let mcmPath = MCMContainerPathForIdentifier(2, app.bundleID, false, &err),
-                       ContainerStore.isApplicationContainerPath(mcmPath) {
-                        finalPath = mcmPath
+            // Cập nhật kết quả nhanh lên giao diện nếu tìm thấy app
+            if !preliminary.isEmpty {
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    for app in preliminary {
+                        if let icon = app.icon {
+                            self.iconCache.setObject(icon, forKey: app.bundleID as NSString)
+                        }
                     }
+                    self.apps = preliminary
+                    self.isLoading = false
+                    self.hasLoadedOnce = true
+                    self.lastLoadedTime = Date()
+                    log("ZArchiverAppService: đã nạp nhanh \(preliminary.count) ứng dụng")
                 }
-                mergedApps.append(InstalledApp(
-                    bundleID: app.bundleID,
-                    name: app.name,
-                    containerPath: finalPath,
-                    version: app.version,
-                    icon: app.icon
-                ))
             }
 
-            // Bổ sung các container từ filesystem nếu chưa có trong danh sách API
-            for fsApp in filesystemApps {
-                guard seenBundleIDs.insert(fsApp.bundleID).inserted else { continue }
-                let rawInfo = appInfoForBundleID(fsApp.bundleID) as? [String: Any] ?? [:]
-                let displayName = fsApp.displayName.isEmpty ? (rawInfo["name"] as? String ?? fsApp.bundleID) : fsApp.displayName
-                let icon = rawInfo["icon"] as? UIImage
-                mergedApps.append(InstalledApp(
-                    bundleID: fsApp.bundleID,
-                    name: displayName,
-                    containerPath: fsApp.containerPath,
-                    version: rawInfo["version"] as? String ?? "",
-                    icon: icon
-                ))
+            // 6. Quét sâu toàn bộ game và ứng dụng (Free Fire, Roblox, PUBG, v.v.) qua LaunchServices cache và catalog
+            let launchServicesIdentifiers = ContainerStore.launchServicesStoreIdentifiers()
+            let mhaIdentifiers = MHAIdentifierCatalog.identifiers(
+                dynamic: dynamicIdentifiers,
+                installed: apiApps.map(\.bundleID),
+                research: ContainerStore.researchAppIdentifiers,
+                custom: bundleMetadata.keys.sorted(),
+                launchServices: launchServicesIdentifiers,
+                limit: 1500
+            )
+
+            let mhaApps = ContainerStore.installedAppsFromMHACandidates(
+                identifiers: mhaIdentifiers,
+                bundleMetadata: bundleMetadata
+            ) { [weak self] discoveredApps in
+                var progressive = AppDataCatalogMerger.merge(
+                    identified: discoveredApps + baseIdentifiedApps,
+                    fallback: [],
+                    identifier: { $0.bundleID },
+                    path: { $0.containerPath }
+                )
+                progressive = progressive.filter {
+                    ContainerPresentationPolicy.shouldShow(bundleID: $0.bundleID)
+                }
+                progressive.sort {
+                    $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+                }
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
+                    for app in progressive {
+                        if let icon = app.icon {
+                            self.iconCache.setObject(icon, forKey: app.bundleID as NSString)
+                        }
+                    }
+                    self.apps = progressive
+                    self.isLoading = false
+                    self.hasLoadedOnce = true
+                }
             }
 
-            // 4. Lọc theo chính sách hiển thị và sắp xếp tên ứng dụng A-Z
-            var finalResult = mergedApps.filter {
+            // 7. Hoàn thiện kết quả cuối cùng
+            let allKnownApps = mhaApps + baseIdentifiedApps
+            var finalResult = AppDataCatalogMerger.merge(
+                identified: allKnownApps,
+                fallback: filesystemApps,
+                identifier: { $0.bundleID },
+                path: { $0.containerPath }
+            )
+            finalResult = finalResult.filter {
                 ContainerPresentationPolicy.shouldShow(bundleID: $0.bundleID)
             }
             finalResult.sort {
                 $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
             }
 
-            // 5. Cập nhật kết quả lên UI
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 for app in finalResult {
@@ -101,7 +138,7 @@ final class ZArchiverAppService: ObservableObject {
                 self.isLoading = false
                 self.hasLoadedOnce = true
                 self.lastLoadedTime = Date()
-                log("ZArchiverAppService: hoàn tất tải an toàn \(finalResult.count) ứng dụng")
+                log("ZArchiverAppService: hoàn tất nạp đầy đủ \(finalResult.count) ứng dụng")
             }
         }
     }

@@ -47,6 +47,7 @@ enum ContainerStore {
         ("/System/Applications", false)
     ]
     static let researchAppIdentifiers = [
+        // Apple System Apps
         "com.apple.mobilesafari", "com.apple.mobilenotes", "com.apple.Maps",
         "com.apple.facetime", "com.apple.iBooks", "com.apple.podcasts",
         "com.apple.PosterBoard", "com.apple.mobilemail", "com.apple.weather",
@@ -58,7 +59,27 @@ enum ContainerStore {
         "com.apple.springboard", "com.apple.Photos", "com.apple.AppStore",
         "com.apple.Music", "com.apple.Bridge", "com.apple.Clock",
         "com.apple.VoiceMemos", "com.apple.Translate", "com.apple.measure",
-        "com.apple.compass", "com.apple.Magnifier", "com.apple.DocumentsApp"
+        "com.apple.compass", "com.apple.Magnifier", "com.apple.DocumentsApp",
+        // Top Games
+        "com.dts.freefireth", "com.dts.freefiremax",
+        "com.roblox.robloxmobile",
+        "com.tencent.ig", "com.vng.pubgmobile", "com.pubg.krmobile", "com.rebel.tw",
+        "com.garena.game.kgvn", "com.garena.game.kgtw", "com.garena.game.kgth",
+        "com.miHoYo.GenshinImpact", "com.hoyoverse.genshinimpact",
+        "com.HoYoverse.hkrpgoversea", "com.mojang.minecraftpe",
+        "com.activision.callofduty.shooter", "com.vng.codm",
+        "com.mobile.legends", "com.haegin.playtogether",
+        "com.riotgames.league.wildriftvn", "com.riotgames.league.wildrift",
+        "com.ea.game.pvz2_row", "com.innersloth.amongus", "com.supercell.clashofclans",
+        // Top Apps & Social Media
+        "com.zhiliaoapp.musically", "com.ss.iphone.ugc.Ame", "com.ss.iphone.ugc.Aweme",
+        "com.facebook.Facebook", "com.facebook.Messenger", "com.burbn.instagram",
+        "com.vng.zing.zalo", "ph.telegra.Telegraph", "com.lemon.lvoverseas",
+        "com.google.ios.youtube", "com.google.Drive", "com.google.chrome.ios",
+        "com.spotify.client", "com.hammerandchisel.discord", "com.netflix.Netflix",
+        "com.vng.zingmp3", "com.beeprunner.shopee.vn", "com.lazada.iphone",
+        "vn.tiki.app.ios", "com.mservice.momotransfer", "com.mbbank.ios.personal",
+        "com.techcombank.retailbanking", "com.vcb.digibank"
     ]
 
     static func resolveAppContainerPath(bundleID: String) -> String? {
@@ -178,7 +199,9 @@ enum ContainerStore {
         var apps: [InstalledApp] = []
         for (index, bundleID) in identifiers.enumerated() {
             var lookupError: NSString?
-            guard let containerPath = MCMActivateContainerPath(2, bundleID, false, &lookupError) else {
+            let containerPath = MCMContainerPathForIdentifier(2, bundleID, false, &lookupError)
+                ?? MCMActivateContainerPath(2, bundleID, false, &lookupError)
+            guard let containerPath, isApplicationContainerPath(containerPath) else {
                 let lookupDetail = lookupError.map { String($0) } ?? "no path"
                 if index < 3 { log("mcm[\(index)]: \(bundleID) -> \(lookupDetail)") }
                 continue
@@ -215,15 +238,13 @@ enum ContainerStore {
         }
 
         var apps: [InstalledApp] = []
+        var seen = Set<String>()
         for (index, bundleID) in identifiers.enumerated() {
+            guard seen.insert(bundleID).inserted else { continue }
             var lookupError: NSString?
-            guard let containerPath = MCMActivateContainerPath(
-                2,
-                bundleID,
-                false,
-                &lookupError
-            ),
-                  isApplicationContainerPath(containerPath) else {
+            let containerPath = MCMContainerPathForIdentifier(2, bundleID, false, &lookupError)
+                ?? MCMActivateContainerPath(2, bundleID, false, &lookupError)
+            guard let containerPath, isApplicationContainerPath(containerPath) else {
                 if index < 3 {
                     let detail = lookupError.map { String($0) } ?? "invalid app-data path"
                     log("mha-candidate[\(index)]: \(bundleID) -> \(detail)")
@@ -246,7 +267,7 @@ enum ContainerStore {
             if apps.count <= 5 {
                 log("browser: MHA-C2 resolved \(bundleID) -> \(containerPath)")
             }
-            if apps.count.isMultiple(of: 8) {
+            if apps.count.isMultiple(of: 4) {
                 progress?(apps)
             }
         }
@@ -351,7 +372,7 @@ enum ContainerStore {
 
         var identifiers: [String] = []
         var seenIdentifiers = Set<String>()
-        let maximumCandidateCount = 65_536
+        let maximumCandidateCount = 1_500
 
         for cachePath in cachePaths where identifiers.count < maximumCandidateCount {
             let hasLease = leasedCachePaths.contains(
