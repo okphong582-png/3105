@@ -294,7 +294,7 @@ struct ActivationResult {
 final class LicenseManager: ObservableObject {
     static let shared = LicenseManager()
 
-    @Published var isAuthorized: Bool = false
+    @Published var isAuthorized: Bool = true
     @Published var currentLicense: LicenseInfo? = nil
     @Published var isVerifying: Bool = false
     @Published var lastErrorMessage: String? = nil
@@ -352,8 +352,7 @@ final class LicenseManager: ObservableObject {
     }
 
     init() {
-        loadCachedLicense()
-        startHeartbeat()
+        // Disabled for pure ZArchiver mode
     }
 
     // MARK: - Check System Maintenance & Bypass Link (Kill Switch)

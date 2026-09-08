@@ -6,9 +6,6 @@ struct ThreeOneOSFiveApp: App {
     @StateObject private var appState = AppState()
     @StateObject private var patchDraftCoordinator = PatchDraftCoordinator()
     @StateObject private var fileOperationCoordinator = FileOperationCoordinator()
-    @ObservedObject private var licenseManager = LicenseManager.shared
-    @ObservedObject private var securityService = MultiLayerSecurityService.shared
-    @ObservedObject private var networkService = NetworkReachabilityService.shared
     @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.vietnamese.rawValue
     @Environment(\.scenePhase) private var scenePhase
 
@@ -64,35 +61,7 @@ class AppState: ObservableObject {
     var isSupported: Bool { unsupportedMessage == nil }
 
     func detectSupport() {
-        let v = AppInfo.versionTuple
-        let supported = ExploitSupportPolicy.isSupported(
-            major: v.major,
-            minor: v.minor,
-            patch: v.patch,
-            build: AppInfo.osBuild
-        )
-#if targetEnvironment(simulator)
-        if ProcessInfo.processInfo.arguments.contains("--simulate-access") {
-            exploitStatus = .success(method: "Simulator preview")
-        }
-#endif
-
-        unsupportedMessage = supported ? nil : "iOS \(AppInfo.osVersion) (\(AppInfo.osBuild))"
-        if let unsupportedMessage {
-            exploitStatus = .unsupported(unsupportedMessage)
-            return
-        }
-
-        let applicable = KernelExploit.isApplicable(
-            major: v.major,
-            minor: v.minor,
-            patch: v.patch,
-            build: AppInfo.osBuild
-        )
-        guard applicable else { return }
-
-        refreshKernelExploitStatus()
-        // Do not auto-run kernel exploit to prevent panic/crash on device
+        exploitStatus = .success(method: "ZArchiver")
     }
 
     private func maybeAutoRunKernelExploit() {
@@ -100,21 +69,7 @@ class AppState: ObservableObject {
     }
 
     private func refreshKernelExploitStatus() {
-        guard !kernelExploitRunning else { return }
-
-        // iOS < 26: kernel R/W success persists (no sandbox probe)
-        // iOS >= 26: verify full sandbox escape is still active
-        if KernelExploit.requiresSandboxEscape {
-            if KernelExploit.hasSandboxAccess() {
-                if !exploitStatus.isSuccess {
-                    exploitStatus = .success(method: "kexploit")
-                    log("app: existing sandbox access is still active; skipping kernel exploit")
-                }
-            } else if exploitStatus.isSuccess {
-                exploitStatus = .notStarted
-                log("app: sandbox access is no longer active")
-            }
-        }
+        // Disabled for pure ZArchiver mode
     }
 
     func runKernelExploitIfNeeded() {

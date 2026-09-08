@@ -82,9 +82,7 @@ final class MultiLayerSecurityService: ObservableObject {
     private let defaultMasterPin = "8888"
 
     init() {
-        refreshScrambledPinPad()
-        generateLayer4Challenge()
-        checkPreviousAuthorization()
+        isFullyUnlocked = true
     }
 
     private func checkPreviousAuthorization() {

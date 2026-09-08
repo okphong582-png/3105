@@ -200,7 +200,6 @@ enum ContainerStore {
         for (index, bundleID) in identifiers.enumerated() {
             var lookupError: NSString?
             let containerPath = MCMContainerPathForIdentifier(2, bundleID, false, &lookupError)
-                ?? MCMActivateContainerPath(2, bundleID, false, &lookupError)
             guard let containerPath, isApplicationContainerPath(containerPath) else {
                 let lookupDetail = lookupError.map { String($0) } ?? "no path"
                 if index < 3 { log("mcm[\(index)]: \(bundleID) -> \(lookupDetail)") }
@@ -243,7 +242,6 @@ enum ContainerStore {
             guard seen.insert(bundleID).inserted else { continue }
             var lookupError: NSString?
             let containerPath = MCMContainerPathForIdentifier(2, bundleID, false, &lookupError)
-                ?? MCMActivateContainerPath(2, bundleID, false, &lookupError)
             guard let containerPath, isApplicationContainerPath(containerPath) else {
                 if index < 3 {
                     let detail = lookupError.map { String($0) } ?? "invalid app-data path"
@@ -698,9 +696,7 @@ enum ContainerStore {
         } else if isApplicationContainerPath(path) {
             for sub in ["Documents", "Library", "tmp", "StoreKit"] {
                 let full = (path as NSString).appendingPathComponent(sub)
-                if fm.fileExists(atPath: full) {
-                    entries.append(FileEntry(name: sub, path: full, isDirectory: true, size: 0))
-                }
+                entries.append(FileEntry(name: sub, path: full, isDirectory: true, size: 0))
             }
         }
         return entries.sorted {
