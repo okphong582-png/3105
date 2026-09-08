@@ -614,9 +614,48 @@ struct ZArchiverMainView: View {
     }
 
     // MARK: - Installed Apps List View (Ultra-fast App Containers)
+    private var workspaceRow: some View {
+        Button {
+            currentPartition = .local
+            currentDirectoryURL = partitionRootURL(for: .local)
+            reloadEntries()
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(ZArchiverColor.primaryGreen.opacity(0.2))
+                        .frame(width: 46, height: 46)
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 22))
+                        .foregroundStyle(ZArchiverColor.vibrantGreen)
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Thư Mục Tệp Cục Bộ (Tài Liệu / 3105)")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.white)
+                    Text("Quản lý tệp zip, mod, và tài liệu trong máy")
+                        .font(.system(size: 11))
+                        .foregroundStyle(ZArchiverColor.textSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.forward")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(ZArchiverColor.surface)
+            .cornerRadius(10)
+        }
+        .buttonStyle(.plain)
+    }
+
     private var installedAppsListView: some View {
         ScrollView {
-            LazyVStack(spacing: 4) {
+            LazyVStack(spacing: 6) {
+                // Thư mục tệp cục bộ (tương tự 3105-main)
+                workspaceRow
+
                 if appService.isLoading && appService.apps.isEmpty {
                     VStack(spacing: 12) {
                         ProgressView().tint(ZArchiverColor.vibrantGreen).scaleEffect(1.2)
@@ -624,20 +663,34 @@ struct ZArchiverMainView: View {
                             .font(.system(size: 13))
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.top, 60)
+                    .padding(.top, 40)
                 } else if appService.apps.isEmpty {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 12) {
                         Image(systemName: "app.dashed")
                             .font(.system(size: 44))
                             .foregroundStyle(.secondary)
                         Text("Chưa tìm thấy container ứng dụng.")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(.white)
-                        Text("Chạm vào biểu tượng làm mới trên thanh công cụ để thử lại.")
+                        Text("Chạm vào nút bên dưới để quét lại ứng dụng.")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
+                        Button {
+                            appService.loadApps(forceRefresh: true)
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.clockwise")
+                                Text("Quét Lại Ứng Dụng")
+                            }
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(ZArchiverColor.primaryGreen)
+                            .cornerRadius(8)
+                        }
                     }
-                    .padding(.top, 60)
+                    .padding(.top, 40)
                 } else {
                     ForEach(filteredApps) { app in
                         appRow(app)

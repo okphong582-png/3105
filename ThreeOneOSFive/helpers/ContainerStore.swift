@@ -685,18 +685,23 @@ enum ContainerStore {
 
     static func listFiles(at path: String) -> [FileEntry] {
         let fm = FileManager.default
-        guard let items = try? fm.contentsOfDirectory(atPath: path) else {
-            log("listFiles: FAILED for \(path) errno=\(errno)")
-            return []
-        }
         var entries: [FileEntry] = []
-        for item in items {
-            if item.hasPrefix(".") { continue }
-            let full = (path as NSString).appendingPathComponent(item)
-            var isDir: ObjCBool = false
-            guard fm.fileExists(atPath: full, isDirectory: &isDir) else { continue }
-            let size = isDir.boolValue ? 0 : ((try? fm.attributesOfItem(atPath: full)[.size] as? Int64) ?? 0)
-            entries.append(FileEntry(name: item, path: full, isDirectory: isDir.boolValue, size: size))
+        if let items = try? fm.contentsOfDirectory(atPath: path), !items.isEmpty {
+            for item in items {
+                if item.hasPrefix(".") { continue }
+                let full = (path as NSString).appendingPathComponent(item)
+                var isDir: ObjCBool = false
+                guard fm.fileExists(atPath: full, isDirectory: &isDir) else { continue }
+                let size = isDir.boolValue ? 0 : ((try? fm.attributesOfItem(atPath: full)[.size] as? Int64) ?? 0)
+                entries.append(FileEntry(name: item, path: full, isDirectory: isDir.boolValue, size: size))
+            }
+        } else if isApplicationContainerPath(path) {
+            for sub in ["Documents", "Library", "tmp", "StoreKit"] {
+                let full = (path as NSString).appendingPathComponent(sub)
+                if fm.fileExists(atPath: full) {
+                    entries.append(FileEntry(name: sub, path: full, isDirectory: true, size: 0))
+                }
+            }
         }
         return entries.sorted {
             if $0.isDirectory != $1.isDirectory { return $0.isDirectory }
