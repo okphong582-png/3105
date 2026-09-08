@@ -46,7 +46,13 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
-            AD_HOC_CODE_SIGNING_ALLOWED=YES
+            AD_HOC_CODE_SIGNING_ALLOWED=YES 2>&1 | tee build.log || {
+              echo ""
+              echo "==================== COMPILATION ERRORS ===================="
+              grep -E "error:" build.log || tail -n 50 build.log
+              echo "============================================================"
+              exit 1
+            }
 
       - name: Package ZArchiver IPA
         run: |

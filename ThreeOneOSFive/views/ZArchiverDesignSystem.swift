@@ -6,6 +6,7 @@ enum ZArchiverColor {
     static let primaryGreen = Color(red: 0.18, green: 0.49, blue: 0.20)      // #2E7D32
     static let headerGreen = Color(red: 0.11, green: 0.37, blue: 0.13)       // #1B5E20
     static let vibrantGreen = Color(red: 0.30, green: 0.69, blue: 0.31)      // #4CAF50
+    static let lightGreen = Color(red: 0.40, green: 0.78, blue: 0.41)        // #66BB6A
     static let accentMint = Color(red: 0.00, green: 0.78, blue: 0.55)        // #00C853
     static let darkBackground = Color(red: 0.08, green: 0.08, blue: 0.09)    // #141417
     static let surface = Color(red: 0.12, green: 0.12, blue: 0.14)           // #1F1F24

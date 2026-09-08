@@ -1222,6 +1222,6 @@ struct ZArchiverDocumentPicker: UIViewControllerRepresentable {
 
 // MARK: - URL Wrapper for Sheet Identifiable
 private struct IdentifiableURL: Identifiable {
-    let id = UUID()
+    var id: String { url.absoluteString }
     let url: URL
 }
