@@ -384,72 +384,78 @@ struct MainInjectorView: View {
         )
     }
 
-    // MARK: - NextDNS Antiban VIP Quick Banner
+    // MARK: - NextDNS Antiban VIP Quick Banner (Realtime Status & Toggle)
     private var nextDNSAntibanBanner: some View {
-        Button {
-            let gen = UIImpactFeedbackGenerator(style: .medium)
-            gen.impactOccurred()
-            showNextDNSSetup = true
-        } label: {
-            HStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(nextDNSService.isSetupCompleted ? Color.green.opacity(0.16) : Color.cyan.opacity(0.16))
-                        .frame(width: 42, height: 42)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(nextDNSService.isSetupCompleted ? Color.green.opacity(0.4) : Color.cyan.opacity(0.4), lineWidth: 1)
-                        )
-
-                    Image(systemName: nextDNSService.isSetupCompleted ? "shield.checkmark.fill" : "shield.fill")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(nextDNSService.isSetupCompleted ? Color.green : Color.cyan)
-                }
-
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
-                        Text("NEXTDNS ANTIBAN VIP")
-                            .font(.system(size: 13, weight: .black, design: .monospaced))
-                            .foregroundStyle(Color.white)
-
-                        Text(nextDNSService.isSetupCompleted ? "ĐÃ BẬT" : "CẦN CÀI ĐẶT")
-                            .font(.system(size: 9, weight: .black, design: .monospaced))
-                            .foregroundStyle(nextDNSService.isSetupCompleted ? Color.black : Color.white)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(
-                                (nextDNSService.isSetupCompleted ? Color.green : Color.orange)
-                                    .cornerRadius(4)
+        HStack(spacing: 12) {
+            // Tappable Area to open Full Live Dashboard
+            Button {
+                let gen = UIImpactFeedbackGenerator(style: .medium)
+                gen.impactOccurred()
+                showNextDNSSetup = true
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(nextDNSService.isProtectionActive ? Color.green.opacity(0.16) : Color.red.opacity(0.16))
+                            .frame(width: 42, height: 42)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .stroke(nextDNSService.isProtectionActive ? Color.green.opacity(0.4) : Color.red.opacity(0.4), lineWidth: 1)
                             )
+
+                        Image(systemName: nextDNSService.isProtectionActive ? "shield.checkered" : "shield.slash.fill")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(nextDNSService.isProtectionActive ? Color.green : Color.red)
                     }
 
-                    Text(nextDNSService.isSetupCompleted ? "Hồ sơ bảo vệ chống ban đang hoạt động an toàn" : "Chưa cài đặt hồ sơ • Nhấn để tải NextDNS.mobileconfig")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Color.secondary)
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 6) {
+                            Text("NEXTDNS REALTIME")
+                                .font(.system(size: 13, weight: .black, design: .monospaced))
+                                .foregroundStyle(Color.white)
+
+                            Text(nextDNSService.isProtectionActive ? "ACTIVE" : "OFF")
+                                .font(.system(size: 9, weight: .black, design: .monospaced))
+                                .foregroundStyle(nextDNSService.isProtectionActive ? Color.black : Color.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(
+                                    (nextDNSService.isProtectionActive ? Color.green : Color.red)
+                                        .cornerRadius(4)
+                                )
+                        }
+
+                        Text(nextDNSService.isProtectionActive
+                             ? "Đã chặn \(nextDNSService.blockedQueries) truy vấn • Chạm xem Live Stream"
+                             : "Đã tắt bảo vệ • Bật để chống khóa tài khoản")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color.secondary)
+                            .lineLimit(1)
+                    }
                 }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(Color.secondary)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.04))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(
-                                nextDNSService.isSetupCompleted ? Color.green.opacity(0.25) : Color.cyan.opacity(0.3),
-                                lineWidth: 1
-                            )
-                    )
-            )
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            // Inline Master ON/OFF Switch
+            Toggle("", isOn: $nextDNSService.isProtectionActive)
+                .labelsHidden()
+                .tint(Color.green)
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.04))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(
+                            nextDNSService.isProtectionActive ? Color.green.opacity(0.3) : Color.red.opacity(0.3),
+                            lineWidth: 1
+                        )
+                )
+        )
     }
 
     // MARK: - Tactical Dual Tab Selector (MỚI: [ 🎯 AIM ASSIST ] [ 📡 ĐỊNH VỊ RADAR ])

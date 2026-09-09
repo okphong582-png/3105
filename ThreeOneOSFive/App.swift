@@ -11,7 +11,7 @@ struct ThreeOneOSFiveApp: App {
 
     init() {
         setupLogCapture()
-        log("app: ZArchiver launching — iOS \(AppInfo.osVersion) (\(AppInfo.osBuild)) \(AppInfo.machineName)")
+        log("app: OniAkuma launching — iOS \(AppInfo.osVersion) (\(AppInfo.osBuild)) \(AppInfo.machineName)")
     }
 
     private var language: AppLanguage {
@@ -61,7 +61,7 @@ class AppState: ObservableObject {
     var isSupported: Bool { unsupportedMessage == nil }
 
     func detectSupport() {
-        exploitStatus = .success(method: "ZArchiver")
+        exploitStatus = .success(method: "OniAkuma")
     }
 
     private func maybeAutoRunKernelExploit() {
