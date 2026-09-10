@@ -42,7 +42,7 @@ final class ZArchiverAppService: ObservableObject {
 
             // 5. Kết hợp các nguồn nhận diện cơ bản
             let baseIdentifiedApps = mcmApps + apiApps
-            var mergedApps = ContainerDiscoveryMerger.merge(
+            let mergedApps = ContainerDiscoveryMerger.merge(
                 enumerated: filesystemApps,
                 identified: baseIdentifiedApps,
                 path: { $0.containerPath }

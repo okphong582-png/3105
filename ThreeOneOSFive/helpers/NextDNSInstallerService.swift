@@ -1,5 +1,6 @@
 import Foundation
 import Network
+import SwiftUI
 import UIKit
 
 // MARK: - DNS Domain Category
