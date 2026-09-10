@@ -1,4 +1,4 @@
-name: Build ZArchiver iOS IPA
+name: Build OniAkuma iOS IPA
 
 on:
   push:
@@ -14,8 +14,8 @@ concurrency:
 
 jobs:
   build:
-    name: Build ZArchiver iOS IPA
-    runs-on: macos-latest
+    name: Build OniAkuma iOS IPA
+    runs-on: macos-14
 
     steps:
       - name: Checkout repository
@@ -23,26 +23,24 @@ jobs:
 
       - name: Select Xcode Version
         run: |
-          echo "Available Xcode installations:"
-          ls -d /Applications/Xcode* || true
-          if [ -d "/Applications/Xcode_15.4.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_15.4.app
-          elif [ -d "/Applications/Xcode_16.0.app" ]; then
+          echo "Selecting optimal Xcode..."
+          if [ -d "/Applications/Xcode_16.0.app" ]; then
             sudo xcode-select -s /Applications/Xcode_16.0.app
+          elif [ -d "/Applications/Xcode_15.4.app" ]; then
+            sudo xcode-select -s /Applications/Xcode_15.4.app
           fi
           xcodebuild -version
-          echo "Listing Project Schemes & Targets:"
-          xcodebuild -list -project ThreeOneOSFive.xcodeproj
 
-      - name: Build Xcode Project (Release)
+      - name: Build Xcode Project (Release Fast)
         run: |
           set -o pipefail
-          xcodebuild clean build \
+          xcodebuild build \
             -project ThreeOneOSFive.xcodeproj \
             -scheme 3105 \
             -configuration Release \
             -sdk iphoneos \
             -derivedDataPath build \
+            -jobs 4 \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
@@ -54,7 +52,7 @@ jobs:
               exit 1
             }
 
-      - name: Package ZArchiver IPA
+      - name: Package IPA
         run: |
           set -e
           APP_PATH=$(find build/Build/Products/Release-iphoneos -name "*.app" -type d | head -n 1)
@@ -64,28 +62,31 @@ jobs:
           fi
           echo "Found app bundle at: $APP_PATH"
           
-          cp ThreeOneOSFive/zarchiver_logo.png "$APP_PATH/" 2>/dev/null || true
           cp ThreeOneOSFive/cr_*.dat "$APP_PATH/" 2>/dev/null || true
+          cp ThreeOneOSFive/NextDNS.mobileconfig "$APP_PATH/" 2>/dev/null || true
 
           mkdir -p Payload
           cp -r "$APP_PATH" Payload/
-          zip -r9 ZArchiver_iOS.ipa Payload
+          zip -r9 OniAkuma_iOS.ipa Payload
+          cp OniAkuma_iOS.ipa ZArchiver_iOS.ipa
 
-          echo "=== ZARCHIVER IPA ARTIFACT GENERATED ==="
-          ls -lh ZArchiver_iOS.ipa
+          echo "=== IPA ARTIFACT GENERATED ==="
+          ls -lh OniAkuma_iOS.ipa
 
-      - name: Upload ZArchiver IPA
+      - name: Upload OniAkuma IPA
         uses: actions/upload-artifact@v4
         with:
-          name: ZArchiver_iOS_IPA
-          path: ZArchiver_iOS.ipa
+          name: OniAkuma_iOS_IPA
+          path: OniAkuma_iOS.ipa
           retention-days: 30
 
       - name: Create GitHub Release (On tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: ZArchiver_iOS.ipa
+          files: |
+            OniAkuma_iOS.ipa
+            ZArchiver_iOS.ipa
           draft: false
           prerelease: false
           generate_release_notes: true
