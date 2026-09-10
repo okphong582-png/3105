@@ -57,7 +57,7 @@ final class ZArchiverAppService: ObservableObject {
 
             // Cập nhật kết quả nhanh lên giao diện nếu tìm thấy app
             if !preliminary.isEmpty {
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
                     for app in preliminary {
                         if let icon = app.icon {
@@ -99,7 +99,7 @@ final class ZArchiverAppService: ObservableObject {
                 progressive.sort {
                     $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
                 }
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
                     for app in progressive {
                         if let icon = app.icon {
@@ -127,7 +127,7 @@ final class ZArchiverAppService: ObservableObject {
                 $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
             }
 
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 for app in finalResult {
                     if let icon = app.icon {

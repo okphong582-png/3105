@@ -15,21 +15,26 @@ final class NetworkReachabilityService: ObservableObject {
 
     private init() {
         monitor.pathUpdateHandler = { [weak self] path in
-            Task { @MainActor in
-                let connected = (path.status == .satisfied)
-                self?.isConnected = connected
-                if path.usesInterfaceType(.cellular) {
-                    self?.isCellular = true
-                    self?.connectionType = "4G/5G"
-                } else if path.usesInterfaceType(.wifi) {
-                    self?.isCellular = false
-                    self?.connectionType = "Wi-Fi"
-                } else if path.usesInterfaceType(.wiredEthernet) {
-                    self?.isCellular = false
-                    self?.connectionType = "Ethernet"
+            let status = path.status
+            let isCellular = path.usesInterfaceType(.cellular)
+            let isWifi = path.usesInterfaceType(.wifi)
+            let isWired = path.usesInterfaceType(.wiredEthernet)
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
+                let connected = (status == .satisfied)
+                self.isConnected = connected
+                if isCellular {
+                    self.isCellular = true
+                    self.connectionType = "4G/5G"
+                } else if isWifi {
+                    self.isCellular = false
+                    self.connectionType = "Wi-Fi"
+                } else if isWired {
+                    self.isCellular = false
+                    self.connectionType = "Ethernet"
                 } else {
-                    self?.isCellular = false
-                    self?.connectionType = "Offline"
+                    self.isCellular = false
+                    self.connectionType = "Offline"
                 }
             }
         }
