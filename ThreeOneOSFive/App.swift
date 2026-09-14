@@ -3,9 +3,10 @@ import UIKit
 
 @main
 struct ThreeOneOSFiveApp: App {
-    @StateObject private var appState = AppState()
+    @StateObject private var appState = AppState.shared
     @StateObject private var patchDraftCoordinator = PatchDraftCoordinator()
     @StateObject private var fileOperationCoordinator = FileOperationCoordinator()
+    @StateObject private var patchStore = PatchProjectStore()
     @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.vietnamese.rawValue
     @Environment(\.scenePhase) private var scenePhase
 
@@ -24,6 +25,7 @@ struct ThreeOneOSFiveApp: App {
                 .environmentObject(appState)
                 .environmentObject(patchDraftCoordinator)
                 .environmentObject(fileOperationCoordinator)
+                .environmentObject(patchStore)
                 .environment(\.appLanguage, language)
                 .environment(\.locale, language.locale)
                 .preferredColorScheme(.dark)
@@ -36,6 +38,9 @@ struct ThreeOneOSFiveApp: App {
                     }
                 }
                 .onOpenURL { url in
+                    if url.pathExtension.lowercased() == "3105" {
+                        patchStore.importPackage(at: url)
+                    }
                     patchDraftCoordinator.presentImport(url)
                 }
         }
@@ -43,6 +48,8 @@ struct ThreeOneOSFiveApp: App {
 }
 
 class AppState: ObservableObject {
+    static let shared = AppState()
+
     @Published var exploitStatus: ExploitStatus = .notStarted
     @Published var unsupportedMessage: String?
     @Published var kernelExploitRunning = false
@@ -61,15 +68,68 @@ class AppState: ObservableObject {
     var isSupported: Bool { unsupportedMessage == nil }
 
     func detectSupport() {
-        exploitStatus = .success(method: "OniAkuma")
+        let v = AppInfo.versionTuple
+        let supported = ExploitSupportPolicy.isSupported(
+            major: v.major,
+            minor: v.minor,
+            patch: v.patch,
+            build: AppInfo.osBuild
+        )
+#if targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--simulate-access") {
+            exploitStatus = .success(method: "Simulator preview")
+            return
+        }
+#endif
+
+        if KernelExploit.hasSandboxAccess() {
+            exploitStatus = .success(method: "Sandbox Escaped")
+            return
+        }
+
+        unsupportedMessage = supported ? nil : "iOS \(AppInfo.osVersion) (\(AppInfo.osBuild))"
+        if let unsupportedMessage {
+            exploitStatus = .unsupported(unsupportedMessage)
+            return
+        }
+
+        let applicable = KernelExploit.isApplicable(
+            major: v.major,
+            minor: v.minor,
+            patch: v.patch,
+            build: AppInfo.osBuild
+        )
+        guard applicable else {
+            exploitStatus = .success(method: "Direct Core")
+            return
+        }
+
+        refreshKernelExploitStatus()
+        maybeAutoRunKernelExploit()
     }
 
     private func maybeAutoRunKernelExploit() {
-        // Disabled for pure ZArchiver mode
+        guard !kernelExploitRunning,
+              !exploitStatus.isSuccess,
+              !exploitStatus.isFailed,
+              !autoRunAttempted else { return }
+        autoRunAttempted = true
+        log("app: starting kernel exploit automatically")
+        runKernelExploitIfNeeded()
     }
 
     private func refreshKernelExploitStatus() {
-        // Disabled for pure ZArchiver mode
+        guard !kernelExploitRunning else { return }
+
+        if KernelExploit.hasSandboxAccess() {
+            if !exploitStatus.isSuccess {
+                exploitStatus = .success(method: "kexploit")
+                log("app: existing sandbox access is active; skipping kernel exploit")
+            }
+        } else if exploitStatus.isSuccess {
+            exploitStatus = .notStarted
+            log("app: sandbox access is no longer active")
+        }
     }
 
     func runKernelExploitIfNeeded() {

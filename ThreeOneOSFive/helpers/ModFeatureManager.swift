@@ -191,6 +191,21 @@ final class ModFeatureManager: ObservableObject {
         })
     }
 
+    static func ensureExploitReady() async {
+        if AppState.shared.kernelExploitApplicable && !KernelExploit.hasSandboxAccess() && !AppState.shared.exploitStatus.isSuccess {
+            await MainActor.run {
+                AppState.shared.runKernelExploitIfNeeded()
+            }
+            var waitCount = 0
+            while AppState.shared.kernelExploitRunning && waitCount < 10 {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                waitCount += 1
+            }
+        } else {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+        }
+    }
+
     // MARK: - Toggle Aim Mod (5 Chế Độ)
     func toggleAimMod(_ type: AimModType, store: PatchProjectStore) {
         guard !processingAimMods.contains(type.rawValue) else { return }
@@ -228,8 +243,7 @@ final class ModFeatureManager: ObservableObject {
         let projectToApply = adapted
 
         Task.detached(priority: .userInitiated) {
-            // Loading nhanh siêu mượt (0.35s) mang lại cảm giác phản hồi công nghệ cao
-            try? await Task.sleep(nanoseconds: 350_000_000)
+            await ModFeatureManager.ensureExploitReady()
             do {
                 _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
@@ -246,7 +260,7 @@ final class ModFeatureManager: ObservableObject {
                     ModFeatureManager.shared.processingAimMods.remove(typeKey)
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast("Không thể bật \(type.shortTitle). Vui lòng mở game Free Fire ít nhất một lần!")
+                    ModFeatureManager.shared.triggerToast("Lỗi bật \(type.shortTitle): \(error.localizedDescription)")
                 }
             }
         }
@@ -317,8 +331,7 @@ final class ModFeatureManager: ObservableObject {
         let projectToApply = adapted
 
         Task.detached(priority: .userInitiated) {
-            // Loading nhanh mượt mà (0.35s)
-            try? await Task.sleep(nanoseconds: 350_000_000)
+            await ModFeatureManager.ensureExploitReady()
             do {
                 _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
@@ -335,7 +348,7 @@ final class ModFeatureManager: ObservableObject {
                     ModFeatureManager.shared.isProcessingModSkin = false
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast("Không thể kích hoạt Mod Skin MP40. Vui lòng mở game Free Fire ít nhất một lần!")
+                    ModFeatureManager.shared.triggerToast("Lỗi Mod Skin: \(error.localizedDescription)")
                 }
             }
         }
@@ -405,8 +418,7 @@ final class ModFeatureManager: ObservableObject {
         let projectToApply = adapted
 
         Task.detached(priority: .userInitiated) {
-            // Loading nhanh mượt mà (0.35s)
-            try? await Task.sleep(nanoseconds: 350_000_000)
+            await ModFeatureManager.ensureExploitReady()
             do {
                 _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
@@ -423,7 +435,7 @@ final class ModFeatureManager: ObservableObject {
                     ModFeatureManager.shared.isProcessingModOutfit = false
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast("Không thể kích hoạt Trang Phục Ignis. Vui lòng mở game Free Fire ít nhất một lần!")
+                    ModFeatureManager.shared.triggerToast("Lỗi Trang Phục: \(error.localizedDescription)")
                 }
             }
         }
@@ -493,8 +505,7 @@ final class ModFeatureManager: ObservableObject {
         let projectToApply = adapted
 
         Task.detached(priority: .userInitiated) {
-            // Loading nhanh siêu mượt (0.35s)
-            try? await Task.sleep(nanoseconds: 350_000_000)
+            await ModFeatureManager.ensureExploitReady()
             do {
                 _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
@@ -511,7 +522,7 @@ final class ModFeatureManager: ObservableObject {
                     ModFeatureManager.shared.isProcessingLocator = false
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast("Không thể bật Định Vị Chấm Trắng. Vui lòng mở game Free Fire ít nhất một lần!")
+                    ModFeatureManager.shared.triggerToast("Lỗi Định Vị: \(error.localizedDescription)")
                 }
             }
         }
@@ -583,7 +594,7 @@ final class ModFeatureManager: ObservableObject {
         let projectToApply = adapted
 
         Task.detached(priority: .userInitiated) {
-            try? await Task.sleep(nanoseconds: 350_000_000)
+            await ModFeatureManager.ensureExploitReady()
             do {
                 _ = try DevicePatchService.apply(project: projectToApply)
                 await MainActor.run {
@@ -600,7 +611,7 @@ final class ModFeatureManager: ObservableObject {
                     ModFeatureManager.shared.isProcessingESP = false
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast("Không thể bật Định Vị ESP. Vui lòng mở game Free Fire ít nhất một lần!")
+                    ModFeatureManager.shared.triggerToast("Lỗi ESP: \(error.localizedDescription)")
                 }
             }
         }

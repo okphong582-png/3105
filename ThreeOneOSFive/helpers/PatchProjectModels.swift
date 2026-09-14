@@ -174,11 +174,26 @@ extension PatchPackageError: LocalizedError {
     }
 
     var errorDescription: String? {
-        let message = String(localized: String.LocalizationValue(localizationKey))
-        if let localizationArgument {
-            return String(format: message, localizationArgument)
+        switch self {
+        case .targetAppUnavailable(let id):
+            return "Không tìm thấy thư mục game \(id). Vui lòng mở game một lần trước khi bật mod!"
+        case .applyFailed:
+            return "Không thể ghi tệp mod vào game. Hãy mở game Free Fire một lần để hệ thống tạo container!"
+        case .restoreFailed:
+            return "Không thể khôi phục tệp gốc của game."
+        case .invalidPasswordOrCorruptedPackage:
+            return "Mật khẩu sai hoặc tệp mod bị lỗi."
+        case .unsupportedFormat:
+            return "Định dạng tệp mod không hợp lệ."
+        case .unsupportedVersion:
+            return "Phiên bản tệp mod yêu cầu cập nhật mới hơn."
+        default:
+            let message = String(localized: String.LocalizationValue(localizationKey))
+            if let localizationArgument {
+                return String(format: message, localizationArgument)
+            }
+            return message
         }
-        return message
     }
 
     var localizationArgument: String? {

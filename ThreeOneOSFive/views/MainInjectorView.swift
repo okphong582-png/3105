@@ -292,7 +292,7 @@ struct CyberESPHUDView: View {
 struct MainInjectorView: View {
     @Environment(\.appLanguage) private var language
     @EnvironmentObject private var appState: AppState
-    @StateObject private var store = PatchProjectStore()
+    @EnvironmentObject private var store: PatchProjectStore
     @ObservedObject private var modManager = ModFeatureManager.shared
     @ObservedObject private var licenseManager = LicenseManager.shared
 
@@ -301,9 +301,13 @@ struct MainInjectorView: View {
 
     // Game Selection State (Sau khi nhập key -> Hiện 2 Logo chọn Game)
     @State private var hasSelectedGame = false
-    @State private var selectedTab: Int = 0 // 0: AIM ASSIST, 1: ĐỊNH VỊ ESP, 2: RADAR CHẤM
+    @State private var selectedTab: Int = 0 // 0: AIM ASSIST, 1: ĐỊNH VỊ ESP, 2: RADAR CHẤM, 3: GÓI MOD
     @State private var showSettings = false
     @State private var showLogs = false
+    @State private var showPatchProjects = false
+    @State private var showAppDataBrowser = false
+    @State private var showFileImporter = false
+    @State private var tabSession = FilesTabSession()
     @State private var lastActivatedAimName: String? = nil
 
     var body: some View {
@@ -394,12 +398,16 @@ struct MainInjectorView: View {
                             aimBotCardSection
                                 .transition(.opacity.combined(with: .move(edge: .leading)))
                         } else if selectedTab == 1 {
-                            // TAB 1: ĐỊNH VỊ ESP XUYÊN TƯỜNG (HIH.3105)
+                            // TAB 1: ĐỊNH VỊ ESP XUYÊN TƯỜNG
                             espCardSection
                                 .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                        } else {
+                        } else if selectedTab == 2 {
                             // TAB 2: ĐỊNH VỊ CHẤM TRẮNG (RADAR)
                             locatorCardSection
+                                .transition(.opacity.combined(with: .move(edge: .trailing)))
+                        } else {
+                            // TAB 3: GÓI MOD TỰ CHỌN (.3105)
+                            customModCardSection
                                 .transition(.opacity.combined(with: .move(edge: .trailing)))
                         }
 
@@ -416,6 +424,31 @@ struct MainInjectorView: View {
             .navigationBarHidden(true)
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showLogs) { LogView() }
+            .sheet(isPresented: $showPatchProjects) {
+                PatchProjectsView(
+                    onOpenSettings: { showSettings = true },
+                    onOpenLogs: { showLogs = true }
+                )
+            }
+            .sheet(isPresented: $showAppDataBrowser) {
+                AppDataBrowserView(tabSession: $tabSession)
+            }
+            .sheet(isPresented: $showFileImporter) {
+                FileDocumentPicker(
+                    allowedContentTypes: [UTType(filenameExtension: "3105") ?? .data, .data],
+                    copiesSelectedDocument: true,
+                    allowsMultipleSelection: false,
+                    onSelection: { result in
+                        showFileImporter = false
+                        if case .success(let urls) = result, let url = urls.first {
+                            store.importPackage(at: url)
+                            modManager.triggerToast("Đã nạp gói mod: \(url.lastPathComponent)!")
+                        }
+                    },
+                    onCancel: { showFileImporter = false }
+                )
+                .ignoresSafeArea()
+            }
             .sheet(item: $store.passwordRequest, onDismiss: store.cancelUnlock) { _ in
                 PatchUnlockView(store: store)
             }
@@ -456,12 +489,12 @@ struct MainInjectorView: View {
 
             Spacer()
 
-            // Brand Title
+            // Brand Title & Exploit Status
             HStack(spacing: 6) {
                 Circle()
-                    .fill(Color.green)
-                    .frame(width: 6, height: 6)
-                    .shadow(color: Color.green, radius: 4)
+                    .fill(appState.exploitStatus.isSuccess ? Color.green : (appState.kernelExploitRunning ? Color.yellow : Color.orange))
+                    .frame(width: 7, height: 7)
+                    .shadow(color: appState.exploitStatus.isSuccess ? Color.green : Color.orange, radius: 4)
 
                 Text(modManager.gameShortName.uppercased())
                     .font(.system(size: 15, weight: .black, design: .monospaced))
@@ -477,27 +510,46 @@ struct MainInjectorView: View {
 
             Spacer()
 
-            // Tier Badge
-            if let lic = licenseManager.currentLicense {
-                Text(lic.tierBadgeText)
-                    .font(.system(size: 10, weight: .black, design: .monospaced))
-                    .foregroundStyle(lic.isPremiumTier ? Color.yellow : (lic.isLiteTier ? Color.green : Color.orange))
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 5)
-                    .background(Color.white.opacity(0.08))
-                    .clipShape(Capsule())
-                    .overlay(
-                        Capsule()
-                            .stroke(
-                                lic.isPremiumTier ? Color.yellow.opacity(0.5) : (lic.isLiteTier ? Color.green.opacity(0.5) : Color.orange.opacity(0.5)),
-                                lineWidth: 1
-                            )
-                    )
-            } else {
-                Button { showSettings = true } label: {
+            // Quick Tool Buttons: [Gói Mod] [Duyệt File Container] [Cài đặt]
+            HStack(spacing: 7) {
+                Button {
+                    let gen = UIImpactFeedbackGenerator(style: .medium)
+                    gen.impactOccurred()
+                    showPatchProjects = true
+                } label: {
+                    Image(systemName: "folder.badge.gearshape")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Color.cyan)
+                        .frame(width: 32, height: 32)
+                        .background(Color.cyan.opacity(0.12))
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.cyan.opacity(0.3), lineWidth: 1))
+                }
+
+                Button {
+                    let gen = UIImpactFeedbackGenerator(style: .medium)
+                    gen.impactOccurred()
+                    showAppDataBrowser = true
+                } label: {
+                    Image(systemName: "internaldrive")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Color.green)
+                        .frame(width: 32, height: 32)
+                        .background(Color.green.opacity(0.12))
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.green.opacity(0.3), lineWidth: 1))
+                }
+
+                Button {
+                    showSettings = true
+                } label: {
                     Image(systemName: "gearshape.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Color.white.opacity(0.7))
+                        .frame(width: 32, height: 32)
+                        .background(Color.white.opacity(0.08))
+                        .cornerRadius(8)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.12), lineWidth: 1))
                 }
             }
         }
@@ -645,9 +697,9 @@ struct MainInjectorView: View {
         )
     }
 
-    // MARK: - Tactical 3-Tab Selector: [ 🎯 AIM BOT ] [ 👁️ ĐỊNH VỊ ESP ] [ 📡 RADAR ]
+    // MARK: - Tactical 4-Tab Selector: [ 🎯 AIM BOT ] [ 👁️ ĐỊNH VỊ ESP ] [ 📡 RADAR ] [ 📦 GÓI MOD ]
     private var tacticalTabSelector: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 4) {
             // Tab 0: AIM BOT
             Button {
                 let gen = UIImpactFeedbackGenerator(style: .light)
@@ -656,25 +708,20 @@ struct MainInjectorView: View {
                     selectedTab = 0
                 }
             } label: {
-                HStack(spacing: 5) {
+                VStack(spacing: 2) {
                     Image(systemName: "scope")
-                        .font(.system(size: 12, weight: .black))
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("AIM BOT")
-                            .font(.system(size: 11, weight: .black, design: .monospaced))
-                        Text("5 CHẾ ĐỘ")
-                            .font(.system(size: 7, weight: .bold))
-                            .opacity(0.7)
-                    }
+                        .font(.system(size: 13, weight: .black))
+                    Text("AIM BOT")
+                        .font(.system(size: 9.5, weight: .black, design: .monospaced))
                 }
                 .foregroundStyle(selectedTab == 0 ? Color.black : Color.white.opacity(0.75))
                 .frame(maxWidth: .infinity)
-                .frame(height: 46)
+                .frame(height: 48)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(
                             selectedTab == 0
-                                ? LinearGradient(colors: [Color.green, Color(red: 0.2, green: 0.85, blue: 0.4)], startPoint: .leading, endPoint: .trailing)
+                                ? LinearGradient(colors: [Color.green, Color(red: 0.2, green: 0.85, blue: 0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
                                 : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
                         )
                 )
@@ -694,25 +741,20 @@ struct MainInjectorView: View {
                     selectedTab = 1
                 }
             } label: {
-                HStack(spacing: 5) {
+                VStack(spacing: 2) {
                     Image(systemName: "eye.trianglebadge.exclamationmark")
-                        .font(.system(size: 12, weight: .black))
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("ĐỊNH VỊ ESP")
-                            .font(.system(size: 11, weight: .black, design: .monospaced))
-                        Text("XUYÊN TƯỜNG")
-                            .font(.system(size: 7, weight: .bold))
-                            .opacity(0.7)
-                    }
+                        .font(.system(size: 13, weight: .black))
+                    Text("ESP X-RAY")
+                        .font(.system(size: 9.5, weight: .black, design: .monospaced))
                 }
                 .foregroundStyle(selectedTab == 1 ? Color.black : Color.white.opacity(0.75))
                 .frame(maxWidth: .infinity)
-                .frame(height: 46)
+                .frame(height: 48)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(
                             selectedTab == 1
-                                ? LinearGradient(colors: [Color.red, Color(red: 1.0, green: 0.3, blue: 0.4)], startPoint: .leading, endPoint: .trailing)
+                                ? LinearGradient(colors: [Color.red, Color(red: 1.0, green: 0.3, blue: 0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
                                 : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
                         )
                 )
@@ -732,25 +774,20 @@ struct MainInjectorView: View {
                     selectedTab = 2
                 }
             } label: {
-                HStack(spacing: 5) {
+                VStack(spacing: 2) {
                     Image(systemName: "dot.radiowaves.left.and.right")
-                        .font(.system(size: 12, weight: .black))
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("RADAR")
-                            .font(.system(size: 11, weight: .black, design: .monospaced))
-                        Text("CHẤM TRẮNG")
-                            .font(.system(size: 7, weight: .bold))
-                            .opacity(0.7)
-                    }
+                        .font(.system(size: 13, weight: .black))
+                    Text("RADAR")
+                        .font(.system(size: 9.5, weight: .black, design: .monospaced))
                 }
                 .foregroundStyle(selectedTab == 2 ? Color.black : Color.white.opacity(0.75))
                 .frame(maxWidth: .infinity)
-                .frame(height: 46)
+                .frame(height: 48)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(
                             selectedTab == 2
-                                ? LinearGradient(colors: [Color.cyan, Color(red: 0.1, green: 0.7, blue: 1.0)], startPoint: .leading, endPoint: .trailing)
+                                ? LinearGradient(colors: [Color.cyan, Color(red: 0.1, green: 0.7, blue: 1.0)], startPoint: .topLeading, endPoint: .bottomTrailing)
                                 : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
                         )
                 )
@@ -759,6 +796,39 @@ struct MainInjectorView: View {
                         .stroke(selectedTab == 2 ? Color.cyan.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
                 )
                 .shadow(color: selectedTab == 2 ? Color.cyan.opacity(0.35) : Color.clear, radius: 6, y: 2)
+            }
+            .buttonStyle(.plain)
+
+            // Tab 3: GÓI MOD (File Mod Tự Chọn)
+            Button {
+                let gen = UIImpactFeedbackGenerator(style: .light)
+                gen.impactOccurred()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.78)) {
+                    selectedTab = 3
+                }
+            } label: {
+                VStack(spacing: 2) {
+                    Image(systemName: "shippingbox.fill")
+                        .font(.system(size: 13, weight: .black))
+                    Text("GÓI MOD")
+                        .font(.system(size: 9.5, weight: .black, design: .monospaced))
+                }
+                .foregroundStyle(selectedTab == 3 ? Color.black : Color.white.opacity(0.75))
+                .frame(maxWidth: .infinity)
+                .frame(height: 48)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(
+                            selectedTab == 3
+                                ? LinearGradient(colors: [Color.purple, Color(red: 0.8, green: 0.4, blue: 1.0)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(selectedTab == 3 ? Color.purple.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .shadow(color: selectedTab == 3 ? Color.purple.opacity(0.35) : Color.clear, radius: 6, y: 2)
             }
             .buttonStyle(.plain)
         }
@@ -1228,6 +1298,339 @@ struct MainInjectorView: View {
                 .stroke(Color.cyan.opacity(0.6), lineWidth: 1.5)
                 .shadow(color: Color.cyan.opacity(0.25), radius: 8)
         )
+    }
+
+    // MARK: - Tab 3: Custom Mod Card Section (Quản lý và áp dụng file mod)
+    private var customModCardSection: some View {
+        VStack(spacing: 14) {
+            // Card Top Header
+            HStack {
+                HStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color.purple)
+                        .frame(width: 3, height: 16)
+
+                    Text("DANH SÁCH GÓI MOD TỰ CHỌN")
+                        .font(.system(size: 12, weight: .black, design: .monospaced))
+                        .foregroundStyle(Color.purple)
+                        .tracking(1.0)
+                }
+
+                Spacer()
+
+                Text("\(store.items.count) GÓI")
+                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                    .foregroundStyle(Color.purple)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Color.purple.opacity(0.16))
+                    .cornerRadius(6)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.purple.opacity(0.4), lineWidth: 1))
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+
+            Divider()
+                .background(Color.white.opacity(0.08))
+
+            // Quick Tool Bar: [ + NHẬP FILE MOD ] [ 📂 DUYỆT DATA ] [ ⚙️ CHI TIẾT ]
+            HStack(spacing: 8) {
+                Button {
+                    let gen = UIImpactFeedbackGenerator(style: .medium)
+                    gen.impactOccurred()
+                    showFileImporter = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 11, weight: .bold))
+                        Text("NHẬP FILE")
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 38)
+                    .background(
+                        LinearGradient(colors: [Color.purple, Color.blue], startPoint: .leading, endPoint: .trailing)
+                    )
+                    .cornerRadius(10)
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    let gen = UIImpactFeedbackGenerator(style: .light)
+                    gen.impactOccurred()
+                    showAppDataBrowser = true
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "folder.fill")
+                            .font(.system(size: 11, weight: .bold))
+                        Text("DUYỆT DATA")
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                    }
+                    .foregroundStyle(Color.cyan)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 38)
+                    .background(Color.cyan.opacity(0.14))
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.cyan.opacity(0.3), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    let gen = UIImpactFeedbackGenerator(style: .light)
+                    gen.impactOccurred()
+                    showPatchProjects = true
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 11, weight: .bold))
+                        Text("CHI TIẾT")
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                    }
+                    .foregroundStyle(.white.opacity(0.8))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 38)
+                    .background(Color.white.opacity(0.08))
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.15), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 14)
+
+            // Packages List or Empty State
+            if store.items.isEmpty {
+                VStack(spacing: 10) {
+                    Image(systemName: "shippingbox")
+                        .font(.system(size: 28, weight: .light))
+                        .foregroundStyle(Color.secondary)
+                    Text("CHƯA CÓ GÓI MOD NÀO ĐƯỢC NẠP")
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color.secondary)
+                    Text("Bấm 'NHẬP FILE' để nạp tệp gói mod từ ứng dụng Tệp (Files). App sẽ tự động ghi đè hoặc tạo mới vào game.")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color.secondary.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 12)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+                .background(Color.white.opacity(0.03).cornerRadius(12))
+                .padding(.horizontal, 14)
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(store.items) { item in
+                        customModItemRow(item)
+                    }
+                }
+                .padding(.horizontal, 14)
+            }
+
+            // Exploit & Container Status Footer
+            VStack(spacing: 6) {
+                HStack {
+                    Text("MỤC TIÊU:")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color.secondary)
+                    Spacer()
+                    Text(modManager.selectedBundle)
+                        .font(.system(size: 10, weight: .black, design: .monospaced))
+                        .foregroundStyle(Color.purple)
+                }
+
+                HStack {
+                    Text("QUYỀN HẠN KERNEL:")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color.secondary)
+                    Spacer()
+                    Text(AppState.shared.exploitStatus.isSuccess ? "● ĐÃ MỞ KHÓA SANDBOX" : "○ CHUẨN BỊ TỰ ĐỘNG")
+                        .font(.system(size: 10, weight: .black, design: .monospaced))
+                        .foregroundStyle(AppState.shared.exploitStatus.isSuccess ? Color.green : Color.yellow)
+                }
+
+                HStack {
+                    Text("CƠ CHẾ GHI TỆP:")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color.secondary)
+                    Spacer()
+                    Text("Tự Động Tạo Hoặc Ghi Đè (0o777)")
+                        .font(.system(size: 9.5, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color.white)
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.bottom, 6)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color(red: 0.07, green: 0.08, blue: 0.11))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(Color.purple.opacity(0.6), lineWidth: 1.5)
+                .shadow(color: Color.purple.opacity(0.25), radius: 8)
+        )
+    }
+
+    private func customModItemRow(_ item: PatchLibraryItem) -> some View {
+        let isApplied = DevicePatchService.latestReceipt(projectID: item.id) != nil
+        let displayName = cleanPackageName(item)
+
+        return HStack(spacing: 10) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(isApplied ? Color.green.opacity(0.2) : Color.purple.opacity(0.15))
+                    .frame(width: 36, height: 36)
+                Image(systemName: item.isLocked ? "lock.fill" : (isApplied ? "checkmark.circle.fill" : "shippingbox.fill"))
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(item.isLocked ? Color.yellow : (isApplied ? Color.green : Color.purple))
+            }
+
+            // Info
+            VStack(alignment: .leading, spacing: 2) {
+                Text(displayName)
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+
+                HStack(spacing: 6) {
+                    if let project = item.project {
+                        Text("\(project.rules.count) files")
+                            .font(.system(size: 9, weight: .medium, design: .monospaced))
+                            .foregroundStyle(Color.secondary)
+                    }
+                    Text(isApplied ? "● ĐÃ ÁP DỤNG" : "○ CHƯA BẬT")
+                        .font(.system(size: 9, weight: .black, design: .monospaced))
+                        .foregroundStyle(isApplied ? Color.green : Color.secondary)
+                }
+            }
+
+            Spacer()
+
+            // Buttons: Áp Dụng / Khôi Phục
+            HStack(spacing: 6) {
+                if isApplied {
+                    Button {
+                        restoreCustomMod(item)
+                    } label: {
+                        Text("KHÔI PHỤC")
+                            .font(.system(size: 9, weight: .black, design: .monospaced))
+                            .foregroundStyle(Color.orange)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 6)
+                            .background(Color.orange.opacity(0.16))
+                            .cornerRadius(8)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.orange.opacity(0.5), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Button {
+                        applyCustomMod(item)
+                    } label: {
+                        Text("ÁP DỤNG")
+                            .font(.system(size: 9, weight: .black, design: .monospaced))
+                            .foregroundStyle(Color.green)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.green.opacity(0.16))
+                            .cornerRadius(8)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.green.opacity(0.5), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                // Delete Button
+                Button {
+                    let gen = UIImpactFeedbackGenerator(style: .medium)
+                    gen.impactOccurred()
+                    store.delete(item)
+                    modManager.triggerToast("Đã xóa gói!")
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.red.opacity(0.7))
+                        .padding(6)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(10)
+        .background(Color.white.opacity(0.04).cornerRadius(12))
+    }
+
+    private func cleanPackageName(_ item: PatchLibraryItem) -> String {
+        var name = item.project?.name ?? item.packageURL.deletingPathExtension().lastPathComponent
+        name = name.replacingOccurrences(of: "3105", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if name.isEmpty { name = "Gói Mod VIP" }
+        return name
+    }
+
+    private func applyCustomMod(_ item: PatchLibraryItem) {
+        guard let baseProject = item.project else {
+            if item.isLocked {
+                store.passwordRequest = PatchPasswordRequest(summary: item.summary, existingURL: item.packageURL)
+            } else {
+                modManager.triggerToast("Gói mod không hợp lệ hoặc chưa mở khóa!")
+            }
+            return
+        }
+
+        let gen = UIImpactFeedbackGenerator(style: .medium)
+        gen.impactOccurred()
+
+        Task {
+            await ModFeatureManager.ensureExploitReady()
+            do {
+                let project = item.summary.schemaVersion >= 2
+                    ? try PatchProjectLibrary.synchronizeWorkspace(item: item)
+                    : baseProject
+                _ = try DevicePatchService.apply(project: project)
+                await MainActor.run {
+                    store.reload()
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.success)
+                    let cleanName = cleanPackageName(item)
+                    modManager.triggerToast("Đã áp dụng thành công: \(cleanName)!")
+                }
+            } catch {
+                await MainActor.run {
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.error)
+                    modManager.triggerToast("Lỗi áp dụng: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func restoreCustomMod(_ item: PatchLibraryItem) {
+        guard let receipt = DevicePatchService.latestReceipt(projectID: item.id) else {
+            modManager.triggerToast("Gói chưa được áp dụng hoặc không có bản lưu!")
+            return
+        }
+
+        let gen = UIImpactFeedbackGenerator(style: .medium)
+        gen.impactOccurred()
+
+        Task {
+            do {
+                try DevicePatchService.restore(receipt: receipt)
+                await MainActor.run {
+                    store.reload()
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.success)
+                    let cleanName = cleanPackageName(item)
+                    modManager.triggerToast("Đã khôi phục thành công: \(cleanName)!")
+                }
+            } catch {
+                await MainActor.run {
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.error)
+                    modManager.triggerToast("Lỗi khôi phục: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     // MARK: - Open Game Button (Tactical Cyber Launch Station)

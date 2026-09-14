@@ -97,6 +97,13 @@ enum ContainerStore {
             log("patch: MHA-C2 resolved \(bundleID)")
             return path
         }
+        if let raw = appInfoForBundleID(bundleID) as? [String: Any],
+           let container = raw["container"] as? String,
+           !container.isEmpty,
+           isApplicationContainerPath(container) {
+            log("patch: LSProxy container resolved \(bundleID) -> \(container)")
+            return container
+        }
         let detail = lookupError.map(String.init) ?? "unavailable"
         log("patch: MCM could not resolve \(bundleID), detail=\(detail)")
 
