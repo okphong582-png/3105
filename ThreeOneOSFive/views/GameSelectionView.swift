@@ -423,17 +423,37 @@ struct GameSelectionView: View {
 
                 Spacer()
 
-                // Verified Security Seal
-                HStack(spacing: 4) {
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 12, weight: .bold))
-                    Text("ACTIVE")
+                // Verified Security Seal & Change Key
+                HStack(spacing: 8) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.seal.fill")
+                            .font(.system(size: 12, weight: .bold))
+                        Text("ACTIVE")
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                    }
+                    .foregroundStyle(Color.green)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.green.opacity(0.12).cornerRadius(6))
+
+                    Button {
+                        let gen = UIImpactFeedbackGenerator(style: .medium)
+                        gen.impactOccurred()
+                        licenseManager.logout(reason: "Vui lòng nhập Key mới")
+                    } label: {
+                        HStack(spacing: 3) {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                            Text("ĐỔI KEY")
+                        }
                         .font(.system(size: 10, weight: .black, design: .monospaced))
+                        .foregroundStyle(Color.orange)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.orange.opacity(0.12).cornerRadius(6))
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.orange.opacity(0.4), lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .foregroundStyle(Color.green)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.green.opacity(0.12).cornerRadius(6))
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
@@ -445,6 +465,9 @@ struct GameSelectionView: View {
         let generator = UIImpactFeedbackGenerator(style: .heavy)
         generator.impactOccurred()
         modManager.selectedBundle = bundleID
+        DispatchQueue.global(qos: .userInitiated).async {
+            ContainerStore.warmupAndActivateGameContainer(bundleID: bundleID)
+        }
         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
             onSelectGame(bundleID)
         }

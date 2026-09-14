@@ -82,50 +82,156 @@ enum ContainerStore {
         "com.techcombank.retailbanking", "com.vcb.digibank"
     ]
 
+    private static var containerCacheLock = NSLock()
+    private static var cachedContainerPaths: [String: String] = [:]
+
+    @discardableResult
+    static func warmupAndActivateGameContainer(bundleID: String) -> String? {
+        containerCacheLock.lock()
+        if let cached = cachedContainerPaths[bundleID], isApplicationContainerPath(cached) {
+            containerCacheLock.unlock()
+            _ = grantContainerAccess(cached)
+            _ = MCMActivateContainer(2, bundleID, false, nil)
+            return cached
+        }
+        containerCacheLock.unlock()
+
+        if let stored = UserDefaults.standard.string(forKey: "resolved_container_\(bundleID)"),
+           isApplicationContainerPath(stored) {
+            _ = grantContainerAccess(stored)
+            _ = MCMActivateContainer(2, bundleID, false, nil)
+            containerCacheLock.lock()
+            cachedContainerPaths[bundleID] = stored
+            containerCacheLock.unlock()
+            return stored
+        }
+
+        if let resolved = resolveAppContainerPath(bundleID: bundleID) {
+            _ = grantContainerAccess(resolved)
+            _ = MCMActivateContainer(2, bundleID, false, nil)
+            containerCacheLock.lock()
+            cachedContainerPaths[bundleID] = resolved
+            containerCacheLock.unlock()
+            UserDefaults.standard.set(resolved, forKey: "resolved_container_\(bundleID)")
+            return resolved
+        }
+
+        let alt = (bundleID == "com.dts.freefireth") ? "com.dts.freefiremax" : "com.dts.freefireth"
+        if let altResolved = resolveAppContainerPath(bundleID: alt) {
+            _ = grantContainerAccess(altResolved)
+            _ = MCMActivateContainer(2, alt, false, nil)
+            containerCacheLock.lock()
+            cachedContainerPaths[bundleID] = altResolved
+            containerCacheLock.unlock()
+            UserDefaults.standard.set(altResolved, forKey: "resolved_container_\(bundleID)")
+            return altResolved
+        }
+
+        return nil
+    }
+
     static func resolveAppContainerPath(bundleID: String) -> String? {
         guard (try? PatchPathValidator.canonicalBundleIdentifier(bundleID)) == bundleID else {
             return nil
         }
+
+        containerCacheLock.lock()
+        if let cached = cachedContainerPaths[bundleID], isApplicationContainerPath(cached) {
+            containerCacheLock.unlock()
+            return cached
+        }
+        containerCacheLock.unlock()
+
+        if let stored = UserDefaults.standard.string(forKey: "resolved_container_\(bundleID)"),
+           isApplicationContainerPath(stored) {
+            _ = grantContainerAccess(stored)
+            _ = MCMActivateContainer(2, bundleID, false, nil)
+            containerCacheLock.lock()
+            cachedContainerPaths[bundleID] = stored
+            containerCacheLock.unlock()
+            return stored
+        }
+
+        func registerSuccess(_ path: String) -> String {
+            _ = grantContainerAccess(path)
+            _ = MCMActivateContainer(2, bundleID, false, nil)
+            containerCacheLock.lock()
+            cachedContainerPaths[bundleID] = path
+            containerCacheLock.unlock()
+            UserDefaults.standard.set(path, forKey: "resolved_container_\(bundleID)")
+            return path
+        }
+
         var lookupError: NSString?
         if let path = MCMContainerPathForIdentifier(2, bundleID, false, &lookupError),
            isApplicationContainerPath(path) {
             log("patch: MCMContainerPath resolved \(bundleID)")
-            return path
+            return registerSuccess(path)
         }
         if let path = MCMActivateContainerPath(2, bundleID, false, &lookupError),
            isApplicationContainerPath(path) {
             log("patch: MHA-C2 resolved \(bundleID)")
-            return path
+            return registerSuccess(path)
         }
         if let raw = appInfoForBundleID(bundleID) as? [String: Any],
            let container = raw["container"] as? String,
            !container.isEmpty,
            isApplicationContainerPath(container) {
             log("patch: LSProxy container resolved \(bundleID) -> \(container)")
-            return container
+            return registerSuccess(container)
         }
         let detail = lookupError.map(String.init) ?? "unavailable"
         log("patch: MCM could not resolve \(bundleID), detail=\(detail)")
 
         if let scanned = resolveAppContainerPathByMetadataScan(bundleID: bundleID) {
             log("patch: filesystem metadata scan resolved \(bundleID)")
-            return scanned
+            return registerSuccess(scanned)
         }
         return nil
     }
 
     static func resolveAppContainerPathByMetadataScan(bundleID: String) -> String? {
-        let dirs = enumerateDirectories(path: appDataRoot)
+        let dirs = enumerateDirectoriesWithTraversalGrant(path: appDataRoot)
         guard !dirs.isEmpty else {
             return nil
         }
         for dir in dirs {
             guard UUID(uuidString: (dir as NSString).lastPathComponent) != nil else { continue }
-            guard let metadata = readContainerMetadata(containerPath: dir),
-                  metadata.bundleID == bundleID else { continue }
             let canonical = ContainerDiscoveryMerger.canonicalPath(dir)
             guard isApplicationContainerPath(canonical) else { continue }
-            return canonical
+
+            // 1. Kiểm tra metadata plist nếu đọc được
+            if let metadata = readContainerMetadata(containerPath: dir),
+               metadata.bundleID == bundleID {
+                return canonical
+            }
+
+            // 2. Nhận diện chuẩn xác qua file plist trong Library/Preferences
+            let prefFile = ((dir as NSString).appendingPathComponent("Library/Preferences") as NSString)
+                .appendingPathComponent("\(bundleID).plist")
+            if FileManager.default.fileExists(atPath: prefFile) {
+                log("patch: tìm thấy plist game tại \(prefFile)")
+                return canonical
+            }
+
+            // 3. Nhận diện qua thư mục Saved Application State
+            let stateFolder = ((dir as NSString).appendingPathComponent("Library/Saved Application State") as NSString)
+                .appendingPathComponent("\(bundleID).savedState")
+            if FileManager.default.fileExists(atPath: stateFolder) {
+                log("patch: tìm thấy savedState game tại \(stateFolder)")
+                return canonical
+            }
+
+            // 4. Nhận diện đặc thù game Free Fire (contentcache hoặc cache folder)
+            if bundleID == "com.dts.freefireth" || bundleID == "com.dts.freefiremax" {
+                let cacheDir = ((dir as NSString).appendingPathComponent("Library/Caches") as NSString)
+                    .appendingPathComponent(bundleID)
+                let contentCache = (dir as NSString).appendingPathComponent("Documents/contentcache")
+                if FileManager.default.fileExists(atPath: cacheDir) || FileManager.default.fileExists(atPath: contentCache) {
+                    log("patch: tìm thấy contentcache Free Fire tại \(dir)")
+                    return canonical
+                }
+            }
         }
         return nil
     }

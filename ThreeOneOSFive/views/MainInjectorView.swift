@@ -329,6 +329,9 @@ struct MainInjectorView: View {
         }
         .onAppear {
             store.reload()
+            DispatchQueue.global(qos: .userInitiated).async {
+                ContainerStore.warmupAndActivateGameContainer(bundleID: modManager.selectedBundle)
+            }
             if !nextDNSService.isSetupCompleted {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
                     showNextDNSSetup = true

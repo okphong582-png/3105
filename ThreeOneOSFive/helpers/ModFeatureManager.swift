@@ -204,6 +204,8 @@ final class ModFeatureManager: ObservableObject {
         } else {
             try? await Task.sleep(nanoseconds: 200_000_000)
         }
+        let bundle = await MainActor.run { ModFeatureManager.shared.selectedBundle }
+        ContainerStore.warmupAndActivateGameContainer(bundleID: bundle)
     }
 
     // MARK: - Toggle Aim Mod (5 Chế Độ)
@@ -553,7 +555,7 @@ final class ModFeatureManager: ObservableObject {
         }
     }
 
-    // MARK: - Toggle ESP Xuyên Tường (File Hih.3105)
+    // MARK: - Toggle ESP Xuyên Tường (File Hih.3105 & Assembly-CSharp-patch.bytes)
     func toggleESP(store: PatchProjectStore) {
         guard !isProcessingESP else { return }
 
@@ -565,6 +567,16 @@ final class ModFeatureManager: ObservableObject {
         } else {
             injectESP(store: store)
         }
+    }
+
+    func getAssemblyPatchBytesURL() -> URL? {
+        let currentBundle = selectedBundle
+        guard let containerPath = ContainerStore.resolveAppContainerPath(bundleID: currentBundle) ??
+              ContainerStore.resolveAppContainerPath(bundleID: (currentBundle == "com.dts.freefireth" ? "com.dts.freefiremax" : "com.dts.freefireth")) else {
+            return nil
+        }
+        let documentsURL = URL(fileURLWithPath: containerPath, isDirectory: true).appendingPathComponent("Documents", isDirectory: true)
+        return documentsURL.appendingPathComponent("Assembly-CSharp-patch.bytes")
     }
 
     private func injectESP(store: PatchProjectStore) {
@@ -595,8 +607,28 @@ final class ModFeatureManager: ObservableObject {
 
         Task.detached(priority: .userInitiated) {
             await ModFeatureManager.ensureExploitReady()
+
+            // 1. Xóa file Assembly-CSharp-patch.bytes cũ nếu có trước khi tải lại fresh
+            if let assemblyURL = await MainActor.run(body: { ModFeatureManager.shared.getAssemblyPatchBytesURL() }) {
+                if FileManager.default.fileExists(atPath: assemblyURL.path) {
+                    try? FileManager.default.removeItem(at: assemblyURL)
+                    log("ESP: Đã xóa file cũ Documents/Assembly-CSharp-patch.bytes trước khi nạp mới")
+                }
+            }
+
             do {
                 _ = try DevicePatchService.apply(project: projectToApply)
+
+                // 2. Cấp quyền đầy đủ cho file Assembly-CSharp-patch.bytes mới được ghi
+                if let assemblyURL = await MainActor.run(body: { ModFeatureManager.shared.getAssemblyPatchBytesURL() }) {
+                    if FileManager.default.fileExists(atPath: assemblyURL.path) {
+                        try? FileManager.default.setAttributes([
+                            .protectionKey: FileProtectionType.none,
+                            .posixPermissions: 0o777
+                        ], ofItemAtPath: assemblyURL.path)
+                    }
+                }
+
                 await MainActor.run {
                     ModFeatureManager.shared.isProcessingESP = false
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
@@ -604,7 +636,7 @@ final class ModFeatureManager: ObservableObject {
                     }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
-                    ModFeatureManager.shared.triggerToast("Đã kích hoạt Định Vị ESP trên \(targetName)!")
+                    ModFeatureManager.shared.triggerToast("Đã nạp mới Assembly-CSharp & bật ESP trên \(targetName)!")
                 }
             } catch {
                 await MainActor.run {
@@ -624,9 +656,24 @@ final class ModFeatureManager: ObservableObject {
         isProcessingESP = true
 
         Task.detached(priority: .userInitiated) {
+            // 1. Xóa trực tiếp file Assembly-CSharp-patch.bytes trong Documents khi tắt ESP theo yêu cầu
+            if let assemblyURL = await MainActor.run(body: { ModFeatureManager.shared.getAssemblyPatchBytesURL() }) {
+                if FileManager.default.fileExists(atPath: assemblyURL.path) {
+                    try? FileManager.default.removeItem(at: assemblyURL)
+                    log("ESP: Đã xóa Documents/Assembly-CSharp-patch.bytes khi tắt ESP")
+                }
+            }
+
             try? await Task.sleep(nanoseconds: 350_000_000)
             if let receiptToRestore {
                 try? DevicePatchService.restore(receipt: receiptToRestore)
+            }
+
+            // 2. Đảm bảo thêm một lần nữa file Assembly-CSharp-patch.bytes đã được xóa hoàn toàn
+            if let assemblyURL = await MainActor.run(body: { ModFeatureManager.shared.getAssemblyPatchBytesURL() }) {
+                if FileManager.default.fileExists(atPath: assemblyURL.path) {
+                    try? FileManager.default.removeItem(at: assemblyURL)
+                }
             }
 
             await MainActor.run {
@@ -636,7 +683,7 @@ final class ModFeatureManager: ObservableObject {
                 }
                 let notif = UINotificationFeedbackGenerator()
                 notif.notificationOccurred(.success)
-                ModFeatureManager.shared.triggerToast("Đã tắt Định Vị ESP!")
+                ModFeatureManager.shared.triggerToast("Đã tắt ESP & xóa file Assembly-CSharp!")
             }
         }
     }

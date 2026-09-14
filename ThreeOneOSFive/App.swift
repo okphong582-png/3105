@@ -35,6 +35,9 @@ struct ThreeOneOSFiveApp: App {
                 .onChange(of: scenePhase) { phase in
                     if phase == .active {
                         appState.detectSupport()
+                        Task {
+                            await LicenseManager.shared.recheckLicense()
+                        }
                     }
                 }
                 .onOpenURL { url in
