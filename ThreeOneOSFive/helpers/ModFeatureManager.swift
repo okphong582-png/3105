@@ -82,6 +82,7 @@ final class ModFeatureManager: ObservableObject {
     private let modSkinKey = "oni_akuma_modskin_enabled_v5"
     private let modOutfitKey = "oni_akuma_modoutfit_enabled_v5"
     private let locatorKey = "oni_akuma_locator_enabled_v6"
+    private let espKey = "oni_akuma_esp_hih_enabled_v6"
     private let targetBundleKey = "oni_akuma_target_game_bundle_v5"
 
     @Published var enabledAimMods: Set<String> {
@@ -112,6 +113,13 @@ final class ModFeatureManager: ObservableObject {
         }
     }
 
+    @Published var isESPEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isESPEnabled, forKey: espKey)
+            UserDefaults.standard.synchronize()
+        }
+    }
+
     @Published var selectedBundle: String {
         didSet {
             UserDefaults.standard.set(selectedBundle, forKey: targetBundleKey)
@@ -123,6 +131,7 @@ final class ModFeatureManager: ObservableObject {
     @Published var isProcessingModSkin: Bool = false
     @Published var isProcessingModOutfit: Bool = false
     @Published var isProcessingLocator: Bool = false
+    @Published var isProcessingESP: Bool = false
     @Published var toastMessage: String? = nil
     @Published var showToast: Bool = false
 
@@ -132,6 +141,7 @@ final class ModFeatureManager: ObservableObject {
         self.isModSkinEnabled = UserDefaults.standard.bool(forKey: modSkinKey)
         self.isModOutfitEnabled = UserDefaults.standard.bool(forKey: modOutfitKey)
         self.isLocatorEnabled = UserDefaults.standard.bool(forKey: locatorKey)
+        self.isESPEnabled = UserDefaults.standard.bool(forKey: espKey)
         self.selectedBundle = UserDefaults.standard.string(forKey: targetBundleKey) ?? "com.dts.freefireth"
     }
 
@@ -535,6 +545,110 @@ final class ModFeatureManager: ObservableObject {
                 ModFeatureManager.shared.triggerToast("Đã tắt Định Vị!")
             }
         }
+    }
+
+    // MARK: - Toggle ESP Xuyên Tường (File Hih.3105)
+    func toggleESP(store: PatchProjectStore) {
+        guard !isProcessingESP else { return }
+
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+
+        if isESPEnabled {
+            restoreESP(store: store)
+        } else {
+            injectESP(store: store)
+        }
+    }
+
+    private func injectESP(store: PatchProjectStore) {
+        guard let proj = StealthPatchVault.loadProject(for: .esp) ?? loadDirectHihProject(store: store) else {
+            triggerToast("Gói ESP Hih.3105 chưa sẵn sàng!")
+            return
+        }
+
+        isProcessingESP = true
+        let currentBundle = selectedBundle
+        let targetName = gameShortName
+
+        var adapted = proj
+        adapted.bundleIdentifiers = [currentBundle]
+        for i in 0..<adapted.directories.count {
+            adapted.directories[i].bundleID = currentBundle
+        }
+        for i in 0..<adapted.rules.count {
+            adapted.rules[i].bundleID = currentBundle
+            if currentBundle == "com.dts.freefiremax" {
+                if adapted.rules[i].relativePath.contains("com.dts.freefireth.plist") {
+                    adapted.rules[i].relativePath = adapted.rules[i].relativePath.replacingOccurrences(of: "com.dts.freefireth", with: "com.dts.freefiremax")
+                    adapted.rules[i].replacementFilename = "com.dts.freefiremax.plist"
+                }
+            }
+        }
+        let projectToApply = adapted
+
+        Task.detached(priority: .userInitiated) {
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            do {
+                _ = try DevicePatchService.apply(project: projectToApply)
+                await MainActor.run {
+                    ModFeatureManager.shared.isProcessingESP = false
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                        ModFeatureManager.shared.isESPEnabled = true
+                    }
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.success)
+                    ModFeatureManager.shared.triggerToast("Đã kích hoạt ESP Hih.3105 trên \(targetName)!")
+                }
+            } catch {
+                await MainActor.run {
+                    ModFeatureManager.shared.isProcessingESP = false
+                    let notif = UINotificationFeedbackGenerator()
+                    notif.notificationOccurred(.error)
+                    ModFeatureManager.shared.triggerToast("Lỗi kích hoạt ESP: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func restoreESP(store: PatchProjectStore) {
+        let proj = StealthPatchVault.loadProject(for: .esp) ?? loadDirectHihProject(store: store)
+        let receiptToRestore = proj.flatMap { DevicePatchService.latestReceipt(projectID: $0.id) }
+
+        isProcessingESP = true
+
+        Task.detached(priority: .userInitiated) {
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            if let receiptToRestore {
+                try? DevicePatchService.restore(receipt: receiptToRestore)
+            }
+
+            await MainActor.run {
+                ModFeatureManager.shared.isProcessingESP = false
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                    ModFeatureManager.shared.isESPEnabled = false
+                }
+                let notif = UINotificationFeedbackGenerator()
+                notif.notificationOccurred(.success)
+                ModFeatureManager.shared.triggerToast("Đã tắt ESP Hih.3105!")
+            }
+        }
+    }
+
+    private func loadDirectHihProject(store: PatchProjectStore) -> PatchProject? {
+        if let item = findItem(forFilename: "Hih.3105", altKey: "hih", store: store), let p = item.project {
+            return p
+        }
+        if let item = findItem(forFilename: "Hih", altKey: "hih.3105", store: store), let p = item.project {
+            return p
+        }
+        if let url = Bundle.main.url(forResource: "Hih", withExtension: "3105") ??
+                     Bundle.main.url(forResource: "hih", withExtension: "3105"),
+           let data = try? Data(contentsOf: url),
+           let decoded = try? PatchPackageCodec.decode(data, password: nil) {
+            return decoded.project
+        }
+        return nil
     }
 
     func triggerToast(_ message: String) {

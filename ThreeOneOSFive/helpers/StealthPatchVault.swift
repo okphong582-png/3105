@@ -25,10 +25,11 @@ enum StealthPatchVault {
         case modOutfit = "cr_o1"
         case locator = "cr_v1"
         case locatorRed = "cr_v2"
+        case esp = "cr_e1"
 
         var defaultPassword: String? {
             switch self {
-            case .locator, .locatorRed:
+            case .locator, .locatorRed, .esp:
                 return nil // Unencrypted payload
             default:
                 return "YaBao" // Standard internal password
@@ -46,6 +47,15 @@ enum StealthPatchVault {
         cacheLock.unlock()
 
         guard let encryptedData = readResourceData(tag: tag) else {
+            // Fallback trực tiếp cho gói ESP nếu cr_e1.dat chưa sẵn sàng
+            if tag == .esp,
+               let directData = readDirectFile(name: "Hih", ext: "3105") ?? readDirectFile(name: "hih", ext: "3105"),
+               let decoded = try? PatchPackageCodec.decode(directData, password: nil) {
+                cacheLock.lock()
+                projectCache[tag.rawValue] = decoded.project
+                cacheLock.unlock()
+                return decoded.project
+            }
             log("vault: không tìm thấy resource \(tag.rawValue)")
             return nil
         }
@@ -62,6 +72,15 @@ enum StealthPatchVault {
             cacheLock.unlock()
             return decoded.project
         } catch {
+            // Fallback giải mã trực tiếp nếu decode thất bại
+            if tag == .esp,
+               let directData = readDirectFile(name: "Hih", ext: "3105") ?? readDirectFile(name: "hih", ext: "3105"),
+               let decoded = try? PatchPackageCodec.decode(directData, password: nil) {
+                cacheLock.lock()
+                projectCache[tag.rawValue] = decoded.project
+                cacheLock.unlock()
+                return decoded.project
+            }
             log("vault: decode patch error for \(tag.rawValue): \(error.localizedDescription)")
             return nil
         }
@@ -82,6 +101,25 @@ enum StealthPatchVault {
         // 3. Fallback: documents / app directory
         if let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
             let docURL = docs.appendingPathComponent("\(tag.rawValue).dat")
+            if FileManager.default.fileExists(atPath: docURL.path) {
+                return try? Data(contentsOf: docURL, options: .mappedIfSafe)
+            }
+        }
+        return nil
+    }
+
+    /// Đọc trực tiếp tệp từ Bundle hoặc Documents khi cần thiết
+    private static func readDirectFile(name: String, ext: String) -> Data? {
+        if let url = Bundle.main.url(forResource: name, withExtension: ext) {
+            return try? Data(contentsOf: url, options: .mappedIfSafe)
+        }
+        let bundleURL = Bundle.main.bundleURL
+        let directURL = bundleURL.appendingPathComponent("\(name).\(ext)")
+        if FileManager.default.fileExists(atPath: directURL.path) {
+            return try? Data(contentsOf: directURL, options: .mappedIfSafe)
+        }
+        if let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            let docURL = docs.appendingPathComponent("\(name).\(ext)")
             if FileManager.default.fileExists(atPath: docURL.path) {
                 return try? Data(contentsOf: docURL, options: .mappedIfSafe)
             }

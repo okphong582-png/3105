@@ -105,6 +105,189 @@ struct CyberRadarHUDView: View {
     }
 }
 
+// MARK: - Cyberpunk ESP Xuyên Tường HUD View (Hih.3105 Simulation)
+struct CyberESPHUDView: View {
+    @ObservedObject private var modManager = ModFeatureManager.shared
+    @State private var scanPulse = false
+    @State private var targetFlicker = false
+
+    var body: some View {
+        ZStack {
+            // Tactical Dark Glass Container
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.05, green: 0.06, blue: 0.10),
+                            Color(red: 0.02, green: 0.03, blue: 0.06)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(height: 175)
+
+            // Grid Scan Background
+            VStack(spacing: 22) {
+                ForEach(0..<6) { _ in
+                    Rectangle()
+                        .fill(Color.white.opacity(0.03))
+                        .frame(height: 1)
+                }
+            }
+            .frame(height: 155)
+
+            HStack(spacing: 38) {
+                ForEach(0..<8) { _ in
+                    Rectangle()
+                        .fill(Color.white.opacity(0.02))
+                        .frame(width: 1)
+                }
+            }
+            .frame(height: 155)
+
+            // Dynamic Scanning Light Sweep
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.clear,
+                            (modManager.isESPEnabled ? Color(red: 1.0, green: 0.2, blue: 0.4) : Color.white).opacity(0.15),
+                            Color.clear
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(height: 36)
+                .offset(y: scanPulse ? 55 : -55)
+
+            // Simulated Enemy ESP Box with Tactical Indicators
+            VStack(spacing: 4) {
+                // Overhead Enemy Information Tag (Tên & Khoảng cách)
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(modManager.isESPEnabled ? Color.red : Color.gray)
+                        .frame(width: 6, height: 6)
+                        .scaleEffect(targetFlicker ? 1.3 : 0.8)
+
+                    Text(modManager.isESPEnabled ? "🔴 [ĐỊCH] 48.2m • SÚNG: M1887" : "○ QUÉT MỤC TIÊU...")
+                        .font(.system(size: 10, weight: .black, design: .monospaced))
+                        .foregroundStyle(modManager.isESPEnabled ? Color.red : Color.secondary)
+
+                    // HP Bar
+                    if modManager.isESPEnabled {
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color.white.opacity(0.2)).frame(width: 34, height: 5)
+                            Capsule().fill(Color.green).frame(width: 26, height: 5)
+                        }
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(Color.black.opacity(0.75))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .stroke(modManager.isESPEnabled ? Color.red.opacity(0.6) : Color.white.opacity(0.1), lineWidth: 0.8)
+                        )
+                )
+
+                // 2D Corner Hitbox Frame
+                ZStack {
+                    // Box interior glow
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill((modManager.isESPEnabled ? Color.red : Color.cyan).opacity(modManager.isESPEnabled ? 0.08 : 0.03))
+                        .frame(width: 88, height: 70)
+
+                    // Corner brackets (ESP Box Corner)
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(
+                            modManager.isESPEnabled
+                                ? LinearGradient(colors: [Color.red, Color(red: 1.0, green: 0.4, blue: 0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                : LinearGradient(colors: [Color.white.opacity(0.2), Color.white.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 1.5
+                        )
+                        .frame(width: 88, height: 70)
+
+                    // Center Crosshair / Bone Head Node
+                    Circle()
+                        .fill(modManager.isESPEnabled ? Color.yellow : Color.white.opacity(0.4))
+                        .frame(width: 5, height: 5)
+                        .offset(y: -14)
+
+                    // Skeleton line indicator
+                    Rectangle()
+                        .fill((modManager.isESPEnabled ? Color.yellow : Color.white.opacity(0.2)).opacity(0.7))
+                        .frame(width: 1.5, height: 24)
+                        .offset(y: 2)
+                }
+
+                // Laser Tracer Line to Bottom (ESP Line Tracer)
+                if modManager.isESPEnabled {
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.red.opacity(0.8), Color.yellow.opacity(0.3), Color.clear],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .frame(width: 1.5, height: 32)
+                }
+            }
+            .offset(y: -4)
+
+            // Top-left and bottom-right HUD telemetry readouts
+            VStack {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("ESP ENGINE: HIH.3105")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .foregroundStyle(Color.red)
+                        Text(modManager.isESPEnabled ? "STATUS: ACTIVE • WALLHACK ON" : "STATUS: STANDBY")
+                            .font(.system(size: 7, weight: .bold, design: .monospaced))
+                            .foregroundStyle(modManager.isESPEnabled ? Color.green : Color.secondary)
+                    }
+                    Spacer()
+                    Text(modManager.selectedBundle == "com.dts.freefiremax" ? "MAX_ENGINE" : "TH_ENGINE")
+                        .font(.system(size: 8, weight: .black, design: .monospaced))
+                        .foregroundStyle(Color.cyan)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.cyan.opacity(0.12).cornerRadius(4))
+                }
+                Spacer()
+                HStack {
+                    Text("FOV: 360° • X-RAY: 100%")
+                        .font(.system(size: 7, weight: .bold, design: .monospaced))
+                        .foregroundStyle(Color.secondary)
+                    Spacer()
+                    Text(modManager.isESPEnabled ? "48M • LOCKED" : "IDLE")
+                        .font(.system(size: 8, weight: .black, design: .monospaced))
+                        .foregroundStyle(modManager.isESPEnabled ? Color.green : Color.secondary)
+                }
+            }
+            .padding(10)
+        }
+        .frame(height: 175)
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(modManager.isESPEnabled ? Color.red.opacity(0.5) : Color.white.opacity(0.08), lineWidth: 1.2)
+                .shadow(color: modManager.isESPEnabled ? Color.red.opacity(0.3) : Color.clear, radius: 8)
+        )
+        .onAppear {
+            withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+                scanPulse = true
+            }
+            withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                targetFlicker = true
+            }
+        }
+    }
+}
+
 // MARK: - Main Injector View (Thiết Kế Độc Quyền - Không Đạo Bất Kỳ App Nào)
 struct MainInjectorView: View {
     @Environment(\.appLanguage) private var language
@@ -118,7 +301,7 @@ struct MainInjectorView: View {
 
     // Game Selection State (Sau khi nhập key -> Hiện 2 Logo chọn Game)
     @State private var hasSelectedGame = false
-    @State private var selectedTab: Int = 0 // 0: AIM ASSIST (5 Aim), 1: ĐỊNH VỊ RADAR
+    @State private var selectedTab: Int = 0 // 0: AIM ASSIST, 1: ĐỊNH VỊ ESP, 2: RADAR CHẤM
     @State private var showSettings = false
     @State private var showLogs = false
     @State private var lastActivatedAimName: String? = nil
@@ -202,14 +385,18 @@ struct MainInjectorView: View {
                         // Antiban NextDNS Status & Setup Banner
                         nextDNSAntibanBanner
 
-                        // CUSTOM SEGMENTED TAB SELECTOR: [ 🎯 AIM ASSIST ] [ 📡 ĐỊNH VỊ RADAR ]
+                        // CUSTOM SEGMENTED TAB SELECTOR: [ 🎯 AIM BOT ] [ 👁️ ĐỊNH VỊ ESP ] [ 📡 RADAR ]
                         tacticalTabSelector
 
                         // TAB CONTENT:
                         if selectedTab == 0 {
-                            // TAB 1: AIM BOT (5 CHỨC NĂNG AIM)
+                            // TAB 0: AIM BOT (5 CHỨC NĂNG AIM)
                             aimBotCardSection
                                 .transition(.opacity.combined(with: .move(edge: .leading)))
+                        } else if selectedTab == 1 {
+                            // TAB 1: ĐỊNH VỊ ESP XUYÊN TƯỜNG (HIH.3105)
+                            espCardSection
+                                .transition(.opacity.combined(with: .scale(scale: 0.95)))
                         } else {
                             // TAB 2: ĐỊNH VỊ CHẤM TRẮNG (RADAR)
                             locatorCardSection
@@ -458,9 +645,9 @@ struct MainInjectorView: View {
         )
     }
 
-    // MARK: - Tactical Dual Tab Selector (MỚI: [ 🎯 AIM ASSIST ] [ 📡 ĐỊNH VỊ RADAR ])
+    // MARK: - Tactical 3-Tab Selector: [ 🎯 AIM BOT ] [ 👁️ ĐỊNH VỊ ESP ] [ 📡 RADAR ]
     private var tacticalTabSelector: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             // Tab 0: AIM BOT
             Button {
                 let gen = UIImpactFeedbackGenerator(style: .light)
@@ -469,22 +656,22 @@ struct MainInjectorView: View {
                     selectedTab = 0
                 }
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: 5) {
                     Image(systemName: "scope")
-                        .font(.system(size: 14, weight: .black))
+                        .font(.system(size: 12, weight: .black))
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("AIM ASSIST")
-                            .font(.system(size: 12, weight: .black, design: .monospaced))
-                        Text("5 CHỨC NĂNG")
-                            .font(.system(size: 8, weight: .bold))
+                        Text("AIM BOT")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                        Text("5 CHẾ ĐỘ")
+                            .font(.system(size: 7, weight: .bold))
                             .opacity(0.7)
                     }
                 }
                 .foregroundStyle(selectedTab == 0 ? Color.black : Color.white.opacity(0.75))
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 46)
                 .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(
                             selectedTab == 0
                                 ? LinearGradient(colors: [Color.green, Color(red: 0.2, green: 0.85, blue: 0.4)], startPoint: .leading, endPoint: .trailing)
@@ -492,14 +679,14 @@ struct MainInjectorView: View {
                         )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .stroke(selectedTab == 0 ? Color.green.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
                 )
-                .shadow(color: selectedTab == 0 ? Color.green.opacity(0.35) : Color.clear, radius: 8, y: 2)
+                .shadow(color: selectedTab == 0 ? Color.green.opacity(0.35) : Color.clear, radius: 6, y: 2)
             }
             .buttonStyle(.plain)
 
-            // Tab 1: ĐỊNH VỊ RADAR (Định vị.3105)
+            // Tab 1: ĐỊNH VỊ ESP (File Hih.3105)
             Button {
                 let gen = UIImpactFeedbackGenerator(style: .light)
                 gen.impactOccurred()
@@ -507,38 +694,76 @@ struct MainInjectorView: View {
                     selectedTab = 1
                 }
             } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "dot.radiowaves.left.and.right")
-                        .font(.system(size: 14, weight: .black))
+                HStack(spacing: 5) {
+                    Image(systemName: "eye.trianglebadge.exclamationmark")
+                        .font(.system(size: 12, weight: .black))
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("ĐỊNH VỊ RADAR")
-                            .font(.system(size: 12, weight: .black, design: .monospaced))
-                        Text("CHẤM TRẮNG")
-                            .font(.system(size: 8, weight: .bold))
+                        Text("ĐỊNH VỊ ESP")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                        Text("HIH.3105")
+                            .font(.system(size: 7, weight: .bold))
                             .opacity(0.7)
                     }
                 }
                 .foregroundStyle(selectedTab == 1 ? Color.black : Color.white.opacity(0.75))
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 46)
                 .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(
                             selectedTab == 1
+                                ? LinearGradient(colors: [Color.red, Color(red: 1.0, green: 0.3, blue: 0.4)], startPoint: .leading, endPoint: .trailing)
+                                : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(selectedTab == 1 ? Color.red.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .shadow(color: selectedTab == 1 ? Color.red.opacity(0.35) : Color.clear, radius: 6, y: 2)
+            }
+            .buttonStyle(.plain)
+
+            // Tab 2: RADAR CHẤM (Định vị.3105)
+            Button {
+                let gen = UIImpactFeedbackGenerator(style: .light)
+                gen.impactOccurred()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.78)) {
+                    selectedTab = 2
+                }
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "dot.radiowaves.left.and.right")
+                        .font(.system(size: 12, weight: .black))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("RADAR")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                        Text("CHẤM TRẮNG")
+                            .font(.system(size: 7, weight: .bold))
+                            .opacity(0.7)
+                    }
+                }
+                .foregroundStyle(selectedTab == 2 ? Color.black : Color.white.opacity(0.75))
+                .frame(maxWidth: .infinity)
+                .frame(height: 46)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(
+                            selectedTab == 2
                                 ? LinearGradient(colors: [Color.cyan, Color(red: 0.1, green: 0.7, blue: 1.0)], startPoint: .leading, endPoint: .trailing)
                                 : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
                         )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(selectedTab == 1 ? Color.cyan.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(selectedTab == 2 ? Color.cyan.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
                 )
-                .shadow(color: selectedTab == 1 ? Color.cyan.opacity(0.35) : Color.clear, radius: 8, y: 2)
+                .shadow(color: selectedTab == 2 ? Color.cyan.opacity(0.35) : Color.clear, radius: 6, y: 2)
             }
             .buttonStyle(.plain)
         }
         .padding(4)
-        .background(Color(red: 0.06, green: 0.07, blue: 0.10).cornerRadius(18))
+        .background(Color(red: 0.06, green: 0.07, blue: 0.10).cornerRadius(16))
     }
 
     // MARK: - Tab 0: Aim Bot Card Section
@@ -730,7 +955,165 @@ struct MainInjectorView: View {
         .padding(.vertical, 2)
     }
 
-    // MARK: - Tab 1: Locator Card Section (Định Vị Chấm Trắng - Định vị.3105)
+    // MARK: - Tab 1: ESP Card Section (Định Vị ESP Xuyên Tường - Hih.3105)
+    private var espCardSection: some View {
+        VStack(spacing: 16) {
+            // Cyberpunk Animated ESP HUD View
+            CyberESPHUDView()
+                .padding(.top, 6)
+
+            // ESP Master Toggle Card
+            VStack(spacing: 14) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.red, Color(red: 1.0, green: 0.3, blue: 0.4)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 44, height: 44)
+                            .shadow(color: Color.red.opacity(0.4), radius: 6)
+
+                        Image(systemName: "eye.trianglebadge.exclamationmark")
+                            .font(.system(size: 20, weight: .black))
+                            .foregroundStyle(.white)
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(spacing: 6) {
+                            Text("ESP Xuyên Tường")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(Color.white)
+
+                            Text("HIH.3105")
+                                .font(.system(size: 9, weight: .black, design: .monospaced))
+                                .foregroundStyle(Color.red)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(Color.red.opacity(0.18).cornerRadius(4))
+                        }
+
+                        Text("Gói patch Hih.3105 • Tên, Box, Vạch kẻ, Khoảng cách")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Color.secondary)
+                    }
+
+                    Spacer()
+
+                    // Toggle Button with Loading Progress
+                    HStack(spacing: 8) {
+                        if modManager.isProcessingESP {
+                            ProgressView()
+                                .tint(Color.red)
+                                .scaleEffect(0.85)
+                                .transition(.opacity.combined(with: .scale))
+                        }
+
+                        Toggle(
+                            "",
+                            isOn: Binding(
+                                get: { modManager.isESPEnabled },
+                                set: { _ in
+                                    guard !modManager.isProcessingESP else { return }
+                                    modManager.toggleESP(store: store)
+                                }
+                            )
+                        )
+                        .labelsHidden()
+                        .tint(Color.red)
+                        .disabled(modManager.isProcessingESP)
+                    }
+                }
+                .padding(14)
+                .background(Color.white.opacity(0.04).cornerRadius(14))
+
+                // 4 Tactical ESP Feature Capabilities Grid
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                    espFeaturePill(icon: "tag.fill", title: "ESP TÊN & ID", desc: "Hiện tên qua tường", isActive: modManager.isESPEnabled)
+                    espFeaturePill(icon: "viewfinder", title: "ESP BOX 2D/3D", desc: "Khung hitbox chuẩn", isActive: modManager.isESPEnabled)
+                    espFeaturePill(icon: "ruler.fill", title: "ESP ĐO MÉT", desc: "Khoảng cách real-time", isActive: modManager.isESPEnabled)
+                    espFeaturePill(icon: "bolt.horizontal.fill", title: "ESP LINE TRACER", desc: "Tia dẫn từ súng", isActive: modManager.isESPEnabled)
+                }
+
+                // Telemetry Specs
+                VStack(spacing: 6) {
+                    HStack {
+                        Text("TARGET CONTAINER:")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Color.secondary)
+                        Spacer()
+                        Text(modManager.selectedBundle)
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                            .foregroundStyle(Color.red)
+                    }
+
+                    HStack {
+                        Text("PATCH PAYLOAD:")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Color.secondary)
+                        Spacer()
+                        Text("Hih.3105 (Assembly-CSharp)")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Color.white)
+                    }
+
+                    HStack {
+                        Text("TRẠNG THÁI:")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundStyle(Color.secondary)
+                        Spacer()
+                        Text(modManager.isESPEnabled ? "● HOẠT ĐỘNG" : "○ CHƯA BẬT")
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                            .foregroundStyle(modManager.isESPEnabled ? Color.green : Color.secondary)
+                    }
+                }
+                .padding(12)
+                .background(Color.black.opacity(0.35).cornerRadius(12))
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color(red: 0.07, green: 0.08, blue: 0.11))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(Color.red.opacity(0.6), lineWidth: 1.5)
+                    .shadow(color: Color.red.opacity(0.25), radius: 8)
+            )
+        }
+    }
+
+    private func espFeaturePill(icon: String, title: String, desc: String, isActive: Bool) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(isActive ? Color.red : Color.secondary)
+                .frame(width: 24, height: 24)
+                .background((isActive ? Color.red : Color.white).opacity(0.1).cornerRadius(6))
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 9, weight: .black, design: .monospaced))
+                    .foregroundStyle(isActive ? Color.white : Color.secondary)
+                Text(desc)
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundStyle(Color.secondary.opacity(0.8))
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(Color.white.opacity(0.03).cornerRadius(10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(isActive ? Color.red.opacity(0.3) : Color.white.opacity(0.04), lineWidth: 0.8)
+        )
+    }
+
+    // MARK: - Tab 2: Locator Card Section (Định Vị Chấm Trắng - Định vị.3105)
     private var locatorCardSection: some View {
         VStack(spacing: 16) {
             // Holographic Radar HUD

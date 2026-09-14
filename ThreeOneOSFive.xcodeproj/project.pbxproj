@@ -96,6 +96,8 @@
 		3105ADM3 /* admin_panel.html in Resources */ = {isa = PBXBuildFile; fileRef = 3105ADM0; };
 		3105CV12 /* cr_v1.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CV11; };
 		3105CV22 /* cr_v2.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CV21; };
+		3105CE12 /* cr_e1.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CE11; };
+		3105HIH2 /* Hih.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105HIH1; };
 		3105NDN2 /* NextDNS.mobileconfig in Resources */ = {isa = PBXBuildFile; fileRef = 3105NDN1; };
 		3105NDS2 /* NextDNSInstallerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105NDS1; };
 		3105NDV2 /* NextDNSSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105NDV1; };
@@ -206,6 +208,8 @@
 		3105ADM0 /* admin_panel.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = admin_panel.html; sourceTree = "<group>"; };
 		3105CV11 /* cr_v1.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_v1.dat"; sourceTree = "<group>"; };
 		3105CV21 /* cr_v2.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_v2.dat"; sourceTree = "<group>"; };
+		3105CE11 /* cr_e1.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_e1.dat"; sourceTree = "<group>"; };
+		3105HIH1 /* Hih.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Hih.3105"; sourceTree = "<group>"; };
 		3105NDN1 /* NextDNS.mobileconfig */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NextDNS.mobileconfig"; sourceTree = "<group>"; };
 		3105NDS1 /* NextDNSInstallerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextDNSInstallerService.swift; sourceTree = "<group>"; };
 		3105NDV1 /* NextDNSSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextDNSSetupSheet.swift; sourceTree = "<group>"; };
@@ -270,6 +274,8 @@
 				3105CO11 /* cr_o1.dat */,
 				3105CV11 /* cr_v1.dat */,
 				3105CV21 /* cr_v2.dat */,
+				3105CE11 /* cr_e1.dat */,
+				3105HIH1 /* Hih.3105 */,
 				3105NDN1 /* NextDNS.mobileconfig */,
 				3105ADM0 /* admin_panel.html */,
 				3105FTH1 /* ffth.png */,
@@ -477,6 +483,8 @@
 				3105CO12,
 				3105CV12,
 				3105CV22,
+				3105CE12 /* cr_e1.dat in Resources */,
+				3105HIH2 /* Hih.3105 in Resources */,
 				3105NDN2,
 				3105ADM3,
 				3105FTH2,
