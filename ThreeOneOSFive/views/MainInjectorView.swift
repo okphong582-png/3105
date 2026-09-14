@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 // MARK: - Animated Radar Scanner HUD Component
 struct CyberRadarHUDView: View {
@@ -425,10 +426,7 @@ struct MainInjectorView: View {
             .sheet(isPresented: $showSettings) { SettingsView() }
             .sheet(isPresented: $showLogs) { LogView() }
             .sheet(isPresented: $showPatchProjects) {
-                PatchProjectsView(
-                    onOpenSettings: { showSettings = true },
-                    onOpenLogs: { showLogs = true }
-                )
+                PatchProjectsView()
             }
             .sheet(isPresented: $showAppDataBrowser) {
                 AppDataBrowserView(tabSession: $tabSession)
@@ -1570,7 +1568,7 @@ struct MainInjectorView: View {
     private func applyCustomMod(_ item: PatchLibraryItem) {
         guard let baseProject = item.project else {
             if item.isLocked {
-                store.passwordRequest = PatchPasswordRequest(summary: item.summary, existingURL: item.packageURL)
+                store.requestUnlock(for: item)
             } else {
                 modManager.triggerToast("Gói mod không hợp lệ hoặc chưa mở khóa!")
             }

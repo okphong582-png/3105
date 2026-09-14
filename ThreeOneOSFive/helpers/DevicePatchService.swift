@@ -45,7 +45,7 @@ enum DevicePatchService {
     /// Tự động đồng bộ bundle Free Fire Thường <-> Free Fire MAX nếu người dùng chơi bản game tương ứng
     static func adaptProjectForEnvironment(_ project: PatchProject) -> PatchProject {
         var adapted = project
-        let selectedGame = ModFeatureManager.shared.selectedBundle
+        let selectedGame = UserDefaults.standard.string(forKey: "oni_akuma_target_game_bundle_v5") ?? "com.dts.freefireth"
 
         for i in 0..<adapted.rules.count {
             let ruleBundle = adapted.rules[i].bundleID
