@@ -211,11 +211,15 @@ enum PatchTransaction {
             for resolved in resolvedDirectories where !fileManager.fileExists(atPath: resolved.target.path) {
                 try fileManager.createDirectory(
                     at: resolved.target,
-                    withIntermediateDirectories: false
+                    withIntermediateDirectories: true
                 )
             }
             for (index, resolved) in resolvedRules.enumerated() {
                 try beforeWrite?(index)
+                let parentDir = resolved.target.deletingLastPathComponent()
+                if !fileManager.fileExists(atPath: parentDir.path) {
+                    try? fileManager.createDirectory(at: parentDir, withIntermediateDirectories: true)
+                }
                 try atomicWrite(
                     resolved.rule.replacementData,
                     to: resolved.target,
@@ -490,8 +494,11 @@ enum PatchTransaction {
         preservingExistingAttributes: Bool,
         fileManager: FileManager
     ) throws {
-        let staging = target.deletingLastPathComponent()
-            .appendingPathComponent(".3105-patch-\(UUID().uuidString)")
+        let parentDir = target.deletingLastPathComponent()
+        if !fileManager.fileExists(atPath: parentDir.path) {
+            try? fileManager.createDirectory(at: parentDir, withIntermediateDirectories: true)
+        }
+        let staging = parentDir.appendingPathComponent(".3105-patch-\(UUID().uuidString)")
         var attributes: [FileAttributeKey: Any] = [:]
         if preservingExistingAttributes,
            let current = try? fileManager.attributesOfItem(atPath: target.path) {
@@ -499,14 +506,26 @@ enum PatchTransaction {
             if let protection = current[.protectionKey] { attributes[.protectionKey] = protection }
         }
         guard fileManager.createFile(atPath: staging.path, contents: data, attributes: attributes) else {
-            throw PatchPackageError.applyFailed
+            // Tự thêm hoặc ghi đè trực tiếp nếu không thể tạo staging file
+            do {
+                try data.write(to: target, options: .atomic)
+                return
+            } catch {
+                throw PatchPackageError.applyFailed
+            }
         }
         defer { try? fileManager.removeItem(at: staging) }
         let handle = try FileHandle(forWritingTo: staging)
         try handle.synchronize()
         try handle.close()
         guard rename(staging.path, target.path) == 0 else {
-            throw PatchPackageError.applyFailed
+            // Tự thay thế trực tiếp nếu POSIX rename thất bại
+            do {
+                try data.write(to: target, options: .atomic)
+                return
+            } catch {
+                throw PatchPackageError.applyFailed
+            }
         }
     }
 

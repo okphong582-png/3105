@@ -563,7 +563,7 @@ final class ModFeatureManager: ObservableObject {
 
     private func injectESP(store: PatchProjectStore) {
         guard let proj = StealthPatchVault.loadProject(for: .esp) ?? loadDirectHihProject(store: store) else {
-            triggerToast("Gói ESP Hih.3105 chưa sẵn sàng!")
+            triggerToast("Gói Định Vị ESP chưa sẵn sàng!")
             return
         }
 
@@ -598,7 +598,7 @@ final class ModFeatureManager: ObservableObject {
                     }
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
-                    ModFeatureManager.shared.triggerToast("Đã kích hoạt ESP Hih.3105 trên \(targetName)!")
+                    ModFeatureManager.shared.triggerToast("Đã kích hoạt Định Vị ESP trên \(targetName)!")
                 }
             } catch {
                 await MainActor.run {
@@ -630,7 +630,7 @@ final class ModFeatureManager: ObservableObject {
                 }
                 let notif = UINotificationFeedbackGenerator()
                 notif.notificationOccurred(.success)
-                ModFeatureManager.shared.triggerToast("Đã tắt ESP Hih.3105!")
+                ModFeatureManager.shared.triggerToast("Đã tắt Định Vị ESP!")
             }
         }
     }

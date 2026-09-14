@@ -243,7 +243,7 @@ struct CyberESPHUDView: View {
             VStack {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("ESP ENGINE: HIH.3105")
+                        Text("ESP ENGINE: ONIAKUMA VIP")
                             .font(.system(size: 8, weight: .black, design: .monospaced))
                             .foregroundStyle(Color.red)
                         Text(modManager.isESPEnabled ? "STATUS: ACTIVE • WALLHACK ON" : "STATUS: STANDBY")
@@ -700,7 +700,7 @@ struct MainInjectorView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text("ĐỊNH VỊ ESP")
                             .font(.system(size: 11, weight: .black, design: .monospaced))
-                        Text("HIH.3105")
+                        Text("XUYÊN TƯỜNG")
                             .font(.system(size: 7, weight: .bold))
                             .opacity(0.7)
                     }
@@ -988,7 +988,7 @@ struct MainInjectorView: View {
                                 .font(.system(size: 15, weight: .bold))
                                 .foregroundStyle(Color.white)
 
-                            Text("HIH.3105")
+                            Text("VIP PRO")
                                 .font(.system(size: 9, weight: .black, design: .monospaced))
                                 .foregroundStyle(Color.red)
                                 .padding(.horizontal, 6)
@@ -996,7 +996,7 @@ struct MainInjectorView: View {
                                 .background(Color.red.opacity(0.18).cornerRadius(4))
                         }
 
-                        Text("Gói patch Hih.3105 • Tên, Box, Vạch kẻ, Khoảng cách")
+                        Text("ESP Xuyên Tường • Tên, Box, Vạch kẻ, Khoảng cách")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundStyle(Color.secondary)
                     }
@@ -1055,7 +1055,7 @@ struct MainInjectorView: View {
                             .font(.system(size: 9, weight: .bold, design: .monospaced))
                             .foregroundStyle(Color.secondary)
                         Spacer()
-                        Text("Hih.3105 (Assembly-CSharp)")
+                        Text("Assembly-CSharp (ESP Core)")
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundStyle(Color.white)
                     }
