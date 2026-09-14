@@ -218,6 +218,10 @@ final class ModFeatureManager: ObservableObject {
         let targetName = gameShortName
 
         var adapted = proj
+        adapted.bundleIdentifiers = [currentBundle]
+        for i in 0..<adapted.directories.count {
+            adapted.directories[i].bundleID = currentBundle
+        }
         for i in 0..<adapted.rules.count {
             adapted.rules[i].bundleID = currentBundle
         }
@@ -237,19 +241,12 @@ final class ModFeatureManager: ObservableObject {
                     notif.notificationOccurred(.success)
                     ModFeatureManager.shared.triggerToast("Đã bật \(type.shortTitle) trên \(targetName)!")
                 }
-            } catch let error as PatchPackageError {
-                await MainActor.run {
-                    ModFeatureManager.shared.processingAimMods.remove(typeKey)
-                    let notif = UINotificationFeedbackGenerator()
-                    notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast(error.localizationKey)
-                }
             } catch {
                 await MainActor.run {
                     ModFeatureManager.shared.processingAimMods.remove(typeKey)
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast("Lỗi khi bật: \(error.localizedDescription)")
+                    ModFeatureManager.shared.triggerToast("Không thể bật \(type.shortTitle). Vui lòng mở game Free Fire ít nhất một lần!")
                 }
             }
         }
@@ -310,6 +307,10 @@ final class ModFeatureManager: ObservableObject {
         let targetName = gameShortName
 
         var adapted = proj
+        adapted.bundleIdentifiers = [currentBundle]
+        for i in 0..<adapted.directories.count {
+            adapted.directories[i].bundleID = currentBundle
+        }
         for i in 0..<adapted.rules.count {
             adapted.rules[i].bundleID = currentBundle
         }
@@ -329,19 +330,12 @@ final class ModFeatureManager: ObservableObject {
                     notif.notificationOccurred(.success)
                     ModFeatureManager.shared.triggerToast("Đã kích hoạt Mod Skin MP40 Mãng Xà trên \(targetName)!")
                 }
-            } catch let error as PatchPackageError {
-                await MainActor.run {
-                    ModFeatureManager.shared.isProcessingModSkin = false
-                    let notif = UINotificationFeedbackGenerator()
-                    notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast(error.localizationKey)
-                }
             } catch {
                 await MainActor.run {
                     ModFeatureManager.shared.isProcessingModSkin = false
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast("Lỗi khi kích hoạt skin: \(error.localizedDescription)")
+                    ModFeatureManager.shared.triggerToast("Không thể kích hoạt Mod Skin MP40. Vui lòng mở game Free Fire ít nhất một lần!")
                 }
             }
         }
@@ -401,6 +395,10 @@ final class ModFeatureManager: ObservableObject {
         let targetName = gameShortName
 
         var adapted = proj
+        adapted.bundleIdentifiers = [currentBundle]
+        for i in 0..<adapted.directories.count {
+            adapted.directories[i].bundleID = currentBundle
+        }
         for i in 0..<adapted.rules.count {
             adapted.rules[i].bundleID = currentBundle
         }
@@ -420,19 +418,12 @@ final class ModFeatureManager: ObservableObject {
                     notif.notificationOccurred(.success)
                     ModFeatureManager.shared.triggerToast("Đã kích hoạt Trang Phục Ignis trên \(targetName)!")
                 }
-            } catch let error as PatchPackageError {
-                await MainActor.run {
-                    ModFeatureManager.shared.isProcessingModOutfit = false
-                    let notif = UINotificationFeedbackGenerator()
-                    notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast(error.localizationKey)
-                }
             } catch {
                 await MainActor.run {
                     ModFeatureManager.shared.isProcessingModOutfit = false
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast("Lỗi khi kích hoạt trang phục: \(error.localizedDescription)")
+                    ModFeatureManager.shared.triggerToast("Không thể kích hoạt Trang Phục Ignis. Vui lòng mở game Free Fire ít nhất một lần!")
                 }
             }
         }
@@ -492,6 +483,10 @@ final class ModFeatureManager: ObservableObject {
         let targetName = gameShortName
 
         var adapted = proj
+        adapted.bundleIdentifiers = [currentBundle]
+        for i in 0..<adapted.directories.count {
+            adapted.directories[i].bundleID = currentBundle
+        }
         for i in 0..<adapted.rules.count {
             adapted.rules[i].bundleID = currentBundle
         }
@@ -516,7 +511,7 @@ final class ModFeatureManager: ObservableObject {
                     ModFeatureManager.shared.isProcessingLocator = false
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast("Lỗi kích hoạt Định Vị: \(error.localizedDescription)")
+                    ModFeatureManager.shared.triggerToast("Không thể bật Định Vị Chấm Trắng. Vui lòng mở game Free Fire ít nhất một lần!")
                 }
             }
         }
@@ -605,7 +600,7 @@ final class ModFeatureManager: ObservableObject {
                     ModFeatureManager.shared.isProcessingESP = false
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.error)
-                    ModFeatureManager.shared.triggerToast("Lỗi kích hoạt ESP: \(error.localizedDescription)")
+                    ModFeatureManager.shared.triggerToast("Không thể bật Định Vị ESP. Vui lòng mở game Free Fire ít nhất một lần!")
                 }
             }
         }

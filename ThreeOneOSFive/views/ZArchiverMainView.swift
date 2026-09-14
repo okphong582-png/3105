@@ -630,7 +630,7 @@ struct ZArchiverMainView: View {
                         .foregroundStyle(ZArchiverColor.vibrantGreen)
                 }
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Thư Mục Tệp Cục Bộ (Tài Liệu / 3105)")
+                    Text("Thư Mục Tệp Cục Bộ (Tài Liệu / OniAkuma)")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.white)
                     Text("Quản lý tệp zip, mod, và tài liệu trong máy")
