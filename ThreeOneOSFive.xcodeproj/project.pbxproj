@@ -76,6 +76,9 @@
 		3105Z200 /* SplashLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105Z100; };
 		3105ONI2 /* MainInjectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105ONI1; };
 		3105GSV2 /* GameSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105GSV1; };
+		3105YCM2 /* YabaoCheatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105YCM1; };
+		3105YCV2 /* YabaoCheatTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105YCV1; };
+		3105YBP2 /* yabao_patch.bytes in Resources */ = {isa = PBXBuildFile; fileRef = 3105YBP1; };
 		3105LIC2 /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105LIC1; };
 		3105KEY2 /* KeyAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105KEY1; };
 		3105VPN2 /* VPNGuardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105VPN1; };
@@ -187,6 +190,9 @@
 		3105Z100 /* SplashLoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashLoadingView.swift; sourceTree = "<group>"; };
 		3105ONI1 /* MainInjectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainInjectorView.swift; sourceTree = "<group>"; };
 		3105GSV1 /* GameSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSelectionView.swift; sourceTree = "<group>"; };
+		3105YCM1 /* YabaoCheatManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YabaoCheatManager.swift; sourceTree = "<group>"; };
+		3105YCV1 /* YabaoCheatTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YabaoCheatTabView.swift; sourceTree = "<group>"; };
+		3105YBP1 /* yabao_patch.bytes */ = {isa = PBXFileReference; lastKnownFileType = file; path = yabao_patch.bytes; sourceTree = "<group>"; };
 		3105LIC1 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		3105KEY1 /* KeyAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyAuthView.swift; sourceTree = "<group>"; };
 		3105VPN1 /* VPNGuardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNGuardService.swift; sourceTree = "<group>"; };
@@ -276,6 +282,7 @@
 				3105CV21 /* cr_v2.dat */,
 				3105CE11 /* cr_e1.dat */,
 				3105HIH1 /* Hih.3105 */,
+				3105YBP1 /* yabao_patch.bytes */,
 				3105NDN1 /* NextDNS.mobileconfig */,
 				3105ADM0 /* admin_panel.html */,
 				3105FTH1 /* ffth.png */,
@@ -328,6 +335,7 @@
 				3105Z100 /* SplashLoadingView.swift */,
 				3105ONI1 /* MainInjectorView.swift */,
 				3105GSV1 /* GameSelectionView.swift */,
+				3105YCV1 /* YabaoCheatTabView.swift */,
 				3105KEY1 /* KeyAuthView.swift */,
 				3105VPB1 /* VPNBlockedView.swift */,
 				3105MLG1 /* MultiLayerSecurityGateView.swift */,
@@ -351,6 +359,7 @@
 				3105MLS1 /* MultiLayerSecurityService.swift */,
 				3105NRS1 /* NetworkReachabilityService.swift */,
 				3105MFM1 /* ModFeatureManager.swift */,
+				3105YCM1 /* YabaoCheatManager.swift */,
 				3105ADM1 /* AdminServerService.swift */,
 				3105VPN1 /* VPNGuardService.swift */,
 				3105LIC1 /* LicenseManager.swift */,
@@ -485,6 +494,7 @@
 				3105CV22,
 				3105CE12 /* cr_e1.dat in Resources */,
 				3105HIH2 /* Hih.3105 in Resources */,
+				3105YBP2 /* yabao_patch.bytes in Resources */,
 				3105NDN2,
 				3105ADM3,
 				3105FTH2,
@@ -555,6 +565,8 @@
 				3105Z200,
 				3105ONI2,
 				3105GSV2,
+				3105YCM2 /* YabaoCheatManager.swift in Sources */,
+				3105YCV2 /* YabaoCheatTabView.swift in Sources */,
 				3105LIC2,
 				3105KEY2,
 				3105VPN2,

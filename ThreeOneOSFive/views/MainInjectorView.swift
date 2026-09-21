@@ -409,8 +409,12 @@ struct MainInjectorView: View {
                             // TAB 2: ĐỊNH VỊ CHẤM TRẮNG (RADAR)
                             locatorCardSection
                                 .transition(.opacity.combined(with: .move(edge: .trailing)))
+                        } else if selectedTab == 3 {
+                            // TAB 3: YABAO CHEAT (BẬT TẮT CHỨC NĂNG YABAOCHEAT.app)
+                            YabaoCheatTabView()
+                                .transition(.opacity.combined(with: .scale(scale: 0.95)))
                         } else {
-                            // TAB 3: GÓI MOD TỰ CHỌN (.3105)
+                            // TAB 4: GÓI MOD TỰ CHỌN (.3105)
                             customModCardSection
                                 .transition(.opacity.combined(with: .move(edge: .trailing)))
                         }
@@ -698,9 +702,9 @@ struct MainInjectorView: View {
         )
     }
 
-    // MARK: - Tactical 4-Tab Selector: [ 🎯 AIM BOT ] [ 👁️ ĐỊNH VỊ ESP ] [ 📡 RADAR ] [ 📦 GÓI MOD ]
+    // MARK: - Tactical 5-Tab Selector: [ 🎯 AIM BOT ] [ 👁️ ESP X-RAY ] [ 📡 RADAR ] [ 🔥 YABAO ] [ 📦 GÓI MOD ]
     private var tacticalTabSelector: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 3) {
             // Tab 0: AIM BOT
             Button {
                 let gen = UIImpactFeedbackGenerator(style: .light)
@@ -711,15 +715,15 @@ struct MainInjectorView: View {
             } label: {
                 VStack(spacing: 2) {
                     Image(systemName: "scope")
-                        .font(.system(size: 13, weight: .black))
+                        .font(.system(size: 11.5, weight: .black))
                     Text("AIM BOT")
-                        .font(.system(size: 9.5, weight: .black, design: .monospaced))
+                        .font(.system(size: 8.5, weight: .black, design: .monospaced))
                 }
                 .foregroundStyle(selectedTab == 0 ? Color.black : Color.white.opacity(0.75))
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 46)
                 .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(
                             selectedTab == 0
                                 ? LinearGradient(colors: [Color.green, Color(red: 0.2, green: 0.85, blue: 0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -727,10 +731,10 @@ struct MainInjectorView: View {
                         )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .stroke(selectedTab == 0 ? Color.green.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
                 )
-                .shadow(color: selectedTab == 0 ? Color.green.opacity(0.35) : Color.clear, radius: 6, y: 2)
+                .shadow(color: selectedTab == 0 ? Color.green.opacity(0.35) : Color.clear, radius: 5, y: 2)
             }
             .buttonStyle(.plain)
 
@@ -744,15 +748,15 @@ struct MainInjectorView: View {
             } label: {
                 VStack(spacing: 2) {
                     Image(systemName: "eye.trianglebadge.exclamationmark")
-                        .font(.system(size: 13, weight: .black))
+                        .font(.system(size: 11.5, weight: .black))
                     Text("ESP X-RAY")
-                        .font(.system(size: 9.5, weight: .black, design: .monospaced))
+                        .font(.system(size: 8.5, weight: .black, design: .monospaced))
                 }
                 .foregroundStyle(selectedTab == 1 ? Color.black : Color.white.opacity(0.75))
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 46)
                 .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(
                             selectedTab == 1
                                 ? LinearGradient(colors: [Color.red, Color(red: 1.0, green: 0.3, blue: 0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -760,10 +764,10 @@ struct MainInjectorView: View {
                         )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .stroke(selectedTab == 1 ? Color.red.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
                 )
-                .shadow(color: selectedTab == 1 ? Color.red.opacity(0.35) : Color.clear, radius: 6, y: 2)
+                .shadow(color: selectedTab == 1 ? Color.red.opacity(0.35) : Color.clear, radius: 5, y: 2)
             }
             .buttonStyle(.plain)
 
@@ -777,15 +781,15 @@ struct MainInjectorView: View {
             } label: {
                 VStack(spacing: 2) {
                     Image(systemName: "dot.radiowaves.left.and.right")
-                        .font(.system(size: 13, weight: .black))
+                        .font(.system(size: 11.5, weight: .black))
                     Text("RADAR")
-                        .font(.system(size: 9.5, weight: .black, design: .monospaced))
+                        .font(.system(size: 8.5, weight: .black, design: .monospaced))
                 }
                 .foregroundStyle(selectedTab == 2 ? Color.black : Color.white.opacity(0.75))
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 46)
                 .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(
                             selectedTab == 2
                                 ? LinearGradient(colors: [Color.cyan, Color(red: 0.1, green: 0.7, blue: 1.0)], startPoint: .topLeading, endPoint: .bottomTrailing)
@@ -793,14 +797,14 @@ struct MainInjectorView: View {
                         )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .stroke(selectedTab == 2 ? Color.cyan.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
                 )
-                .shadow(color: selectedTab == 2 ? Color.cyan.opacity(0.35) : Color.clear, radius: 6, y: 2)
+                .shadow(color: selectedTab == 2 ? Color.cyan.opacity(0.35) : Color.clear, radius: 5, y: 2)
             }
             .buttonStyle(.plain)
 
-            // Tab 3: GÓI MOD (File Mod Tự Chọn)
+            // Tab 3: YABAO CHEAT (Chức Năng YABAOCHEAT.app)
             Button {
                 let gen = UIImpactFeedbackGenerator(style: .light)
                 gen.impactOccurred()
@@ -809,32 +813,65 @@ struct MainInjectorView: View {
                 }
             } label: {
                 VStack(spacing: 2) {
-                    Image(systemName: "shippingbox.fill")
-                        .font(.system(size: 13, weight: .black))
-                    Text("GÓI MOD")
-                        .font(.system(size: 9.5, weight: .black, design: .monospaced))
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 11.5, weight: .black))
+                    Text("YABAO")
+                        .font(.system(size: 8.5, weight: .black, design: .monospaced))
                 }
                 .foregroundStyle(selectedTab == 3 ? Color.black : Color.white.opacity(0.75))
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
+                .frame(height: 46)
                 .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(
                             selectedTab == 3
+                                ? LinearGradient(colors: [Color.orange, Color(red: 1.0, green: 0.6, blue: 0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(selectedTab == 3 ? Color.orange.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
+                )
+                .shadow(color: selectedTab == 3 ? Color.orange.opacity(0.35) : Color.clear, radius: 5, y: 2)
+            }
+            .buttonStyle(.plain)
+
+            // Tab 4: GÓI MOD (File Mod Tự Chọn)
+            Button {
+                let gen = UIImpactFeedbackGenerator(style: .light)
+                gen.impactOccurred()
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.78)) {
+                    selectedTab = 4
+                }
+            } label: {
+                VStack(spacing: 2) {
+                    Image(systemName: "shippingbox.fill")
+                        .font(.system(size: 11.5, weight: .black))
+                    Text("GÓI MOD")
+                        .font(.system(size: 8.5, weight: .black, design: .monospaced))
+                }
+                .foregroundStyle(selectedTab == 4 ? Color.black : Color.white.opacity(0.75))
+                .frame(maxWidth: .infinity)
+                .frame(height: 46)
+                .background(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(
+                            selectedTab == 4
                                 ? LinearGradient(colors: [Color.purple, Color(red: 0.8, green: 0.4, blue: 1.0)], startPoint: .topLeading, endPoint: .bottomTrailing)
                                 : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
                         )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(selectedTab == 3 ? Color.purple.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .stroke(selectedTab == 4 ? Color.purple.opacity(0.8) : Color.white.opacity(0.08), lineWidth: 1)
                 )
-                .shadow(color: selectedTab == 3 ? Color.purple.opacity(0.35) : Color.clear, radius: 6, y: 2)
+                .shadow(color: selectedTab == 4 ? Color.purple.opacity(0.35) : Color.clear, radius: 5, y: 2)
             }
             .buttonStyle(.plain)
         }
         .padding(4)
-        .background(Color(red: 0.06, green: 0.07, blue: 0.10).cornerRadius(16))
+        .background(Color(red: 0.06, green: 0.07, blue: 0.10).cornerRadius(14))
     }
 
     // MARK: - Tab 0: Aim Bot Card Section
