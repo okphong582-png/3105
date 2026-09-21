@@ -2,8 +2,9 @@ import SwiftUI
 import UIKit
 
 // MARK: - Giao Diện Tab YABAO CHEAT (Chức Năng Y Hệt YABAOCHEAT.app)
+@MainActor
 struct YabaoCheatTabView: View {
-    @StateObject private var yabao = YabaoCheatManager.shared
+    @ObservedObject private var yabao = YabaoCheatManager.shared
     @State private var alertMessage: String = ""
     @State private var showAlert: Bool = false
     @State private var isAlertSuccess: Bool = true
@@ -154,11 +155,7 @@ struct YabaoCheatTabView: View {
                 }
             } label: {
                 HStack(spacing: 8) {
-                    Image("ffth")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 24, height: 24)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                    GameAppIconBadge(isMax: false, size: 24)
 
                     Text("Free Fire Thường")
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
@@ -191,11 +188,7 @@ struct YabaoCheatTabView: View {
                 }
             } label: {
                 HStack(spacing: 8) {
-                    Image("ffmax")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 24, height: 24)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                    GameAppIconBadge(isMax: true, size: 24)
 
                     Text("Free Fire MAX")
                         .font(.system(size: 11, weight: .bold, design: .monospaced))

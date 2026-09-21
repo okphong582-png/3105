@@ -157,7 +157,7 @@ final class YabaoCheatManager: ObservableObject {
 
     // MARK: - Kiểm tra trạng thái hiện tại trong container game
     func checkInjectionState() {
-        guard let containerPath = ContainerStore.shared.resolveAppContainerPath(bundleID: selectedGame) else {
+        guard let containerPath = ContainerStore.resolveAppContainerPath(bundleID: selectedGame) else {
             self.isOnline = false
             self.statusMessage = "TRẠNG THÁI : OFFLINE"
             return
@@ -182,7 +182,7 @@ final class YabaoCheatManager: ObservableObject {
         // Tự động kích hoạt quyền traversal & lease container game
         ContainerStore.warmupAndActivateGameContainer(bundleID: selectedGame)
 
-        guard let containerPath = ContainerStore.shared.resolveAppContainerPath(bundleID: selectedGame) else {
+        guard let containerPath = ContainerStore.resolveAppContainerPath(bundleID: selectedGame) else {
             self.isInjecting = false
             self.isOnline = false
             self.statusMessage = "TRẠNG THÁI : OFFLINE"
@@ -280,7 +280,7 @@ final class YabaoCheatManager: ObservableObject {
     func resetFeatures() async -> (Bool, String) {
         ContainerStore.warmupAndActivateGameContainer(bundleID: selectedGame)
 
-        guard let containerPath = ContainerStore.shared.resolveAppContainerPath(bundleID: selectedGame) else {
+        guard let containerPath = ContainerStore.resolveAppContainerPath(bundleID: selectedGame) else {
             self.isOnline = false
             self.statusMessage = "TRẠNG THÁI : OFFLINE"
             return (true, "Đã đặt lại cấu hình sạch.")
