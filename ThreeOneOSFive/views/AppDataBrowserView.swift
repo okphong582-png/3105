@@ -82,9 +82,7 @@ struct AppDataBrowserView: View {
                     if self.apps.isEmpty {
                         reload()
                     } else {
-                        DispatchQueue.global(qos: .userInitiated).async {
-                            ZArchiverAppService.shared.loadApps()
-                        }
+                        ZArchiverAppService.shared.loadApps()
                     }
                 }
             }

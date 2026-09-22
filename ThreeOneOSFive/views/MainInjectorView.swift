@@ -147,7 +147,7 @@ struct MainInjectorView: View {
                 )
             }
             .overlay(alignment: .top) {
-                if let toast = modManager.activeToastMessage {
+                if let toast = modManager.toastMessage {
                     toastView(message: toast)
                         .padding(.top, 50)
                         .transition(.move(edge: .top).combined(with: .opacity))
@@ -332,7 +332,7 @@ struct MainInjectorView: View {
                         Circle()
                             .fill(
                                 LinearGradient(
-                                    colors: nextDNSService.isInstalled
+                                    colors: nextDNSService.isSetupCompleted
                                         ? [Color.green.opacity(0.3), Color.cyan.opacity(0.15)]
                                         : [Color.orange.opacity(0.3), Color.red.opacity(0.15)],
                                     startPoint: .topLeading,
@@ -341,10 +341,10 @@ struct MainInjectorView: View {
                             )
                             .frame(width: 38, height: 38)
 
-                        Image(systemName: nextDNSService.isInstalled ? "checkmark.shield.fill" : "shield.slash.fill")
+                        Image(systemName: nextDNSService.isSetupCompleted ? "checkmark.shield.fill" : "shield.slash.fill")
                             .font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(nextDNSService.isInstalled ? Color.green : Color.orange)
-                            .shadow(color: (nextDNSService.isInstalled ? Color.green : Color.orange).opacity(0.6), radius: 4)
+                            .foregroundStyle(nextDNSService.isSetupCompleted ? Color.green : Color.orange)
+                            .shadow(color: (nextDNSService.isSetupCompleted ? Color.green : Color.orange).opacity(0.6), radius: 4)
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
@@ -353,16 +353,16 @@ struct MainInjectorView: View {
                                 .font(.system(size: 11.5, weight: .black, design: .monospaced))
                                 .foregroundStyle(.white)
 
-                            Text(nextDNSService.isInstalled ? "HOẠT ĐỘNG" : "CHƯA CÀI")
+                            Text(nextDNSService.isSetupCompleted ? "HOẠT ĐỘNG" : "CHƯA CÀI")
                                 .font(.system(size: 8, weight: .black, design: .monospaced))
-                                .foregroundStyle(nextDNSService.isInstalled ? Color.green : Color.orange)
+                                .foregroundStyle(nextDNSService.isSetupCompleted ? Color.green : Color.orange)
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 2)
-                                .background(Capsule().fill((nextDNSService.isInstalled ? Color.green : Color.orange).opacity(0.15)))
-                                .overlay(Capsule().stroke((nextDNSService.isInstalled ? Color.green : Color.orange).opacity(0.4), lineWidth: 0.8))
+                                .background(Capsule().fill((nextDNSService.isSetupCompleted ? Color.green : Color.orange).opacity(0.15)))
+                                .overlay(Capsule().stroke((nextDNSService.isSetupCompleted ? Color.green : Color.orange).opacity(0.4), lineWidth: 0.8))
                         }
 
-                        Text(nextDNSService.isInstalled ? "Bảo vệ rank 100% • Chặn máy chủ quét Blackbox" : "Nhấn để cài cấu hình DNS chống khoá tài khoản")
+                        Text(nextDNSService.isSetupCompleted ? "Bảo vệ rank 100% • Chặn máy chủ quét Blackbox" : "Nhấn để cài cấu hình DNS chống khoá tài khoản")
                             .font(.system(size: 9.5, weight: .medium))
                             .foregroundStyle(Color.white.opacity(0.6))
                             .lineLimit(1)
@@ -385,7 +385,7 @@ struct MainInjectorView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(
-                    nextDNSService.isInstalled ? Color.green.opacity(0.3) : Color.orange.opacity(0.3),
+                    nextDNSService.isSetupCompleted ? Color.green.opacity(0.3) : Color.orange.opacity(0.3),
                     lineWidth: 1
                 )
         )
