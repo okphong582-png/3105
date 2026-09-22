@@ -1,2 +1,0 @@
-=== XCODEBUILD ERROR LOG ===
-/Users/runner/work/3105/3105/ThreeOneOSFive/views/MainInjectorView.swift:146:22: error: missing argument for parameter 'onCancel' in call

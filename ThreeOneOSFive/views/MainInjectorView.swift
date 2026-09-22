@@ -143,6 +143,9 @@ struct MainInjectorView: View {
                             store.importPackage(at: url)
                             modManager.triggerToast("Đã nạp gói mod: \(url.lastPathComponent)!")
                         }
+                    },
+                    onCancel: {
+                        showFileImporter = false
                     }
                 )
             }
