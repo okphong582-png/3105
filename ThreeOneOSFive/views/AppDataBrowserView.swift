@@ -64,9 +64,28 @@ struct AppDataBrowserView: View {
                     workspaceURL = try? PatchWorkspaceService.documentsRootURL()
                     _ = try? PatchWorkspaceService.patchesRootURL()
                 }
+                // Nạp tức thì trong 0ms từ ZArchiverAppService nếu đã có sẵn trong RAM
+                let cached = ZArchiverAppService.shared.apps
+                if !cached.isEmpty {
+                    self.apps = cached
+                    self.isLoading = false
+                    self.isResolving = false
+                } else {
+                    let fastGames = ZArchiverAppService.fastResolveFreeFireApps()
+                    if !fastGames.isEmpty {
+                        self.apps = fastGames
+                        self.isLoading = false
+                    }
+                }
                 if !hasLoaded {
                     hasLoaded = true
-                    reload()
+                    if self.apps.isEmpty {
+                        reload()
+                    } else {
+                        DispatchQueue.global(qos: .userInitiated).async {
+                            ZArchiverAppService.shared.loadApps()
+                        }
+                    }
                 }
             }
             .navigationDestination(for: FileBrowserDestination.self) { destination in
@@ -301,14 +320,21 @@ struct AppDataBrowserView: View {
                 bundleMetadata: bundleMetadata
             )
             let filesystemApps = ContainerStore.containersFromFilesystem()
-            let baseIdentifiedApps = mcmApps + apiApps
+            let fastGames = ZArchiverAppService.fastResolveFreeFireApps()
+            let baseIdentifiedApps = fastGames + mcmApps + apiApps
             var result = ContainerDiscoveryMerger.merge(
                 enumerated: filesystemApps,
                 identified: baseIdentifiedApps,
                 path: { $0.containerPath }
             )
             log("browser: merged api=\(apiApps.count), MCM=\(mcmApps.count), filesystem=\(filesystemApps.count) -> \(result.count)")
-            result.sort { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+            result.sort {
+                let isGame0 = $0.bundleID.contains("freefire")
+                let isGame1 = $1.bundleID.contains("freefire")
+                if isGame0 && !isGame1 { return true }
+                if !isGame0 && isGame1 { return false }
+                return $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+            }
 
             let preliminary = result.filter {
                 ContainerPresentationPolicy.shouldShow(bundleID: $0.bundleID)
@@ -345,7 +371,11 @@ struct AppDataBrowserView: View {
                     ContainerPresentationPolicy.shouldShow(bundleID: $0.bundleID)
                 }
                 progressiveResult.sort {
-                    $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+                    let isGame0 = $0.bundleID.contains("freefire")
+                    let isGame1 = $1.bundleID.contains("freefire")
+                    if isGame0 && !isGame1 { return true }
+                    if !isGame0 && isGame1 { return false }
+                    return $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
                 }
                 DispatchQueue.main.async {
                     apps = progressiveResult
@@ -378,7 +408,11 @@ struct AppDataBrowserView: View {
                 ContainerPresentationPolicy.shouldShow(bundleID: $0.bundleID)
             }
             result.sort {
-                $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+                let isGame0 = $0.bundleID.contains("freefire")
+                let isGame1 = $1.bundleID.contains("freefire")
+                if isGame0 && !isGame1 { return true }
+                if !isGame0 && isGame1 { return false }
+                return $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
             }
 
             DispatchQueue.main.async {

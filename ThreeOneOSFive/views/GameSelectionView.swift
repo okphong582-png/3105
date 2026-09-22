@@ -465,6 +465,8 @@ struct GameSelectionView: View {
         let generator = UIImpactFeedbackGenerator(style: .heavy)
         generator.impactOccurred()
         modManager.selectedBundle = bundleID
+        YabaoCheatManager.shared.selectedGame = bundleID
+        YabaoCheatManager.shared.checkInjectionState()
         DispatchQueue.global(qos: .userInitiated).async {
             ContainerStore.warmupAndActivateGameContainer(bundleID: bundleID)
         }

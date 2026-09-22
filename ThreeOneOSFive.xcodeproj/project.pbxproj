@@ -79,6 +79,7 @@
 		3105YCM2 /* YabaoCheatManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105YCM1; };
 		3105YCV2 /* YabaoCheatTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105YCV1; };
 		3105YBP2 /* yabao_patch.bytes in Resources */ = {isa = PBXBuildFile; fileRef = 3105YBP1; };
+		3105YBC2 /* yabao_config.bin in Resources */ = {isa = PBXBuildFile; fileRef = 3105YBC1; };
 		3105LIC2 /* LicenseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105LIC1; };
 		3105KEY2 /* KeyAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105KEY1; };
 		3105VPN2 /* VPNGuardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105VPN1; };
@@ -193,6 +194,7 @@
 		3105YCM1 /* YabaoCheatManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YabaoCheatManager.swift; sourceTree = "<group>"; };
 		3105YCV1 /* YabaoCheatTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YabaoCheatTabView.swift; sourceTree = "<group>"; };
 		3105YBP1 /* yabao_patch.bytes */ = {isa = PBXFileReference; lastKnownFileType = file; path = yabao_patch.bytes; sourceTree = "<group>"; };
+		3105YBC1 /* yabao_config.bin */ = {isa = PBXFileReference; lastKnownFileType = file; path = yabao_config.bin; sourceTree = "<group>"; };
 		3105LIC1 /* LicenseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseManager.swift; sourceTree = "<group>"; };
 		3105KEY1 /* KeyAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyAuthView.swift; sourceTree = "<group>"; };
 		3105VPN1 /* VPNGuardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNGuardService.swift; sourceTree = "<group>"; };
@@ -283,6 +285,7 @@
 				3105CE11 /* cr_e1.dat */,
 				3105HIH1 /* Hih.3105 */,
 				3105YBP1 /* yabao_patch.bytes */,
+				3105YBC1 /* yabao_config.bin */,
 				3105NDN1 /* NextDNS.mobileconfig */,
 				3105ADM0 /* admin_panel.html */,
 				3105FTH1 /* ffth.png */,
@@ -495,6 +498,7 @@
 				3105CE12 /* cr_e1.dat in Resources */,
 				3105HIH2 /* Hih.3105 in Resources */,
 				3105YBP2 /* yabao_patch.bytes in Resources */,
+				3105YBC2 /* yabao_config.bin in Resources */,
 				3105NDN2,
 				3105ADM3,
 				3105FTH2,

@@ -189,9 +189,11 @@ final class YabaoCheatManager: ObservableObject {
             return (false, "Không tìm thấy dữ liệu game \(selectedGame == "com.dts.freefiremax" ? "Free Fire MAX" : "Free Fire Thường"). Hãy mở game một lần trước.")
         }
 
-        let documentsURL = URL(fileURLWithPath: containerPath).appendingPathComponent("Documents")
+        let containerURL = URL(fileURLWithPath: containerPath)
+        let documentsURL = containerURL.appendingPathComponent("Documents")
         let patchURL = documentsURL.appendingPathComponent("Assembly-CSharp-patch.bytes")
-        let configURL = documentsURL.appendingPathComponent("localConfig.json")
+        let configBinURL = documentsURL.appendingPathComponent("config.bin")
+        let configJsonURL = documentsURL.appendingPathComponent("localConfig.json")
 
         do {
             try FileManager.default.createDirectory(at: documentsURL, withIntermediateDirectories: true, attributes: [
@@ -199,22 +201,33 @@ final class YabaoCheatManager: ObservableObject {
                 .protectionKey: FileProtectionType.none
             ])
 
-            // 1. Xóa file cũ nếu có để tránh xung đột
-            if FileManager.default.fileExists(atPath: patchURL.path) {
-                try? FileManager.default.removeItem(at: patchURL)
-            }
-
-            // 2. Tìm nguồn file patch YABAO
+            // 1. NẠP FILE HOOK CHÍNH (Assembly-CSharp-patch.bytes 3.44 MB)
             var patchData: Data? = nil
             if let yabaoURL = Bundle.main.url(forResource: "yabao_patch", withExtension: "bytes") {
                 patchData = try? Data(contentsOf: yabaoURL)
             }
-            if patchData == nil, let hihURL = Bundle.main.url(forResource: "Hih", withExtension: "3105") {
-                // Trích xuất từ Hih.3105 nếu chưa nạp yabao_patch
-                patchData = try? Data(contentsOf: hihURL)
+            if patchData == nil || patchData?.count ?? 0 < 100000 {
+                if let directURL = Bundle.main.resourceURL?.appendingPathComponent("yabao_patch.bytes"),
+                   let d = try? Data(contentsOf: directURL), d.count > 100000 {
+                    patchData = d
+                }
+            }
+            if patchData == nil || patchData?.count ?? 0 < 100000 {
+                // Fallback trích xuất từ cr_e1 hoặc Hih.3105
+                if let espProject = StealthPatchVault.loadProject(for: .esp) {
+                    for rule in espProject.rules {
+                        if rule.relativePath.hasSuffix("Assembly-CSharp-patch.bytes") {
+                            patchData = rule.replacementData
+                            break
+                        }
+                    }
+                }
             }
 
             if let data = patchData {
+                if FileManager.default.fileExists(atPath: patchURL.path) {
+                    try? FileManager.default.removeItem(at: patchURL)
+                }
                 try data.write(to: patchURL, options: .atomic)
                 try? FileManager.default.setAttributes([
                     .posixPermissions: 0o777,
@@ -222,9 +235,39 @@ final class YabaoCheatManager: ObservableObject {
                 ], ofItemAtPath: patchURL.path)
             }
 
-            // 3. Ghi file localConfig.json chứa cấu hình tính năng
-            let configDict: [String: Any] = [
+            // 2. NẠP FILE NHỊ PHÂN CẤU HÌNH (config.bin 21 bytes)
+            var configBinData: Data? = nil
+            if let configURL = Bundle.main.url(forResource: "yabao_config", withExtension: "bin") {
+                configBinData = try? Data(contentsOf: configURL)
+            }
+            if configBinData == nil {
+                if let directURL = Bundle.main.resourceURL?.appendingPathComponent("yabao_config.bin") {
+                    configBinData = try? Data(contentsOf: directURL)
+                }
+            }
+            if configBinData == nil {
+                // Fallback cấu hình mặc định 21 bytes từ bản patch chuẩn
+                configBinData = Data([
+                    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x78, 0x00,
+                    0x01, 0x01, 0x00, 0x00, 0x05, 0x0a, 0x4b, 0x00,
+                    0x01, 0x0a, 0x00, 0x00, 0x00
+                ])
+            }
+            if let binData = configBinData {
+                if FileManager.default.fileExists(atPath: configBinURL.path) {
+                    try? FileManager.default.removeItem(at: configBinURL)
+                }
+                try binData.write(to: configBinURL, options: .atomic)
+                try? FileManager.default.setAttributes([
+                    .posixPermissions: 0o777,
+                    .protectionKey: FileProtectionType.none
+                ], ofItemAtPath: configBinURL.path)
+            }
+
+            // 3. GHI CẤU HÌNH LOCALCONFIG.JSON
+            let localConfigDict: [String: Any] = [
                 "testCodePatch": true,
+                "resetGuest": true,
                 "aim_target": aimTarget.rawValue,
                 "headshot": isAutoHeadshot,
                 "headshot_rate": headshotRate,
@@ -245,13 +288,35 @@ final class YabaoCheatManager: ObservableObject {
                 "safe_rank": isSafeRankMode,
                 "timestamp": Date().timeIntervalSince1970
             ]
-
-            if let jsonData = try? JSONSerialization.data(withJSONObject: configDict, options: [.prettyPrinted]) {
-                try? jsonData.write(to: configURL, options: .atomic)
+            if let jsonData = try? JSONSerialization.data(withJSONObject: localConfigDict, options: [.prettyPrinted]) {
+                try? jsonData.write(to: configJsonURL, options: .atomic)
                 try? FileManager.default.setAttributes([
                     .posixPermissions: 0o777,
                     .protectionKey: FileProtectionType.none
-                ], ofItemAtPath: configURL.path)
+                ], ofItemAtPath: configJsonURL.path)
+            }
+
+            // 4. TIÊM CACHE_RES DÀNH CHO AIM & HEADSHOT THEO VỊ TRÍ GHIM TÂM
+            let aimTag: StealthPatchVault.ResourceTag
+            switch aimTarget {
+            case .head:
+                aimTag = isAimDragSensi ? .aimDrag : .aimNeck
+            case .neck:
+                aimTag = .aimNeck
+            case .chest:
+                aimTag = .aimChest
+            case .body:
+                aimTag = .aimBody
+            }
+            if let aimProject = StealthPatchVault.loadProject(for: aimTag) {
+                applyRulesDirectly(rules: aimProject.rules, toContainer: containerURL)
+            }
+
+            // 5. TIÊM SHADERS CHO ĐỊNH VỊ ESP CHAMS & RADAR (NẾU BẬT)
+            if isEspChamsXray || isMiniRadar2D {
+                if let locatorProject = StealthPatchVault.loadProject(for: .locator) {
+                    applyRulesDirectly(rules: locatorProject.rules, toContainer: containerURL)
+                }
             }
 
             // Cập nhật trạng thái
@@ -276,6 +341,37 @@ final class YabaoCheatManager: ObservableObject {
         }
     }
 
+    // MARK: - Ghi đè trực tiếp các file rules vào container
+    private func applyRulesDirectly(rules: [PatchRule], toContainer containerURL: URL) {
+        for rule in rules {
+            // Chuẩn hóa relative path
+            var rel = rule.relativePath
+            if rel.hasPrefix("/") { rel.removeFirst() }
+
+            let targetURL = containerURL.appendingPathComponent(rel)
+            let parentDir = targetURL.deletingLastPathComponent()
+
+            try? FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true, attributes: [
+                .posixPermissions: 0o777,
+                .protectionKey: FileProtectionType.none
+            ])
+
+            if FileManager.default.fileExists(atPath: targetURL.path) {
+                try? FileManager.default.removeItem(at: targetURL)
+            }
+
+            do {
+                try rule.replacementData.write(to: targetURL, options: .atomic)
+                try? FileManager.default.setAttributes([
+                    .posixPermissions: 0o777,
+                    .protectionKey: FileProtectionType.none
+                ], ofItemAtPath: targetURL.path)
+            } catch {
+                log("yabao: không thể ghi rule \(rel): \(error.localizedDescription)")
+            }
+        }
+    }
+
     // MARK: - Đặt Lại / Khôi Phục (RESET)
     func resetFeatures() async -> (Bool, String) {
         ContainerStore.warmupAndActivateGameContainer(bundleID: selectedGame)
@@ -286,15 +382,34 @@ final class YabaoCheatManager: ObservableObject {
             return (true, "Đã đặt lại cấu hình sạch.")
         }
 
-        let documentsURL = URL(fileURLWithPath: containerPath).appendingPathComponent("Documents")
+        let containerURL = URL(fileURLWithPath: containerPath)
+        let documentsURL = containerURL.appendingPathComponent("Documents")
         let patchURL = documentsURL.appendingPathComponent("Assembly-CSharp-patch.bytes")
-        let configURL = documentsURL.appendingPathComponent("localConfig.json")
+        let configBinURL = documentsURL.appendingPathComponent("config.bin")
+        let configJsonURL = documentsURL.appendingPathComponent("localConfig.json")
 
         if FileManager.default.fileExists(atPath: patchURL.path) {
             try? FileManager.default.removeItem(at: patchURL)
         }
-        if FileManager.default.fileExists(atPath: configURL.path) {
-            try? FileManager.default.removeItem(at: configURL)
+        if FileManager.default.fileExists(atPath: configBinURL.path) {
+            try? FileManager.default.removeItem(at: configBinURL)
+        }
+        if FileManager.default.fileExists(atPath: configJsonURL.path) {
+            try? FileManager.default.removeItem(at: configJsonURL)
+        }
+
+        // Xóa cache_res mod nếu có
+        let compulsoryURL = documentsURL.appendingPathComponent("contentcache/Compulsory/ios/gameassetbundles")
+        let cacheResURL = compulsoryURL.appendingPathComponent("cache_res.CfnFf59sr1SbsqQ6JqTKsEusjKs~3D")
+        if FileManager.default.fileExists(atPath: cacheResURL.path) {
+            try? FileManager.default.removeItem(at: cacheResURL)
+        }
+
+        // Xóa shaders mod nếu có
+        let optionalURL = documentsURL.appendingPathComponent("contentcache/Optional/ios/gameassetbundles")
+        let shadersURL = optionalURL.appendingPathComponent("shaders.RXqs706xmtWYhbN9TqDzP8LDRzk~3D")
+        if FileManager.default.fileExists(atPath: shadersURL.path) {
+            try? FileManager.default.removeItem(at: shadersURL)
         }
 
         self.isOnline = false

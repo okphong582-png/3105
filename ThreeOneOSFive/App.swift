@@ -31,6 +31,12 @@ struct ThreeOneOSFiveApp: App {
                 .preferredColorScheme(.dark)
                 .onAppear {
                     appState.detectSupport()
+                    // Kích hoạt nạp sẵn ngầm ứng dụng và container game để người dùng mở dán tệp tức thì (0ms)
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        ZArchiverAppService.shared.loadApps()
+                        ContainerStore.warmupAndActivateGameContainer(bundleID: "com.dts.freefireth")
+                        ContainerStore.warmupAndActivateGameContainer(bundleID: "com.dts.freefiremax")
+                    }
                 }
                 .onChange(of: scenePhase) { phase in
                     if phase == .active {

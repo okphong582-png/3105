@@ -11,15 +11,67 @@ final class ZArchiverAppService: ObservableObject {
 
     private let iconCache = NSCache<NSString, UIImage>()
     private var hasLoadedOnce = false
+    private static var cachedAllApps: [InstalledApp] = []
 
     private init() {
         iconCache.countLimit = 500
+        // Nạp tức thì các app game Free Fire ngay khi service khởi tạo trong RAM (0ms)
+        let instantGames = Self.fastResolveFreeFireApps()
+        if !instantGames.isEmpty {
+            self.apps = instantGames
+            for app in instantGames {
+                if let icon = app.icon {
+                    self.iconCache.setObject(icon, forKey: app.bundleID as NSString)
+                }
+            }
+        }
     }
 
-    /// Tải danh sách tất cả ứng dụng từ hệ thống, MCM và filesystem an toàn, không bị văng
+    /// Tìm siêu tốc container của Free Fire Thường & MAX trực tiếp trong < 1ms
+    static func fastResolveFreeFireApps() -> [InstalledApp] {
+        var results: [InstalledApp] = []
+        let targets = [
+            ("com.dts.freefireth", "Free Fire", "FFTHLogo"),
+            ("com.dts.freefiremax", "Free Fire MAX", "FFMAXLogo")
+        ]
+        for (bid, name, iconKey) in targets {
+            if let path = ContainerStore.resolveAppContainerPath(bundleID: bid),
+               FileManager.default.fileExists(atPath: path) {
+                let icon = UIImage(named: iconKey)
+                    ?? (bid == "com.dts.freefiremax" ? UIImage(named: "ffmax") : UIImage(named: "ffth"))
+                results.append(InstalledApp(
+                    bundleID: bid,
+                    name: name,
+                    containerPath: path,
+                    version: "OB",
+                    icon: icon
+                ))
+            }
+        }
+        return results
+    }
+
+    /// Tải danh sách tất cả ứng dụng từ hệ thống, MCM và filesystem siêu tốc 0-delay
     func loadApps(forceRefresh: Bool = false) {
+        if !forceRefresh && !Self.cachedAllApps.isEmpty {
+            self.apps = Self.cachedAllApps
+            self.isLoading = false
+            return
+        }
+
         if !forceRefresh && hasLoadedOnce && !apps.isEmpty {
             return
+        }
+
+        // 1. Nạp ngay lập tức Free Fire TH & MAX để hiển thị tức thì không chờ đợi
+        let instantGames = Self.fastResolveFreeFireApps()
+        if !instantGames.isEmpty && self.apps.isEmpty {
+            self.apps = instantGames
+            for app in instantGames {
+                if let icon = app.icon {
+                    self.iconCache.setObject(icon, forKey: app.bundleID as NSString)
+                }
+            }
         }
 
         isLoading = apps.isEmpty
@@ -40,8 +92,8 @@ final class ZArchiverAppService: ObservableObject {
             // 4. Quét từ filesystem nếu có quyền truy cập
             let filesystemApps = ContainerStore.containersFromFilesystem()
 
-            // 5. Kết hợp các nguồn nhận diện cơ bản
-            let baseIdentifiedApps = mcmApps + apiApps
+            // 5. Kết hợp các nguồn nhận diện cơ bản + Instant Games
+            let baseIdentifiedApps = instantGames + mcmApps + apiApps
             let mergedApps = ContainerDiscoveryMerger.merge(
                 enumerated: filesystemApps,
                 identified: baseIdentifiedApps,
@@ -52,10 +104,15 @@ final class ZArchiverAppService: ObservableObject {
                 ContainerPresentationPolicy.shouldShow(bundleID: $0.bundleID)
             }
             preliminary.sort {
-                $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+                // Ưu tiên hiển thị Free Fire lên đầu danh sách để dán tệp nhanh nhất
+                let isGame0 = $0.bundleID.contains("freefire")
+                let isGame1 = $1.bundleID.contains("freefire")
+                if isGame0 && !isGame1 { return true }
+                if !isGame0 && isGame1 { return false }
+                return $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
             }
 
-            // Cập nhật kết quả nhanh lên giao diện nếu tìm thấy app
+            // Cập nhật kết quả nhanh lên giao diện
             if !preliminary.isEmpty {
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
@@ -68,11 +125,11 @@ final class ZArchiverAppService: ObservableObject {
                     self.isLoading = false
                     self.hasLoadedOnce = true
                     self.lastLoadedTime = Date()
-                    log("ZArchiverAppService: đã nạp nhanh \(preliminary.count) ứng dụng")
+                    Self.cachedAllApps = preliminary
                 }
             }
 
-            // 6. Quét sâu toàn bộ game và ứng dụng (Free Fire, Roblox, PUBG, v.v.) qua LaunchServices cache và catalog
+            // 6. Quét sâu toàn bộ game và ứng dụng qua LaunchServices cache và catalog
             let launchServicesIdentifiers = ContainerStore.launchServicesStoreIdentifiers()
             let mhaIdentifiers = MHAIdentifierCatalog.identifiers(
                 dynamic: dynamicIdentifiers,
@@ -88,7 +145,7 @@ final class ZArchiverAppService: ObservableObject {
                 bundleMetadata: bundleMetadata
             ) { [weak self] discoveredApps in
                 var progressive = AppDataCatalogMerger.merge(
-                    identified: discoveredApps + baseIdentifiedApps,
+                    identified: instantGames + discoveredApps + baseIdentifiedApps,
                     fallback: [],
                     identifier: { $0.bundleID },
                     path: { $0.containerPath }
@@ -97,7 +154,11 @@ final class ZArchiverAppService: ObservableObject {
                     ContainerPresentationPolicy.shouldShow(bundleID: $0.bundleID)
                 }
                 progressive.sort {
-                    $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+                    let isGame0 = $0.bundleID.contains("freefire")
+                    let isGame1 = $1.bundleID.contains("freefire")
+                    if isGame0 && !isGame1 { return true }
+                    if !isGame0 && isGame1 { return false }
+                    return $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
                 }
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
@@ -109,11 +170,12 @@ final class ZArchiverAppService: ObservableObject {
                     self.apps = progressive
                     self.isLoading = false
                     self.hasLoadedOnce = true
+                    Self.cachedAllApps = progressive
                 }
             }
 
             // 7. Hoàn thiện kết quả cuối cùng
-            let allKnownApps = mhaApps + baseIdentifiedApps
+            let allKnownApps = instantGames + mhaApps + baseIdentifiedApps
             var finalResult = AppDataCatalogMerger.merge(
                 identified: allKnownApps,
                 fallback: filesystemApps,
@@ -124,7 +186,11 @@ final class ZArchiverAppService: ObservableObject {
                 ContainerPresentationPolicy.shouldShow(bundleID: $0.bundleID)
             }
             finalResult.sort {
-                $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
+                let isGame0 = $0.bundleID.contains("freefire")
+                let isGame1 = $1.bundleID.contains("freefire")
+                if isGame0 && !isGame1 { return true }
+                if !isGame0 && isGame1 { return false }
+                return $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending
             }
 
             DispatchQueue.main.async { [weak self] in
@@ -138,7 +204,7 @@ final class ZArchiverAppService: ObservableObject {
                 self.isLoading = false
                 self.hasLoadedOnce = true
                 self.lastLoadedTime = Date()
-                log("ZArchiverAppService: hoàn tất nạp đầy đủ \(finalResult.count) ứng dụng")
+                Self.cachedAllApps = finalResult
             }
         }
     }

@@ -151,6 +151,7 @@ struct YabaoCheatTabView: View {
                 gen.impactOccurred()
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
                     yabao.selectedGame = "com.dts.freefireth"
+                    ModFeatureManager.shared.selectedBundle = "com.dts.freefireth"
                     yabao.checkInjectionState()
                 }
             } label: {
@@ -184,6 +185,7 @@ struct YabaoCheatTabView: View {
                 gen.impactOccurred()
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
                     yabao.selectedGame = "com.dts.freefiremax"
+                    ModFeatureManager.shared.selectedBundle = "com.dts.freefiremax"
                     yabao.checkInjectionState()
                 }
             } label: {
