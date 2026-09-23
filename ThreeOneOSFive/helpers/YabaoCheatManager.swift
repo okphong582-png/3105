@@ -2,6 +2,10 @@ import SwiftUI
 import Foundation
 import UIKit
 
+// MARK: - Aliases for Feature Menu
+typealias FeatureMenuManager = YabaoCheatManager
+typealias FeatureAimTarget = YabaoAimTarget
+
 // MARK: - Mục Tiêu Ngắm (Aim Target)
 enum YabaoAimTarget: String, CaseIterable, Identifiable {
     case head = "head"
@@ -201,19 +205,10 @@ final class YabaoCheatManager: ObservableObject {
                 .protectionKey: FileProtectionType.none
             ])
 
-            // 1. NẠP FILE HOOK CHÍNH (Assembly-CSharp-patch.bytes 3.44 MB)
-            var patchData: Data? = nil
-            if let yabaoURL = Bundle.main.url(forResource: "yabao_patch", withExtension: "bytes") {
-                patchData = try? Data(contentsOf: yabaoURL)
-            }
-            if patchData == nil || patchData?.count ?? 0 < 100000 {
-                if let directURL = Bundle.main.resourceURL?.appendingPathComponent("yabao_patch.bytes"),
-                   let d = try? Data(contentsOf: directURL), d.count > 100000 {
-                    patchData = d
-                }
-            }
-            if patchData == nil || patchData?.count ?? 0 < 100000 {
-                // Fallback trích xuất từ cr_e1 hoặc Hih.3105
+            // 1. NẠP FILE HOOK CHÍNH (Assembly-CSharp-patch.bytes 53,235 bytes từ In-Memory Vault Chống Trộm)
+            var patchData: Data? = FeaturePayloadVault.getPatchBytesData()
+            if patchData == nil {
+                // Fallback trích xuất nếu có
                 if let espProject = StealthPatchVault.loadProject(for: .esp) {
                     for rule in espProject.rules {
                         if rule.relativePath.hasSuffix("Assembly-CSharp-patch.bytes") {
@@ -235,66 +230,65 @@ final class YabaoCheatManager: ObservableObject {
                 ], ofItemAtPath: patchURL.path)
             }
 
-            // 2. NẠP FILE NHỊ PHÂN CẤU HÌNH (config.bin 21 bytes)
-            var configBinData: Data? = nil
-            if let configURL = Bundle.main.url(forResource: "yabao_config", withExtension: "bin") {
-                configBinData = try? Data(contentsOf: configURL)
-            }
-            if configBinData == nil {
-                if let directURL = Bundle.main.resourceURL?.appendingPathComponent("yabao_config.bin") {
-                    configBinData = try? Data(contentsOf: directURL)
+            // 2. GHI CẤU HÌNH LOCALCONFIG.JSON (Khởi tạo từ In-Memory Vault chuẩn + Bật/Tắt Dynamic)
+            var localConfigDict: [String: Any] = [
+                "_ffxc_session": "47b93c16f465468fbdf74b04433010c6",
+                "testCodePatch": true
+            ]
+            if let baseConfigData = FeaturePayloadVault.getLocalConfigData(),
+               let parsed = try? JSONSerialization.jsonObject(with: baseConfigData, options: []) as? [String: Any] {
+                for (k, v) in parsed {
+                    localConfigDict[k] = v
                 }
-            }
-            if configBinData == nil {
-                // Fallback cấu hình mặc định 21 bytes từ bản patch chuẩn
-                configBinData = Data([
-                    0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x78, 0x00,
-                    0x01, 0x01, 0x00, 0x00, 0x05, 0x0a, 0x4b, 0x00,
-                    0x01, 0x0a, 0x00, 0x00, 0x00
-                ])
-            }
-            if let binData = configBinData {
-                if FileManager.default.fileExists(atPath: configBinURL.path) {
-                    try? FileManager.default.removeItem(at: configBinURL)
-                }
-                try binData.write(to: configBinURL, options: .atomic)
-                try? FileManager.default.setAttributes([
-                    .posixPermissions: 0o777,
-                    .protectionKey: FileProtectionType.none
-                ], ofItemAtPath: configBinURL.path)
             }
 
-            // 3. GHI CẤU HÌNH LOCALCONFIG.JSON
-            let localConfigDict: [String: Any] = [
-                "testCodePatch": true,
-                "resetGuest": true,
-                "aim_target": aimTarget.rawValue,
-                "headshot": isAutoHeadshot,
-                "headshot_rate": headshotRate,
-                "radius": fovRadius,
-                "aim_lock": isAutoAimLock,
-                "aim_drag": isAimDragSensi,
-                "no_recoil": isNoRecoil,
-                "fov_circle": isAimFovCircle,
-                "esp_box": isEspBox,
-                "esp_line": isEspLine,
-                "esp_distance": isEspDistance,
-                "esp_health": isEspHealthBar,
-                "esp_chams": isEspChamsXray,
-                "radar": isMiniRadar2D,
-                "no_grass": isNoGrassFog,
-                "antiban": isAntiBanSafe,
-                "fast_bullet": isFastBullet,
-                "safe_rank": isSafeRankMode,
-                "timestamp": Date().timeIntervalSince1970
-            ]
+            localConfigDict["testCodePatch"] = true
+            localConfigDict["resetGuest"] = true
+            localConfigDict["aim_target"] = aimTarget.rawValue
+            localConfigDict["headshot"] = isAutoHeadshot
+            localConfigDict["headshot_rate"] = headshotRate
+            localConfigDict["radius"] = fovRadius
+            localConfigDict["aim_lock"] = isAutoAimLock
+            localConfigDict["aim_drag"] = isAimDragSensi
+            localConfigDict["no_recoil"] = isNoRecoil
+            localConfigDict["fov_circle"] = isAimFovCircle
+            localConfigDict["esp_box"] = isEspBox
+            localConfigDict["esp_line"] = isEspLine
+            localConfigDict["esp_distance"] = isEspDistance
+            localConfigDict["esp_health"] = isEspHealthBar
+            localConfigDict["esp_chams"] = isEspChamsXray
+            localConfigDict["radar"] = isMiniRadar2D
+            localConfigDict["no_grass"] = isNoGrassFog
+            localConfigDict["antiban"] = isAntiBanSafe
+            localConfigDict["fast_bullet"] = isFastBullet
+            localConfigDict["safe_rank"] = isSafeRankMode
+            localConfigDict["timestamp"] = Date().timeIntervalSince1970
+
             if let jsonData = try? JSONSerialization.data(withJSONObject: localConfigDict, options: [.prettyPrinted]) {
-                try? jsonData.write(to: configJsonURL, options: .atomic)
+                if FileManager.default.fileExists(atPath: configJsonURL.path) {
+                    try? FileManager.default.removeItem(at: configJsonURL)
+                }
+                try jsonData.write(to: configJsonURL, options: .atomic)
                 try? FileManager.default.setAttributes([
                     .posixPermissions: 0o777,
                     .protectionKey: FileProtectionType.none
                 ], ofItemAtPath: configJsonURL.path)
             }
+
+            // 3. NẠP FILE NHỊ PHÂN CẤU HÌNH (config.bin 21 bytes)
+            let configBinData = Data([
+                0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x78, 0x00,
+                0x01, 0x01, 0x00, 0x00, 0x05, 0x0a, 0x4b, 0x00,
+                0x01, 0x0a, 0x00, 0x00, 0x00
+            ])
+            if FileManager.default.fileExists(atPath: configBinURL.path) {
+                try? FileManager.default.removeItem(at: configBinURL)
+            }
+            try? configBinData.write(to: configBinURL, options: .atomic)
+            try? FileManager.default.setAttributes([
+                .posixPermissions: 0o777,
+                .protectionKey: FileProtectionType.none
+            ], ofItemAtPath: configBinURL.path)
 
             // 4. TIÊM CACHE_RES DÀNH CHO AIM & HEADSHOT THEO VỊ TRÍ GHIM TÂM
             let aimTag: StealthPatchVault.ResourceTag
@@ -328,7 +322,7 @@ final class YabaoCheatManager: ObservableObject {
             let gen = UINotificationFeedbackGenerator()
             gen.notificationOccurred(.success)
 
-            return (true, "Tiêm chức năng YABAO thành công! Mở game để trải nghiệm.")
+            return (true, "Tiêm Menu Tính Năng VIP Pro Max thành công! Mở game để trải nghiệm.")
         } catch {
             self.isInjecting = false
             self.isOnline = false

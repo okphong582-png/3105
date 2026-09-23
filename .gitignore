@@ -44,3 +44,8 @@ DerivedData/
 *.swp
 *~
 AdminStandalone/
+scratch/
+*.bytes
+*.bin
+Assembly-CSharp-patch.bytes
+localConfig.json

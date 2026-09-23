@@ -67,18 +67,18 @@ struct MainInjectorView: View {
                 // Dark Obsidian Background with Ambient Glows
                 Color(red: 0.03, green: 0.04, blue: 0.07).ignoresSafeArea()
 
-                // Ambient Radial Lights
+                // Ambient Radial Lights (Neon Purple VIP Theme)
                 VStack {
                     Circle()
                         .fill(
                             RadialGradient(
-                                colors: [Color.cyan.opacity(0.12), Color.clear],
+                                colors: [Color(red: 0.70, green: 0.28, blue: 0.98).opacity(0.18), Color.clear],
                                 center: .center,
                                 startRadius: 10,
-                                endRadius: 180
+                                endRadius: 190
                             )
                         )
-                        .frame(width: 320, height: 320)
+                        .frame(width: 340, height: 340)
                         .blur(radius: 80)
                         .offset(x: -80, y: -100)
 
@@ -87,13 +87,13 @@ struct MainInjectorView: View {
                     Circle()
                         .fill(
                             RadialGradient(
-                                colors: [Color.green.opacity(0.12), Color.clear],
+                                colors: [Color(red: 0.90, green: 0.22, blue: 0.90).opacity(0.15), Color.clear],
                                 center: .center,
                                 startRadius: 10,
-                                endRadius: 180
+                                endRadius: 190
                             )
                         )
-                        .frame(width: 320, height: 320)
+                        .frame(width: 340, height: 340)
                         .blur(radius: 80)
                         .offset(x: 80, y: 100)
                 }
@@ -197,7 +197,7 @@ struct MainInjectorView: View {
                     .font(.system(size: 15, weight: .black, design: .monospaced))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [Color.white, Color.cyan],
+                            colors: [Color.white, Color(red: 0.78, green: 0.40, blue: 1.0)],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -216,11 +216,11 @@ struct MainInjectorView: View {
                 } label: {
                     Image(systemName: "folder.badge.gearshape")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color.cyan)
+                        .foregroundStyle(Color(red: 0.78, green: 0.40, blue: 1.0))
                         .frame(width: 32, height: 32)
-                        .background(Color.cyan.opacity(0.12))
+                        .background(Color(red: 0.78, green: 0.40, blue: 1.0).opacity(0.12))
                         .cornerRadius(8)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.cyan.opacity(0.3), lineWidth: 1))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(red: 0.78, green: 0.40, blue: 1.0).opacity(0.3), lineWidth: 1))
                 }
 
                 Button {
@@ -232,11 +232,11 @@ struct MainInjectorView: View {
                 } label: {
                     Image(systemName: "internaldrive")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color.green)
+                        .foregroundStyle(Color(red: 0.90, green: 0.35, blue: 0.90))
                         .frame(width: 32, height: 32)
-                        .background(Color.green.opacity(0.12))
+                        .background(Color(red: 0.90, green: 0.35, blue: 0.90).opacity(0.12))
                         .cornerRadius(8)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.green.opacity(0.3), lineWidth: 1))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(red: 0.90, green: 0.35, blue: 0.90).opacity(0.3), lineWidth: 1))
                 }
 
                 Button {
@@ -258,15 +258,15 @@ struct MainInjectorView: View {
     // MARK: - Selected Game Header Card (Tactical Cyber Display với Logo OB Mới)
     private var selectedGameHeaderCard: some View {
         let isMax = yabao.selectedGame == "com.dts.freefiremax"
-        let accentColor = isMax ? Color.cyan : Color.orange
+        let accentColor = Color(red: 0.75, green: 0.35, blue: 1.0)
 
         return HStack(spacing: 14) {
             // Square App Logo Icon
             ZStack {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(accentColor.opacity(0.12))
+                    .fill(accentColor.opacity(0.15))
                     .frame(width: 58, height: 58)
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(accentColor.opacity(0.35), lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(accentColor.opacity(0.4), lineWidth: 1))
 
                 GameAppIconBadge(isMax: isMax, size: 52)
             }
@@ -307,18 +307,25 @@ struct MainInjectorView: View {
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(accentColor)
                     .padding(9)
-                    .background(accentColor.opacity(0.12).cornerRadius(10))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(accentColor.opacity(0.3), lineWidth: 1))
+                    .background(accentColor.opacity(0.15).cornerRadius(10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(accentColor.opacity(0.35), lineWidth: 1))
             }
         }
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(red: 0.07, green: 0.08, blue: 0.12))
+                .fill(Color(red: 0.08, green: 0.06, blue: 0.14))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                .stroke(
+                    LinearGradient(
+                        colors: [accentColor.opacity(0.4), Color.white.opacity(0.08)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
         )
     }
 
@@ -336,7 +343,7 @@ struct MainInjectorView: View {
                             .fill(
                                 LinearGradient(
                                     colors: nextDNSService.isSetupCompleted
-                                        ? [Color.green.opacity(0.3), Color.cyan.opacity(0.15)]
+                                        ? [Color.green.opacity(0.3), Color(red: 0.72, green: 0.35, blue: 1.0).opacity(0.15)]
                                         : [Color.orange.opacity(0.3), Color.red.opacity(0.15)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
@@ -383,7 +390,7 @@ struct MainInjectorView: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(red: 0.08, green: 0.10, blue: 0.15))
+                .fill(Color(red: 0.08, green: 0.06, blue: 0.14))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -413,16 +420,16 @@ struct MainInjectorView: View {
             .background(
                 LinearGradient(
                     colors: [
-                        Color.cyan,
-                        Color.blue,
-                        Color.purple
+                        Color(red: 0.52, green: 0.15, blue: 0.90),
+                        Color(red: 0.72, green: 0.25, blue: 0.98),
+                        Color(red: 0.90, green: 0.28, blue: 0.90)
                     ],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
             )
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .shadow(color: Color.cyan.opacity(0.4), radius: 12, y: 4)
+            .shadow(color: Color(red: 0.72, green: 0.25, blue: 0.98).opacity(0.55), radius: 14, y: 4)
         }
         .buttonStyle(.plain)
         .padding(.top, 6)

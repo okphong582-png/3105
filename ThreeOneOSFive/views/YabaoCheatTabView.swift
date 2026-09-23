@@ -1,7 +1,10 @@
 import SwiftUI
 import UIKit
 
-// MARK: - Giao Diện Tab YABAO CHEAT (Chức Năng Y Hệt YABAOCHEAT.app)
+// MARK: - Alias cho Menu Tính Năng VIP Pro Max
+typealias FeatureMenuTabView = YabaoCheatTabView
+
+// MARK: - Giao Diện Menu Tính Năng VIP Pro Max (Giao Diện Màu Tím Siêu Đẹp)
 @MainActor
 struct YabaoCheatTabView: View {
     @ObservedObject private var yabao = YabaoCheatManager.shared
@@ -10,10 +13,15 @@ struct YabaoCheatTabView: View {
     @State private var isAlertSuccess: Bool = true
     @State private var radarPulse: Bool = false
 
+    // Hệ màu Tím VIP PRO MAX
+    private let purplePrimary = Color(red: 0.72, green: 0.35, blue: 1.0)
+    private let magentaAccent = Color(red: 0.90, green: 0.28, blue: 0.92)
+    private let deepPurpleCard = Color(red: 0.08, green: 0.06, blue: 0.14).opacity(0.92)
+
     var body: some View {
         VStack(spacing: 16) {
-            // 1. BRAND HEADER & TRẠNG THÁI (FFXC / YABAO PRIVATE EDITION)
-            yabaoBrandHeaderCard
+            // 1. BRAND HEADER & TRẠNG THÁI (MENU TÍNH NĂNG VIP PRO MAX)
+            featureBrandHeaderCard
 
             // 2. CHỌN GAME (Free Fire Thường vs Free Fire MAX)
             gameSelectorCard
@@ -53,50 +61,57 @@ struct YabaoCheatTabView: View {
         }
     }
 
-    // MARK: - 1. Brand Header & Status
-    private var yabaoBrandHeaderCard: some View {
+    // MARK: - 1. Brand Header & Status (Menu Tính Năng VIP Pro Max)
+    private var featureBrandHeaderCard: some View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [Color.cyan.opacity(0.3), Color.blue.opacity(0.1)],
+                            colors: [purplePrimary.opacity(0.35), magentaAccent.opacity(0.15)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 46, height: 46)
+                    .frame(width: 48, height: 48)
 
                 Image(systemName: "flame.fill")
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 22, weight: .black))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [Color.cyan, Color.white],
+                            colors: [Color.white, purplePrimary],
                             startPoint: .top,
                             endPoint: .bottom
                         )
                     )
-                    .shadow(color: Color.cyan.opacity(0.8), radius: 6)
+                    .shadow(color: purplePrimary.opacity(0.9), radius: 8)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
-                    Text("YABAO CHEAT")
+                    Text("MENU TÍNH NĂNG")
                         .font(.system(size: 15, weight: .black, design: .monospaced))
                         .foregroundStyle(Color.white)
 
-                    Text("PRIVATE")
+                    Text("VIP PRO MAX")
                         .font(.system(size: 9, weight: .black, design: .monospaced))
-                        .foregroundStyle(Color.cyan)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Capsule().fill(Color.cyan.opacity(0.15)))
-                        .overlay(Capsule().stroke(Color.cyan.opacity(0.5), lineWidth: 0.8))
+                        .foregroundStyle(Color.white)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 2.5)
+                        .background(
+                            LinearGradient(
+                                colors: [purplePrimary, magentaAccent],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .clipShape(Capsule())
+                        .shadow(color: purplePrimary.opacity(0.5), radius: 4)
                 }
 
                 Text("HỆ THỐNG ĐIỀU KHIỂN & BẬT TẮT CHỨC NĂNG")
                     .font(.system(size: 9.5, weight: .medium, design: .monospaced))
-                    .foregroundStyle(Color.white.opacity(0.6))
+                    .foregroundStyle(Color.white.opacity(0.65))
             }
 
             Spacer()
@@ -124,22 +139,23 @@ struct YabaoCheatTabView: View {
                     .stroke(yabao.isOnline ? Color.green.opacity(0.4) : Color.white.opacity(0.08), lineWidth: 1)
             )
         }
-        .padding(12)
+        .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(red: 0.08, green: 0.10, blue: 0.14).opacity(0.85))
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(deepPurpleCard)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(
                     LinearGradient(
-                        colors: [Color.cyan.opacity(0.5), Color.white.opacity(0.08)],
+                        colors: [purplePrimary.opacity(0.5), magentaAccent.opacity(0.2)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
-                    lineWidth: 1
+                    lineWidth: 1.2
                 )
         )
+        .shadow(color: purplePrimary.opacity(0.15), radius: 10, y: 3)
     }
 
     // MARK: - 2. Game Selector Card (FF Thường vs FF MAX)
@@ -161,21 +177,22 @@ struct YabaoCheatTabView: View {
                     Text("Free Fire Thường")
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
                 }
-                .foregroundStyle(yabao.selectedGame == "com.dts.freefireth" ? Color.black : Color.white.opacity(0.8))
+                .foregroundStyle(Color.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: 38)
+                .frame(height: 40)
                 .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
                         .fill(
                             yabao.selectedGame == "com.dts.freefireth"
-                                ? LinearGradient(colors: [Color.orange, Color.yellow], startPoint: .leading, endPoint: .trailing)
+                                ? LinearGradient(colors: [purplePrimary, magentaAccent], startPoint: .leading, endPoint: .trailing)
                                 : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
                         )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(yabao.selectedGame == "com.dts.freefireth" ? Color.orange : Color.white.opacity(0.08), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .stroke(yabao.selectedGame == "com.dts.freefireth" ? purplePrimary : Color.white.opacity(0.08), lineWidth: 1)
                 )
+                .shadow(color: yabao.selectedGame == "com.dts.freefireth" ? purplePrimary.opacity(0.4) : Color.clear, radius: 8)
             }
             .buttonStyle(.plain)
 
@@ -195,28 +212,29 @@ struct YabaoCheatTabView: View {
                     Text("Free Fire MAX")
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
                 }
-                .foregroundStyle(yabao.selectedGame == "com.dts.freefiremax" ? Color.black : Color.white.opacity(0.8))
+                .foregroundStyle(Color.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: 38)
+                .frame(height: 40)
                 .background(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
                         .fill(
                             yabao.selectedGame == "com.dts.freefiremax"
-                                ? LinearGradient(colors: [Color.blue, Color.cyan], startPoint: .leading, endPoint: .trailing)
+                                ? LinearGradient(colors: [purplePrimary, magentaAccent], startPoint: .leading, endPoint: .trailing)
                                 : LinearGradient(colors: [Color.white.opacity(0.05), Color.white.opacity(0.02)], startPoint: .leading, endPoint: .trailing)
                         )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .stroke(yabao.selectedGame == "com.dts.freefiremax" ? Color.cyan : Color.white.opacity(0.08), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                        .stroke(yabao.selectedGame == "com.dts.freefiremax" ? purplePrimary : Color.white.opacity(0.08), lineWidth: 1)
                 )
+                .shadow(color: yabao.selectedGame == "com.dts.freefiremax" ? purplePrimary.opacity(0.4) : Color.clear, radius: 8)
             }
             .buttonStyle(.plain)
         }
         .padding(6)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(red: 0.06, green: 0.08, blue: 0.12).opacity(0.8))
+            RoundedRectangle(cornerRadius: 15, style: .continuous)
+                .fill(Color(red: 0.05, green: 0.04, blue: 0.09).opacity(0.85))
         )
     }
 
@@ -226,7 +244,7 @@ struct YabaoCheatTabView: View {
             HStack(spacing: 6) {
                 Image(systemName: "scope")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(Color.red)
+                    .foregroundStyle(magentaAccent)
 
                 Text("VỊ TRÍ GHIM TÂM (AIM TARGET)")
                     .font(.system(size: 11, weight: .black, design: .monospaced))
@@ -236,10 +254,12 @@ struct YabaoCheatTabView: View {
 
                 Text(yabao.aimTarget.englishTitle)
                     .font(.system(size: 10, weight: .black, design: .monospaced))
-                    .foregroundStyle(Color.red)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Capsule().fill(Color.red.opacity(0.15)))
+                    .foregroundStyle(Color.white)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2.5)
+                    .background(
+                        Capsule().fill(LinearGradient(colors: [purplePrimary, magentaAccent], startPoint: .leading, endPoint: .trailing))
+                    )
             }
 
             // Grid 4 nút: ĐẦU, CỔ, NGỰC, THÂN
@@ -261,20 +281,20 @@ struct YabaoCheatTabView: View {
                         }
                         .foregroundStyle(yabao.aimTarget == target ? Color.white : Color.white.opacity(0.6))
                         .frame(maxWidth: .infinity)
-                        .frame(height: 48)
+                        .frame(height: 50)
                         .background(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            RoundedRectangle(cornerRadius: 11, style: .continuous)
                                 .fill(
                                     yabao.aimTarget == target
-                                        ? LinearGradient(colors: [Color.red, Color(red: 0.8, green: 0.1, blue: 0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                        ? LinearGradient(colors: [purplePrimary, magentaAccent], startPoint: .topLeading, endPoint: .bottomTrailing)
                                         : LinearGradient(colors: [Color.white.opacity(0.06), Color.white.opacity(0.03)], startPoint: .leading, endPoint: .trailing)
                                 )
                         )
                         .overlay(
-                            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .stroke(yabao.aimTarget == target ? Color.red.opacity(0.9) : Color.white.opacity(0.08), lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                .stroke(yabao.aimTarget == target ? purplePrimary.opacity(0.9) : Color.white.opacity(0.08), lineWidth: 1)
                         )
-                        .shadow(color: yabao.aimTarget == target ? Color.red.opacity(0.4) : Color.clear, radius: 6)
+                        .shadow(color: yabao.aimTarget == target ? purplePrimary.opacity(0.5) : Color.clear, radius: 8)
                     }
                     .buttonStyle(.plain)
                 }
@@ -282,12 +302,12 @@ struct YabaoCheatTabView: View {
         }
         .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(red: 0.08, green: 0.09, blue: 0.13).opacity(0.85))
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(deepPurpleCard)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(purplePrimary.opacity(0.2), lineWidth: 1)
         )
     }
 
@@ -299,7 +319,7 @@ struct YabaoCheatTabView: View {
                 HStack {
                     Image(systemName: "cross.circle.fill")
                         .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Color.orange)
+                        .foregroundStyle(magentaAccent)
 
                     Text("TỈ LỆ GHIM ĐẦU (HEADSHOT RATE)")
                         .font(.system(size: 10.5, weight: .bold, design: .monospaced))
@@ -309,11 +329,11 @@ struct YabaoCheatTabView: View {
 
                     Text("\(Int(yabao.headshotRate))%")
                         .font(.system(size: 12, weight: .black, design: .monospaced))
-                        .foregroundStyle(Color.orange)
+                        .foregroundStyle(magentaAccent)
                 }
 
                 Slider(value: $yabao.headshotRate, in: 50...100, step: 5)
-                    .tint(Color.orange)
+                    .tint(purplePrimary)
 
                 HStack(spacing: 8) {
                     ForEach([50, 80, 100], id: \.self) { val in
@@ -326,12 +346,17 @@ struct YabaoCheatTabView: View {
                         } label: {
                             Text("\(val)%")
                                 .font(.system(size: 9.5, weight: .bold, design: .monospaced))
-                                .foregroundStyle(Int(yabao.headshotRate) == val ? Color.black : Color.white.opacity(0.8))
+                                .foregroundStyle(Color.white)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 24)
+                                .frame(height: 26)
                                 .background(
-                                    Capsule().fill(Int(yabao.headshotRate) == val ? Color.orange : Color.white.opacity(0.08))
+                                    Capsule().fill(
+                                        Int(yabao.headshotRate) == val
+                                            ? LinearGradient(colors: [purplePrimary, magentaAccent], startPoint: .leading, endPoint: .trailing)
+                                            : LinearGradient(colors: [Color.white.opacity(0.08), Color.white.opacity(0.04)], startPoint: .leading, endPoint: .trailing)
+                                    )
                                 )
+                                .shadow(color: Int(yabao.headshotRate) == val ? purplePrimary.opacity(0.4) : Color.clear, radius: 4)
                         }
                         .buttonStyle(.plain)
                     }
@@ -345,7 +370,7 @@ struct YabaoCheatTabView: View {
                 HStack {
                     Image(systemName: "circle.circle")
                         .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Color.cyan)
+                        .foregroundStyle(purplePrimary)
 
                     Text("BÁN KÍNH QUÉT FOV (RADIUS)")
                         .font(.system(size: 10.5, weight: .bold, design: .monospaced))
@@ -355,100 +380,100 @@ struct YabaoCheatTabView: View {
 
                     Text("\(Int(yabao.fovRadius))m")
                         .font(.system(size: 12, weight: .black, design: .monospaced))
-                        .foregroundStyle(Color.cyan)
+                        .foregroundStyle(purplePrimary)
                 }
 
                 Slider(value: $yabao.fovRadius, in: 30...120, step: 5)
-                    .tint(Color.cyan)
+                    .tint(magentaAccent)
             }
         }
         .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(red: 0.08, green: 0.09, blue: 0.13).opacity(0.85))
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(deepPurpleCard)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(purplePrimary.opacity(0.2), lineWidth: 1)
         )
     }
 
     // MARK: - 5. Aimbot Features Card (Nhóm 1)
     private var aimbotFeaturesCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            cardHeader(title: "AIMBOT & TRỢ CHIẾN", icon: "scope", color: Color.red)
+            cardHeader(title: "AIMBOT & CHIẾN ĐẤU", icon: "scope", color: magentaAccent)
 
             VStack(spacing: 6) {
-                featureToggleRow(title: "Tự Động Khóa Tâm", subtitle: "Tự bắt mục tiêu khi lia tâm gần đối thủ", icon: "lock.shield", isOn: $yabao.isAutoAimLock, color: Color.red)
-                featureToggleRow(title: "Kéo Tâm Nhạy Siêu Tốc", subtitle: "Trợ lực vuốt tâm mượt mà, gạt nhẹ là trúng", icon: "arrow.up.forward.circle", isOn: $yabao.isAimDragSensi, color: Color.red)
-                featureToggleRow(title: "Ghim Đầu Chuẩn (Auto Head)", subtitle: "Điều hướng đạn thẳng vào vùng đầu", icon: "target", isOn: $yabao.isAutoHeadshot, color: Color.red)
-                featureToggleRow(title: "Bắn Không Rung (No Recoil)", subtitle: "Triệt tiêu độ giật và độ rung của súng", icon: "bolt.shield", isOn: $yabao.isNoRecoil, color: Color.red)
-                featureToggleRow(title: "Hiển Thị Vòng FOV", subtitle: "Vòng tròn giới hạn vùng quét mục tiêu", icon: "circle", isOn: $yabao.isAimFovCircle, color: Color.red)
+                featureToggleRow(title: "Tự Động Khóa Tâm", subtitle: "Tự bắt mục tiêu khi lia tâm gần đối thủ", icon: "lock.shield", isOn: $yabao.isAutoAimLock, color: purplePrimary)
+                featureToggleRow(title: "Kéo Tâm Nhạy Siêu Tốc", subtitle: "Trợ lực vuốt tâm mượt mà, gạt nhẹ là trúng", icon: "arrow.up.forward.circle", isOn: $yabao.isAimDragSensi, color: purplePrimary)
+                featureToggleRow(title: "Ghim Đầu Chuẩn (Auto Head)", subtitle: "Điều hướng đạn thẳng vào vùng đầu", icon: "target", isOn: $yabao.isAutoHeadshot, color: purplePrimary)
+                featureToggleRow(title: "Bắn Không Rung (No Recoil)", subtitle: "Triệt tiêu độ giật và độ rung của súng", icon: "bolt.shield", isOn: $yabao.isNoRecoil, color: purplePrimary)
+                featureToggleRow(title: "Hiển Thị Vòng FOV", subtitle: "Vòng tròn giới hạn vùng quét mục tiêu", icon: "circle", isOn: $yabao.isAimFovCircle, color: purplePrimary)
             }
         }
         .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(red: 0.08, green: 0.09, blue: 0.13).opacity(0.85))
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(deepPurpleCard)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(magentaAccent.opacity(0.2), lineWidth: 1)
         )
     }
 
     // MARK: - 6. ESP Features Card (Nhóm 2)
     private var espFeaturesCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            cardHeader(title: "ĐỊNH VỊ & ESP XUYÊN TƯỜNG", icon: "eye.trianglebadge.exclamationmark", color: Color.cyan)
+            cardHeader(title: "ĐỊNH VỊ & ESP XUYÊN TƯỜNG", icon: "eye.trianglebadge.exclamationmark", color: purplePrimary)
 
             VStack(spacing: 6) {
-                featureToggleRow(title: "ESP Khung Địch (Box 2D/3D)", subtitle: "Đóng khung chữ nhật hiển thị quanh người địch", icon: "viewfinder", isOn: $yabao.isEspBox, color: Color.cyan)
-                featureToggleRow(title: "ESP Đường Kẻ (Line)", subtitle: "Đường thẳng nối từ tâm hoặc đỉnh đầu tới địch", icon: "line.diagonal", isOn: $yabao.isEspLine, color: Color.cyan)
-                featureToggleRow(title: "ESP Khoảng Cách (Distance)", subtitle: "Hiển thị cự ly (mét) chính xác từng mili-giây", icon: "ruler", isOn: $yabao.isEspDistance, color: Color.cyan)
-                featureToggleRow(title: "ESP Thanh Máu & Giáp", subtitle: "Theo dõi lượng máu và trang bị của đối phương", icon: "cross.fill", isOn: $yabao.isEspHealthBar, color: Color.cyan)
-                featureToggleRow(title: "ESP X-Ray Chams Xuyên Tường", subtitle: "Tô màu nhân vật nổi bật xuyên qua vật cản", icon: "person.fill.viewfinder", isOn: $yabao.isEspChamsXray, color: Color.cyan)
-                featureToggleRow(title: "Mini Radar 2D 360°", subtitle: "Quét chấm định vị kẻ địch xung quanh bản đồ", icon: "dot.radiowaves.left.and.right", isOn: $yabao.isMiniRadar2D, color: Color.cyan)
+                featureToggleRow(title: "ESP Khung Địch (Box 2D/3D)", subtitle: "Đóng khung chữ nhật hiển thị quanh người địch", icon: "viewfinder", isOn: $yabao.isEspBox, color: purplePrimary)
+                featureToggleRow(title: "ESP Đường Kẻ (Line)", subtitle: "Đường thẳng nối từ tâm hoặc đỉnh đầu tới địch", icon: "line.diagonal", isOn: $yabao.isEspLine, color: purplePrimary)
+                featureToggleRow(title: "ESP Khoảng Cách (Distance)", subtitle: "Hiển thị cự ly (mét) chính xác từng mili-giây", icon: "ruler", isOn: $yabao.isEspDistance, color: purplePrimary)
+                featureToggleRow(title: "ESP Thanh Máu & Giáp", subtitle: "Theo dõi lượng máu và trang bị của đối phương", icon: "cross.fill", isOn: $yabao.isEspHealthBar, color: purplePrimary)
+                featureToggleRow(title: "ESP X-Ray Chams Xuyên Tường", subtitle: "Tô màu nhân vật nổi bật xuyên qua vật cản", icon: "person.fill.viewfinder", isOn: $yabao.isEspChamsXray, color: purplePrimary)
+                featureToggleRow(title: "Mini Radar 2D 360°", subtitle: "Quét chấm định vị kẻ địch xung quanh bản đồ", icon: "dot.radiowaves.left.and.right", isOn: $yabao.isMiniRadar2D, color: purplePrimary)
             }
         }
         .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(red: 0.08, green: 0.09, blue: 0.13).opacity(0.85))
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(deepPurpleCard)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(purplePrimary.opacity(0.2), lineWidth: 1)
         )
     }
 
     // MARK: - 7. Extra Utilities Card (Nhóm 3)
     private var extraUtilitiesCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            cardHeader(title: "TIỆN ÍCH & AN TOÀN RANK", icon: "shield.checkerboard", color: Color.green)
+            cardHeader(title: "TIỆN ÍCH & AN TOÀN RANK", icon: "shield.checkerboard", color: purplePrimary)
 
             VStack(spacing: 6) {
-                featureToggleRow(title: "Xóa Cỏ & Sương Mù", subtitle: "Tối ưu hóa tầm nhìn thông thoáng khắp bản đồ", icon: "leaf.arrow.triangle.circlepath", isOn: $yabao.isNoGrassFog, color: Color.green)
-                featureToggleRow(title: "Tăng Tốc Đạn (Fast Bullet)", subtitle: "Rút ngắn thời gian đạn bay chạm đích", icon: "bolt.fill", isOn: $yabao.isFastBullet, color: Color.green)
-                featureToggleRow(title: "Anti-Ban Safe Guard", subtitle: "Che giấu chữ ký bộ nhớ và tránh bị quét hệ thống", icon: "shield.lefthalf.filled", isOn: $yabao.isAntiBanSafe, color: Color.green)
-                featureToggleRow(title: "Chế Độ An Toàn Leo Rank", subtitle: "Cân bằng thông số tự nhiên, hạn chế bị report", icon: "star.shield", isOn: $yabao.isSafeRankMode, color: Color.green)
+                featureToggleRow(title: "Xóa Cỏ & Sương Mù", subtitle: "Tối ưu hóa tầm nhìn thông thoáng khắp bản đồ", icon: "leaf.arrow.triangle.circlepath", isOn: $yabao.isNoGrassFog, color: purplePrimary)
+                featureToggleRow(title: "Tăng Tốc Đạn (Fast Bullet)", subtitle: "Rút ngắn thời gian đạn bay chạm đích", icon: "bolt.fill", isOn: $yabao.isFastBullet, color: purplePrimary)
+                featureToggleRow(title: "Anti-Ban Safe Guard", subtitle: "Che giấu chữ ký bộ nhớ và tránh bị quét hệ thống", icon: "shield.lefthalf.filled", isOn: $yabao.isAntiBanSafe, color: purplePrimary)
+                featureToggleRow(title: "Chế Độ An Toàn Leo Rank", subtitle: "Cân bằng thông số tự nhiên, hạn chế bị report", icon: "star.shield", isOn: $yabao.isSafeRankMode, color: purplePrimary)
             }
         }
         .padding(14)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(red: 0.08, green: 0.09, blue: 0.13).opacity(0.85))
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(deepPurpleCard)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(purplePrimary.opacity(0.2), lineWidth: 1)
         )
     }
 
     // MARK: - 8. Bottom Action Bar (INJECT & RESET)
     private var bottomActionBar: some View {
         VStack(spacing: 10) {
-            // Nút TIÊM CHỨC NĂNG (INJECT)
+            // Nút TIÊM MENU TÍNH NĂNG (INJECT)
             Button {
                 let gen = UIImpactFeedbackGenerator(style: .heavy)
                 gen.impactOccurred()
@@ -462,33 +487,36 @@ struct YabaoCheatTabView: View {
                 HStack(spacing: 10) {
                     if yabao.isInjecting {
                         ProgressView()
-                            .tint(.black)
+                            .tint(.white)
                     } else {
                         Image(systemName: "syringe.fill")
                             .font(.system(size: 16, weight: .black))
                     }
 
-                    Text(yabao.isInjecting ? "ĐANG TIÊM CẤU HÌNH..." : "TIÊM CHỨC NĂNG (INJECT)")
-                        .font(.system(size: 13, weight: .black, design: .monospaced))
+                    Text(yabao.isInjecting ? "ĐANG TIÊM CẤU HÌNH..." : "TIÊM MENU TÍNH NĂNG (INJECT)")
+                        .font(.system(size: 13.5, weight: .black, design: .monospaced))
                 }
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: 52)
+                .frame(height: 54)
                 .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color(red: 0.0, green: 0.95, blue: 0.6), Color(red: 0.0, green: 0.7, blue: 0.9)],
+                                colors: [
+                                    Color(red: 0.62, green: 0.18, blue: 0.98),
+                                    Color(red: 0.88, green: 0.25, blue: 0.92)
+                                ],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
                         .stroke(Color.white.opacity(0.4), lineWidth: 1)
                 )
-                .shadow(color: Color(red: 0.0, green: 0.95, blue: 0.6).opacity(0.4), radius: 10, y: 3)
+                .shadow(color: purplePrimary.opacity(0.55), radius: 14, y: 4)
             }
             .buttonStyle(.plain)
             .disabled(yabao.isInjecting)
@@ -520,7 +548,7 @@ struct YabaoCheatTabView: View {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                        .stroke(purplePrimary.opacity(0.2), lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)

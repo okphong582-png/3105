@@ -110,16 +110,16 @@ struct GameSelectionView: View {
             Color(red: 0.03, green: 0.04, blue: 0.07)
                 .ignoresSafeArea()
 
-            // Futuristic Radial Glows
+            // Futuristic Radial Glows (Neon Purple VIP Theme)
             VStack {
                 Circle()
-                    .fill(Color.cyan.opacity(0.12))
+                    .fill(Color(red: 0.70, green: 0.28, blue: 0.98).opacity(0.18))
                     .frame(width: 320, height: 320)
                     .blur(radius: 80)
                     .offset(x: -80, y: -60)
                 Spacer()
                 Circle()
-                    .fill(Color.orange.opacity(0.12))
+                    .fill(Color(red: 0.90, green: 0.22, blue: 0.90).opacity(0.15))
                     .frame(width: 320, height: 320)
                     .blur(radius: 80)
                     .offset(x: 80, y: 60)
@@ -190,7 +190,7 @@ struct GameSelectionView: View {
 
                     Text("HỆ THỐNG ONI AKUMA")
                         .font(.system(size: 11, weight: .black, design: .monospaced))
-                        .foregroundStyle(Color.cyan)
+                        .foregroundStyle(Color(red: 0.78, green: 0.40, blue: 1.0))
                         .tracking(1.5)
                 }
 
