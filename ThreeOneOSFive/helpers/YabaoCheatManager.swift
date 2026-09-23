@@ -178,25 +178,34 @@ final class YabaoCheatManager: ObservableObject {
         }
     }
 
-    // MARK: - Tiêm Chức Năng YABAO (INJECT)
+    // MARK: - Bật / Tắt 1 Nút Duy Nhất (Single Master Toggle)
+    func toggleFeature() async -> (Bool, String) {
+        if isOnline {
+            return await resetFeatures()
+        } else {
+            return await injectFeatures()
+        }
+    }
+
+    // MARK: - Tiêm 2 File Duy Nhất Vào Documents (Assembly-CSharp-patch.bytes & localConfig.json)
     func injectFeatures() async -> (Bool, String) {
         self.isInjecting = true
-        self.statusMessage = "ĐANG TIÊM..."
+        self.statusMessage = "ĐANG BẬT..."
 
-        // Tự động kích hoạt quyền traversal & lease container game
+        // Kích hoạt container quyền truy cập
         ContainerStore.warmupAndActivateGameContainer(bundleID: selectedGame)
 
         guard let containerPath = ContainerStore.resolveAppContainerPath(bundleID: selectedGame) else {
             self.isInjecting = false
             self.isOnline = false
             self.statusMessage = "TRẠNG THÁI : OFFLINE"
-            return (false, "Không tìm thấy dữ liệu game \(selectedGame == "com.dts.freefiremax" ? "Free Fire MAX" : "Free Fire Thường"). Hãy mở game một lần trước.")
+            let targetName = selectedGame == "com.dts.freefiremax" ? "Free Fire MAX" : "Free Fire Thường"
+            return (false, "Không tìm thấy dữ liệu game \(targetName). Hãy mở game một lần trước.")
         }
 
         let containerURL = URL(fileURLWithPath: containerPath)
         let documentsURL = containerURL.appendingPathComponent("Documents")
         let patchURL = documentsURL.appendingPathComponent("Assembly-CSharp-patch.bytes")
-        let configBinURL = documentsURL.appendingPathComponent("config.bin")
         let configJsonURL = documentsURL.appendingPathComponent("localConfig.json")
 
         do {
@@ -205,113 +214,33 @@ final class YabaoCheatManager: ObservableObject {
                 .protectionKey: FileProtectionType.none
             ])
 
-            // 1. NẠP FILE HOOK CHÍNH (Assembly-CSharp-patch.bytes 53,235 bytes từ In-Memory Vault Chống Trộm)
-            var patchData: Data? = FeaturePayloadVault.getPatchBytesData()
-            if patchData == nil {
-                // Fallback trích xuất nếu có
-                if let espProject = StealthPatchVault.loadProject(for: .esp) {
-                    for rule in espProject.rules {
-                        if rule.relativePath.hasSuffix("Assembly-CSharp-patch.bytes") {
-                            patchData = rule.replacementData
-                            break
-                        }
-                    }
-                }
+            // 1. Tiêm FILE 1: Assembly-CSharp-patch.bytes (53,235 bytes từ Vault Chống Trộm)
+            guard let patchData = FeaturePayloadVault.getPatchBytesData() else {
+                self.isInjecting = false
+                return (false, "Không thể giải mã dữ liệu patch từ Vault.")
             }
-
-            if let data = patchData {
-                if FileManager.default.fileExists(atPath: patchURL.path) {
-                    try? FileManager.default.removeItem(at: patchURL)
-                }
-                try data.write(to: patchURL, options: .atomic)
-                try? FileManager.default.setAttributes([
-                    .posixPermissions: 0o777,
-                    .protectionKey: FileProtectionType.none
-                ], ofItemAtPath: patchURL.path)
+            if FileManager.default.fileExists(atPath: patchURL.path) {
+                try? FileManager.default.removeItem(at: patchURL)
             }
-
-            // 2. GHI CẤU HÌNH LOCALCONFIG.JSON (Khởi tạo từ In-Memory Vault chuẩn + Bật/Tắt Dynamic)
-            var localConfigDict: [String: Any] = [
-                "_ffxc_session": "47b93c16f465468fbdf74b04433010c6",
-                "testCodePatch": true
-            ]
-            if let baseConfigData = FeaturePayloadVault.getLocalConfigData(),
-               let parsed = try? JSONSerialization.jsonObject(with: baseConfigData, options: []) as? [String: Any] {
-                for (k, v) in parsed {
-                    localConfigDict[k] = v
-                }
-            }
-
-            localConfigDict["testCodePatch"] = true
-            localConfigDict["resetGuest"] = true
-            localConfigDict["aim_target"] = aimTarget.rawValue
-            localConfigDict["headshot"] = isAutoHeadshot
-            localConfigDict["headshot_rate"] = headshotRate
-            localConfigDict["radius"] = fovRadius
-            localConfigDict["aim_lock"] = isAutoAimLock
-            localConfigDict["aim_drag"] = isAimDragSensi
-            localConfigDict["no_recoil"] = isNoRecoil
-            localConfigDict["fov_circle"] = isAimFovCircle
-            localConfigDict["esp_box"] = isEspBox
-            localConfigDict["esp_line"] = isEspLine
-            localConfigDict["esp_distance"] = isEspDistance
-            localConfigDict["esp_health"] = isEspHealthBar
-            localConfigDict["esp_chams"] = isEspChamsXray
-            localConfigDict["radar"] = isMiniRadar2D
-            localConfigDict["no_grass"] = isNoGrassFog
-            localConfigDict["antiban"] = isAntiBanSafe
-            localConfigDict["fast_bullet"] = isFastBullet
-            localConfigDict["safe_rank"] = isSafeRankMode
-            localConfigDict["timestamp"] = Date().timeIntervalSince1970
-
-            if let jsonData = try? JSONSerialization.data(withJSONObject: localConfigDict, options: [.prettyPrinted]) {
-                if FileManager.default.fileExists(atPath: configJsonURL.path) {
-                    try? FileManager.default.removeItem(at: configJsonURL)
-                }
-                try jsonData.write(to: configJsonURL, options: .atomic)
-                try? FileManager.default.setAttributes([
-                    .posixPermissions: 0o777,
-                    .protectionKey: FileProtectionType.none
-                ], ofItemAtPath: configJsonURL.path)
-            }
-
-            // 3. NẠP FILE NHỊ PHÂN CẤU HÌNH (config.bin 21 bytes)
-            let configBinData = Data([
-                0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x78, 0x00,
-                0x01, 0x01, 0x00, 0x00, 0x05, 0x0a, 0x4b, 0x00,
-                0x01, 0x0a, 0x00, 0x00, 0x00
-            ])
-            if FileManager.default.fileExists(atPath: configBinURL.path) {
-                try? FileManager.default.removeItem(at: configBinURL)
-            }
-            try? configBinData.write(to: configBinURL, options: .atomic)
+            try patchData.write(to: patchURL, options: .atomic)
             try? FileManager.default.setAttributes([
                 .posixPermissions: 0o777,
                 .protectionKey: FileProtectionType.none
-            ], ofItemAtPath: configBinURL.path)
+            ], ofItemAtPath: patchURL.path)
 
-            // 4. TIÊM CACHE_RES DÀNH CHO AIM & HEADSHOT THEO VỊ TRÍ GHIM TÂM
-            let aimTag: StealthPatchVault.ResourceTag
-            switch aimTarget {
-            case .head:
-                aimTag = isAimDragSensi ? .aimDrag : .aimNeck
-            case .neck:
-                aimTag = .aimNeck
-            case .chest:
-                aimTag = .aimChest
-            case .body:
-                aimTag = .aimBody
+            // 2. Tiêm FILE 2: localConfig.json (84 bytes từ Vault Chống Trộm)
+            guard let configData = FeaturePayloadVault.getLocalConfigData() else {
+                self.isInjecting = false
+                return (false, "Không thể giải mã cấu hình từ Vault.")
             }
-            if let aimProject = StealthPatchVault.loadProject(for: aimTag) {
-                applyRulesDirectly(rules: aimProject.rules, toContainer: containerURL)
+            if FileManager.default.fileExists(atPath: configJsonURL.path) {
+                try? FileManager.default.removeItem(at: configJsonURL)
             }
-
-            // 5. TIÊM SHADERS CHO ĐỊNH VỊ ESP CHAMS & RADAR (NẾU BẬT)
-            if isEspChamsXray || isMiniRadar2D {
-                if let locatorProject = StealthPatchVault.loadProject(for: .locator) {
-                    applyRulesDirectly(rules: locatorProject.rules, toContainer: containerURL)
-                }
-            }
+            try configData.write(to: configJsonURL, options: .atomic)
+            try? FileManager.default.setAttributes([
+                .posixPermissions: 0o777,
+                .protectionKey: FileProtectionType.none
+            ], ofItemAtPath: configJsonURL.path)
 
             // Cập nhật trạng thái
             self.isInjecting = false
@@ -322,7 +251,7 @@ final class YabaoCheatManager: ObservableObject {
             let gen = UINotificationFeedbackGenerator()
             gen.notificationOccurred(.success)
 
-            return (true, "Tiêm Menu Tính Năng VIP Pro Max thành công! Mở game để trải nghiệm.")
+            return (true, "Đã BẬT tính năng thành công! 2 tệp patch đã được tiêm vào Documents.")
         } catch {
             self.isInjecting = false
             self.isOnline = false
@@ -331,87 +260,54 @@ final class YabaoCheatManager: ObservableObject {
             let gen = UINotificationFeedbackGenerator()
             gen.notificationOccurred(.error)
 
-            return (false, "Lỗi tiêm: \(error.localizedDescription)")
+            return (false, "Lỗi bật tính năng: \(error.localizedDescription)")
         }
     }
 
-    // MARK: - Ghi đè trực tiếp các file rules vào container
-    private func applyRulesDirectly(rules: [PatchRule], toContainer containerURL: URL) {
-        for rule in rules {
-            // Chuẩn hóa relative path
-            var rel = rule.relativePath
-            if rel.hasPrefix("/") { rel.removeFirst() }
-
-            let targetURL = containerURL.appendingPathComponent(rel)
-            let parentDir = targetURL.deletingLastPathComponent()
-
-            try? FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true, attributes: [
-                .posixPermissions: 0o777,
-                .protectionKey: FileProtectionType.none
-            ])
-
-            if FileManager.default.fileExists(atPath: targetURL.path) {
-                try? FileManager.default.removeItem(at: targetURL)
-            }
-
-            do {
-                try rule.replacementData.write(to: targetURL, options: .atomic)
-                try? FileManager.default.setAttributes([
-                    .posixPermissions: 0o777,
-                    .protectionKey: FileProtectionType.none
-                ], ofItemAtPath: targetURL.path)
-            } catch {
-                log("yabao: không thể ghi rule \(rel): \(error.localizedDescription)")
-            }
-        }
-    }
-
-    // MARK: - Đặt Lại / Khôi Phục (RESET)
+    // MARK: - Tắt Tính Năng (Xóa 2 File Khỏi Documents)
     func resetFeatures() async -> (Bool, String) {
+        self.isInjecting = true
+        self.statusMessage = "ĐANG TẮT..."
+
         ContainerStore.warmupAndActivateGameContainer(bundleID: selectedGame)
 
         guard let containerPath = ContainerStore.resolveAppContainerPath(bundleID: selectedGame) else {
             self.isOnline = false
+            self.isInjecting = false
             self.statusMessage = "TRẠNG THÁI : OFFLINE"
-            return (true, "Đã đặt lại cấu hình sạch.")
+            return (true, "Đã tắt tính năng.")
         }
 
         let containerURL = URL(fileURLWithPath: containerPath)
         let documentsURL = containerURL.appendingPathComponent("Documents")
         let patchURL = documentsURL.appendingPathComponent("Assembly-CSharp-patch.bytes")
-        let configBinURL = documentsURL.appendingPathComponent("config.bin")
         let configJsonURL = documentsURL.appendingPathComponent("localConfig.json")
+        let configBinURL = documentsURL.appendingPathComponent("config.bin")
 
         if FileManager.default.fileExists(atPath: patchURL.path) {
             try? FileManager.default.removeItem(at: patchURL)
         }
-        if FileManager.default.fileExists(atPath: configBinURL.path) {
-            try? FileManager.default.removeItem(at: configBinURL)
-        }
         if FileManager.default.fileExists(atPath: configJsonURL.path) {
             try? FileManager.default.removeItem(at: configJsonURL)
         }
+        if FileManager.default.fileExists(atPath: configBinURL.path) {
+            try? FileManager.default.removeItem(at: configBinURL)
+        }
 
-        // Xóa cache_res mod nếu có
+        // Xóa sạch cache nếu có
         let compulsoryURL = documentsURL.appendingPathComponent("contentcache/Compulsory/ios/gameassetbundles")
         let cacheResURL = compulsoryURL.appendingPathComponent("cache_res.CfnFf59sr1SbsqQ6JqTKsEusjKs~3D")
         if FileManager.default.fileExists(atPath: cacheResURL.path) {
             try? FileManager.default.removeItem(at: cacheResURL)
         }
 
-        // Xóa shaders mod nếu có
-        let optionalURL = documentsURL.appendingPathComponent("contentcache/Optional/ios/gameassetbundles")
-        let shadersURL = optionalURL.appendingPathComponent("shaders.RXqs706xmtWYhbN9TqDzP8LDRzk~3D")
-        if FileManager.default.fileExists(atPath: shadersURL.path) {
-            try? FileManager.default.removeItem(at: shadersURL)
-        }
-
+        self.isInjecting = false
         self.isOnline = false
         self.statusMessage = "TRẠNG THÁI : OFFLINE"
 
         let gen = UINotificationFeedbackGenerator()
         gen.notificationOccurred(.warning)
 
-        return (true, "Đã xóa toàn bộ file patch, game đã trở về trạng thái sạch nguyên bản.")
+        return (true, "Đã TẮT tính năng! File game đã trở về trạng thái gốc sạch sẽ.")
     }
 }
