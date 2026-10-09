@@ -286,7 +286,7 @@ struct MainInjectorView: View {
                         .fill(yabao.isOnline ? Color.green : Color.orange)
                         .frame(width: 6, height: 6)
                         .shadow(color: yabao.isOnline ? Color.green : Color.orange, radius: 3)
-                    Text(yabao.isOnline ? "HỆ THỐNG ONLINE • ĐÃ TIÊM" : "SẴN SÀNG TIÊM HỆ THỐNG")
+                    Text(yabao.isOnline ? "HỆ THỐNG ONLINE • ĐÃ KÍCH HOẠT" : "SẴN SÀNG KÍCH HOẠT")
                         .font(.system(size: 9, weight: .black, design: .monospaced))
                         .foregroundStyle(yabao.isOnline ? Color.green : Color.orange)
                 }
@@ -447,7 +447,7 @@ struct MainInjectorView: View {
             UIApplication.shared.open(url)
         } else {
             let targetName = isMax ? "Free Fire MAX" : "Free Fire"
-            modManager.triggerToast("Đã tiêm tính năng xong! Hãy mở game \(targetName) để trải nghiệm.")
+            modManager.triggerToast("Đã kích hoạt tính năng thành công! Hãy mở game \(targetName) để trải nghiệm.")
         }
     }
 

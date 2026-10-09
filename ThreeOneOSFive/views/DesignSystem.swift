@@ -155,7 +155,8 @@ struct AppLogo: View {
 
     var body: some View {
         ZStack {
-            if let icon = UIImage(named: "AppLogo")
+            if let icon = UIImage(named: "SplashLogo")
+                ?? UIImage(named: "AppLogo")
                 ?? UIImage(named: "AppIcon")
                 ?? UIImage(named: "AppIcon-1024")
                 ?? UIImage(named: "AppIcon60x60") {
@@ -163,9 +164,11 @@ struct AppLogo: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                Image("AppLogo")
+                Image(systemName: "bolt.shield.fill")
                     .resizable()
-                    .scaledToFill()
+                    .scaledToFit()
+                    .padding(size * 0.2)
+                    .foregroundStyle(AppTheme.accent)
             }
         }
         .frame(width: size, height: size)

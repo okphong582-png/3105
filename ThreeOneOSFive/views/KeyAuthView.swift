@@ -68,7 +68,7 @@ struct KeyAuthView: View {
                         }
 
                         VStack(spacing: 4) {
-                            Text("OniAkuma")
+                            Text("VIP PRO MAX")
                                 .font(.system(size: 32, weight: .black, design: .rounded))
                                 .foregroundStyle(
                                     LinearGradient(
@@ -80,18 +80,19 @@ struct KeyAuthView: View {
                                 .shadow(color: activeTheme.primaryColor.opacity(0.6), radius: 12, x: 0, y: 3)
 
                             HStack(spacing: 6) {
-                                Image(systemName: "sparkles")
+                                Image(systemName: "crown.fill")
                                     .font(.system(size: 10, weight: .bold))
-                                Text("HoangHaMod & TrongKien")
+                                    .foregroundStyle(Color.yellow)
+                                Text("DEV: @zwicka1 • ZALO: 0865979853")
                                     .font(.caption.weight(.black).monospaced())
                             }
-                            .foregroundStyle(activeTheme.primaryColor)
+                            .foregroundStyle(Color.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 4)
                             .background(
                                 Capsule()
-                                    .fill(activeTheme.primaryColor.opacity(0.12))
-                                    .overlay(Capsule().stroke(activeTheme.primaryColor.opacity(0.35), lineWidth: 1))
+                                    .fill(activeTheme.primaryColor.opacity(0.25))
+                                    .overlay(Capsule().stroke(activeTheme.primaryColor.opacity(0.6), lineWidth: 1))
                             )
                         }
                     }
@@ -395,41 +396,29 @@ struct KeyAuthView: View {
                             .foregroundStyle(.secondary)
 
                         HStack(spacing: 8) {
-                            Link(destination: URL(string: "https://zalo.me/0866445455")!) {
+                            Link(destination: URL(string: "https://zalo.me/0865979853")!) {
                                 HStack(spacing: 4) {
                                     Image(systemName: "phone.fill")
-                                    Text("Zalo: 0866445455")
+                                    Text("Zalo: 0865979853")
                                 }
                                 .font(.caption.weight(.bold))
                                 .foregroundStyle(Color.white)
-                                .padding(.horizontal, 10)
+                                .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
                                 .background(Color.blue.opacity(0.85).cornerRadius(10))
                             }
 
-                            Link(destination: URL(string: "https://zalo.me/0826794943")!) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "phone.fill")
-                                    Text("Zalo: 0826794943")
-                                }
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(Color.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 8)
-                                .background(Color.blue.opacity(0.85).cornerRadius(10))
-                            }
-
-                            Link(destination: URL(string: "https://t.me/+1fstsksh_dMxNjE1")!) {
+                            Link(destination: URL(string: "https://t.me/zwicka1")!) {
                                 HStack(spacing: 4) {
                                     Image(systemName: "paperplane.fill")
-                                    Text("Telegram")
+                                    Text("Telegram: @zwicka1")
                                 }
                                 .font(.caption.weight(.bold))
-                                .foregroundStyle(activeTheme.primaryColor)
-                                .padding(.horizontal, 10)
+                                .foregroundStyle(Color.white)
+                                .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
-                                .background(activeTheme.primaryColor.opacity(0.15).cornerRadius(10))
-                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(activeTheme.primaryColor.opacity(0.4), lineWidth: 1))
+                                .background(activeTheme.primaryColor.opacity(0.85).cornerRadius(10))
+                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.3), lineWidth: 1))
                             }
                         }
                     }

@@ -19,11 +19,11 @@ struct SettingsView: View {
                         AppLogo(size: 52)
 
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("OniAkuma").font(.headline.weight(.bold))
-                            Text("HoangHaMod & TrongKien")
+                            Text("VIP PRO MAX").font(.headline.weight(.bold))
+                            Text("Dev: @zwicka1 • Zalo: 0865979853")
                                 .font(.caption.weight(.semibold).monospaced())
                                 .foregroundStyle(activeTheme.primaryColor)
-                            Text("OniAkuma Core • v\(appVersion)")
+                            Text("VIP Core System • v\(appVersion)")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
@@ -134,24 +134,19 @@ struct SettingsView: View {
 
                 Section("HỖ TRỢ & CỘNG ĐỒNG") {
                     creditsRow(
-                        name: "Mua Key / Hỗ Trợ Zalo (Admin Hoàng Hà)",
-                        role: "Zalo: 0866445455",
-                        url: "https://zalo.me/0866445455"
+                        name: "Developer & Hỗ Trợ Zalo (Chính Thức)",
+                        role: "Zalo: 0865979853",
+                        url: "https://zalo.me/0865979853"
                     )
                     creditsRow(
-                        name: "Hỗ Trợ Zalo (Admin Trọng Kiên)",
-                        role: "Zalo: 0826794943",
-                        url: "https://zalo.me/0826794943"
+                        name: "Developer & Hỗ Trợ Telegram",
+                        role: "Telegram: @zwicka1",
+                        url: "https://t.me/zwicka1"
                     )
                     creditsRow(
-                        name: "Nhóm Cộng Đồng OniAkuma",
-                        role: "Telegram: Nhóm Hỗ Trợ & Thảo Luận",
-                        url: "https://t.me/+1fstsksh_dMxNjE1"
-                    )
-                    creditsRow(
-                        name: "HoangHaMod & TrongKien",
-                        role: "Đội ngũ phát triển & Tùy biến OniAkuma",
-                        url: "https://zalo.me/0826794943"
+                        name: "Nhóm Hỗ Trợ & Thảo Luận",
+                        role: "Telegram: @zwicka1",
+                        url: "https://t.me/zwicka1"
                     )
                 }
             }

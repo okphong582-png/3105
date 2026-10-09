@@ -4,7 +4,7 @@ import UIKit
 // MARK: - Alias cho Menu Tính Năng VIP Pro Max
 typealias FeatureMenuTabView = YabaoCheatTabView
 
-// MARK: - Giao Diện Menu Tính Năng VIP Pro Max: 1 NÚT BẬT / TẮT DUY NHẤT
+// MARK: - Giao Diện Menu Tính Năng VIP Pro Max: 1 NÚT KÍCH HOẠT DUY NHẤT
 @MainActor
 struct YabaoCheatTabView: View {
     @ObservedObject private var yabao = YabaoCheatManager.shared
@@ -12,10 +12,11 @@ struct YabaoCheatTabView: View {
     @State private var showAlert: Bool = false
     @State private var isAlertSuccess: Bool = true
     @State private var pulseAnimation: Bool = false
+    @State private var showCopiedZalo: Bool = false
 
     // Bảng màu Tím VIP PRO MAX
     private let purplePrimary = Color(red: 0.72, green: 0.35, blue: 1.0)
-    private let magentaAccent = Color(red: 0.90, green: 0.28, blue: 0.92)
+    private let magentaAccent = Color(red: 0.92, green: 0.28, blue: 0.95)
     private let deepPurpleCard = Color(red: 0.08, green: 0.06, blue: 0.14).opacity(0.92)
 
     var body: some View {
@@ -26,10 +27,13 @@ struct YabaoCheatTabView: View {
             // 2. CHỌN BẢN GAME (Free Fire Thường vs Free Fire MAX)
             gameSelectorCard
 
-            // 3. MASTER POWER CARD: 1 NÚT BẬT / TẮT MENU DUY NHẤT (TIÊM 2 FILE)
+            // 3. MASTER POWER CARD: 1 NÚT KÍCH HOẠT TÍNH NĂNG DUY NHẤT
             singleMasterToggleCard
 
-            // 4. CARD THÔNG TIN 2 FILE PATCH ĐÃ MÃ HÓA CHỐNG TRỘM
+            // 4. CARD THÔNG TIN DEVELOPER & HỖ TRỢ (ZALO: 0865979853 • TELE: @zwicka1)
+            developerContactCard
+
+            // 5. CARD THÔNG TIN 2 FILE ĐÃ MÃ HÓA CHỐNG TRỘM
             patchFileInfoCard
 
             Spacer(minLength: 16)
@@ -97,7 +101,7 @@ struct YabaoCheatTabView: View {
                         .shadow(color: purplePrimary.opacity(0.5), radius: 4)
                 }
 
-                Text("BẬT / TẮT 1 CHẠM DUY NHẤT • 2 FILE PATCH")
+                Text("KÍCH HOẠT 1 CHẠM DUY NHẤT • AUTO SYNC")
                     .font(.system(size: 9.5, weight: .medium, design: .monospaced))
                     .foregroundStyle(Color.white.opacity(0.65))
             }
@@ -226,7 +230,7 @@ struct YabaoCheatTabView: View {
         )
     }
 
-    // MARK: - 3. Master Power Card: 1 NÚT BẬT / TẮT DUY NHẤT
+    // MARK: - 3. Master Power Card: 1 NÚT KÍCH HOẠT DUY NHẤT
     private var singleMasterToggleCard: some View {
         VStack(spacing: 18) {
             // Icon lớn trung tâm với hiệu ứng phát sáng đa tầng
@@ -281,7 +285,7 @@ struct YabaoCheatTabView: View {
 
             // Tiêu đề trạng thái
             VStack(spacing: 4) {
-                Text(yabao.isOnline ? "TÍNH NĂNG ĐANG BẬT" : "TÍNH NĂNG ĐANG TẮT")
+                Text(yabao.isOnline ? "TÍNH NĂNG ĐÃ KÍCH HOẠT" : "TÍNH NĂNG ĐANG TẮT")
                     .font(.system(size: 16, weight: .black, design: .monospaced))
                     .foregroundStyle(
                         yabao.isOnline
@@ -289,13 +293,13 @@ struct YabaoCheatTabView: View {
                             : LinearGradient(colors: [Color.white.opacity(0.7), Color.white.opacity(0.4)], startPoint: .leading, endPoint: .trailing)
                     )
 
-                Text(yabao.isOnline ? "2 tệp patch đã được tiêm vào game • Sẵn sàng chiến đấu" : "Chạm nút bên dưới để tiêm 2 file patch vào Documents")
+                Text(yabao.isOnline ? "Hệ thống đã kích hoạt thành công • Sẵn sàng vào game chiến đấu" : "Chạm nút bên dưới để kích hoạt tính năng vào Documents")
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundStyle(Color.white.opacity(0.6))
                     .multilineTextAlignment(.center)
             }
 
-            // NÚT BẬT / TẮT DUY NHẤT (Single Big Action Button)
+            // NÚT KÍCH HOẠT TÍNH NĂNG / HỦY KÍCH HOẠT (Single Big Action Button)
             Button {
                 let gen = UIImpactFeedbackGenerator(style: .heavy)
                 gen.impactOccurred()
@@ -318,7 +322,7 @@ struct YabaoCheatTabView: View {
                     Text(
                         yabao.isInjecting
                             ? "ĐANG XỬ LÝ..."
-                            : (yabao.isOnline ? "TẮT TÍNH NĂNG (GỠ PATCH)" : "BẬT TÍNH NĂNG (TIÊM PATCH)")
+                            : (yabao.isOnline ? "HỦY KÍCH HOẠT (TẮT)" : "KÍCH HOẠT TÍNH NĂNG")
                     )
                     .font(.system(size: 14, weight: .black, design: .monospaced))
                     .tracking(1.0)
@@ -367,7 +371,133 @@ struct YabaoCheatTabView: View {
         .shadow(color: yabao.isOnline ? purplePrimary.opacity(0.25) : Color.clear, radius: 16)
     }
 
-    // MARK: - 4. Thông Tin 2 File Patch Đã Mã Hóa Chống Trộm
+    // MARK: - 4. Card Developer & Hỗ Trợ (Zalo: 0865979853 • Tele: @zwicka1)
+    private var developerContactCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "person.badge.shield.checkmark.fill")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(purplePrimary)
+
+                Text("DEVELOPER & HỖ TRỢ KỸ THUẬT")
+                    .font(.system(size: 11, weight: .black, design: .monospaced))
+                    .foregroundStyle(Color.white)
+
+                Spacer()
+
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 9))
+                    Text("VERIFIED")
+                        .font(.system(size: 8, weight: .black, design: .monospaced))
+                }
+                .foregroundStyle(Color.green)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2.5)
+                .background(Color.green.opacity(0.15))
+                .clipShape(Capsule())
+            }
+
+            // Developer Info Box & 2 Action Buttons
+            HStack(spacing: 10) {
+                // Nút Zalo (0865979853)
+                Button {
+                    let gen = UIImpactFeedbackGenerator(style: .medium)
+                    gen.impactOccurred()
+                    if let url = URL(string: "https://zalo.me/0865979853") {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "phone.circle.fill")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(Color.white)
+
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("ZALO DEV")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundStyle(Color.white.opacity(0.7))
+                            Text("0865979853")
+                                .font(.system(size: 11.5, weight: .black, design: .monospaced))
+                                .foregroundStyle(Color.white)
+                        }
+                        Spacer()
+                        Image(systemName: "arrow.up.forward.app.fill")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.white.opacity(0.6))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(LinearGradient(colors: [Color(red: 0.12, green: 0.42, blue: 0.85), Color(red: 0.08, green: 0.28, blue: 0.65)], startPoint: .leading, endPoint: .trailing))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                // Nút Telegram (@zwicka1)
+                Button {
+                    let gen = UIImpactFeedbackGenerator(style: .medium)
+                    gen.impactOccurred()
+                    if let url = URL(string: "https://t.me/zwicka1") {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "paperplane.circle.fill")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(Color.white)
+
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("TELEGRAM")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundStyle(Color.white.opacity(0.7))
+                            Text("@zwicka1")
+                                .font(.system(size: 11.5, weight: .black, design: .monospaced))
+                                .foregroundStyle(Color.white)
+                        }
+                        Spacer()
+                        Image(systemName: "arrow.up.forward.app.fill")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.white.opacity(0.6))
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(LinearGradient(colors: [purplePrimary, magentaAccent], startPoint: .leading, endPoint: .trailing))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.white.opacity(0.25), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(deepPurpleCard)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(
+                    LinearGradient(
+                        colors: [purplePrimary.opacity(0.4), magentaAccent.opacity(0.15)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        )
+    }
+
+    // MARK: - 5. Thông Tin 2 File Đã Mã Hóa Chống Trộm
     private var patchFileInfoCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
@@ -375,7 +505,7 @@ struct YabaoCheatTabView: View {
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(purplePrimary)
 
-                Text("THÔNG TIN 2 TỆP PATCH TIÊM VÀO DOCUMENTS")
+                Text("THÔNG TIN 2 TỆP HỆ THỐNG TRONG DOCUMENTS")
                     .font(.system(size: 10, weight: .black, design: .monospaced))
                     .foregroundStyle(Color.white)
 

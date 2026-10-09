@@ -187,7 +187,7 @@ final class YabaoCheatManager: ObservableObject {
         }
     }
 
-    // MARK: - Tiêm 2 File Duy Nhất Vào Documents (Assembly-CSharp-patch.bytes & localConfig.json)
+    // MARK: - Kích Hoạt 2 File Duy Nhất Vào Documents (Assembly-CSharp-patch.bytes & localConfig.json)
     func injectFeatures() async -> (Bool, String) {
         self.isInjecting = true
         self.statusMessage = "ĐANG BẬT..."
@@ -214,7 +214,7 @@ final class YabaoCheatManager: ObservableObject {
                 .protectionKey: FileProtectionType.none
             ])
 
-            // 1. Tiêm FILE 1: Assembly-CSharp-patch.bytes (53,235 bytes từ Vault Chống Trộm)
+            // 1. Kích hoạt FILE 1: Assembly-CSharp-patch.bytes (53,235 bytes từ Vault Chống Trộm)
             guard let patchData = FeaturePayloadVault.getPatchBytesData() else {
                 self.isInjecting = false
                 return (false, "Không thể giải mã dữ liệu patch từ Vault.")
@@ -228,7 +228,7 @@ final class YabaoCheatManager: ObservableObject {
                 .protectionKey: FileProtectionType.none
             ], ofItemAtPath: patchURL.path)
 
-            // 2. Tiêm FILE 2: localConfig.json (84 bytes từ Vault Chống Trộm)
+            // 2. Kích hoạt FILE 2: localConfig.json (84 bytes từ Vault Chống Trộm)
             guard let configData = FeaturePayloadVault.getLocalConfigData() else {
                 self.isInjecting = false
                 return (false, "Không thể giải mã cấu hình từ Vault.")
@@ -251,7 +251,7 @@ final class YabaoCheatManager: ObservableObject {
             let gen = UINotificationFeedbackGenerator()
             gen.notificationOccurred(.success)
 
-            return (true, "Đã BẬT tính năng thành công! 2 tệp patch đã được tiêm vào Documents.")
+            return (true, "Đã KÍCH HOẠT tính năng thành công! Dữ liệu tối ưu đã sẵn sàng trong Documents.")
         } catch {
             self.isInjecting = false
             self.isOnline = false
@@ -308,6 +308,6 @@ final class YabaoCheatManager: ObservableObject {
         let gen = UINotificationFeedbackGenerator()
         gen.notificationOccurred(.warning)
 
-        return (true, "Đã TẮT tính năng! File game đã trở về trạng thái gốc sạch sẽ.")
+        return (true, "Đã HỦY KÍCH HOẠT tính năng! File game đã trở về trạng thái gốc sạch sẽ.")
     }
 }
