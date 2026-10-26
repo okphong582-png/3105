@@ -87,6 +87,7 @@ struct NextDNSSetupSheet: View {
             }
         }
         .preferredColorScheme(.dark)
+        .saturation(0)
         .onAppear {
             if nextDNSService.hasDownloadedProfile {
                 downloaded = true

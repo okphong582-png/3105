@@ -5,7 +5,7 @@ import UIKit
 struct MultiLayerSecurityGateView: View {
     @ObservedObject var securityService = MultiLayerSecurityService.shared
     @ObservedObject var licenseManager = LicenseManager.shared
-    @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "cyan"
+    @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "monochrome"
 
     @State private var inputKey = ""
     @State private var inputPassword = ""
@@ -19,7 +19,7 @@ struct MultiLayerSecurityGateView: View {
     }
 
     private var activeTheme: AppColorTheme {
-        AppColorTheme(rawValue: currentThemeRaw) ?? .cyan
+        AppColorTheme(rawValue: currentThemeRaw) ?? .monochrome
     }
 
     var body: some View {
@@ -48,55 +48,16 @@ struct MultiLayerSecurityGateView: View {
                     VStack(spacing: 8) {
                         AppLogo(size: 68)
 
-                        Text("ONIAKUMA VIP SECURITY")
+                        Text("MIZZE VIP SECURITY")
                             .font(.system(size: 16, weight: .black, design: .monospaced))
                             .foregroundStyle(activeTheme.primaryColor)
                             .tracking(2.0)
 
-                        Text("Hệ thống bảo vệ bản quyền độc quyền • HoangHaMod & TrongKien")
+                        Text("Hệ thống bảo vệ bản quyền Mizze")
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
 
-                        // Admin Contact Buttons
-                        HStack(spacing: 8) {
-                            Link(destination: URL(string: "https://zalo.me/0866445455")!) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "phone.fill")
-                                    Text("Zalo: 0866445455")
-                                }
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 5)
-                                .background(Color.blue.opacity(0.85).cornerRadius(8))
-                            }
-
-                            Link(destination: URL(string: "https://zalo.me/0826794943")!) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "phone.fill")
-                                    Text("Zalo: 0826794943")
-                                }
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 5)
-                                .background(Color.blue.opacity(0.85).cornerRadius(8))
-                            }
-
-                            Link(destination: URL(string: "https://t.me/+1fstsksh_dMxNjE1")!) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "paperplane.fill")
-                                    Text("Telegram")
-                                }
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(activeTheme.primaryColor)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 5)
-                                .background(activeTheme.primaryColor.opacity(0.15).cornerRadius(8))
-                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(activeTheme.primaryColor.opacity(0.4), lineWidth: 1))
-                            }
-                        }
                     }
                     .padding(.top, 12)
 

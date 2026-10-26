@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/images/app-icon.png" width="132" alt="3105 app icon">
+  <img src="ThreeOneOSFive/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png" width="132" alt="3105 app icon">
 </p>
 
-<h1 align="center">3105</h1>
+<h1 align="center">Mizze</h1>
 
 <p align="center">
   A native iOS workspace for app-container files, portable patches, limited cleanup, and PosterBoard wallpaper packages.

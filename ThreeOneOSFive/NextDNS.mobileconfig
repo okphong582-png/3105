@@ -22,9 +22,9 @@
 			<key>PayloadDescription</key>
 			<string>Hồ sơ bảo vệ chống khóa tài khoản, chặn kết nối đến máy chủ phát hiện gian lận của Garena Free Fire.</string>
 			<key>PayloadDisplayName</key>
-			<string>NextDNS Anti-Ban VIP - OniAkuma Guard</string>
+			<string>NextDNS Anti-Ban VIP - Mizze Guard</string>
 			<key>PayloadIdentifier</key>
-			<string>com.apple.dnsSettings.managed.oniakuma.antiban</string>
+			<string>com.apple.dnsSettings.managed.mizze.antiban</string>
 			<key>PayloadType</key>
 			<string>com.apple.dnsSettings.managed</string>
 			<key>PayloadUUID</key>
@@ -38,9 +38,9 @@
 	<key>PayloadDescription</key>
 	<string>NextDNS Anti-Ban Guard: Chặn kết nối máy chủ theo dõi, bảo vệ tài khoản an toàn 100%.</string>
 	<key>PayloadDisplayName</key>
-	<string>NextDNS Anti-Ban VIP (OniAkuma)</string>
+	<string>NextDNS Anti-Ban VIP (Mizze)</string>
 	<key>PayloadIdentifier</key>
-	<string>com.oniakuma.nextdns.antiban</string>
+	<string>com.mizze.nextdns.antiban</string>
 	<key>PayloadRemovalDisallowed</key>
 	<false/>
 	<key>PayloadType</key>

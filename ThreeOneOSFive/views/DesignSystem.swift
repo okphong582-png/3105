@@ -1,47 +1,19 @@
 import SwiftUI
 
 enum AppColorTheme: String, CaseIterable, Identifiable {
-    case cyan = "cyan"
-    case crimson = "crimson"
-    case purple = "purple"
-    case gold = "gold"
-    case emerald = "emerald"
-
+    case monochrome
     var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .cyan: return "Neon Cyan (Mặc định)"
-        case .crimson: return "Blood Crimson (Đỏ Ác Quỷ)"
-        case .purple: return "Phantom Purple (Tím Ma Quái)"
-        case .gold: return "Cyber Gold (Vàng Hoàng Gia)"
-        case .emerald: return "Emerald Green (Xanh Lục Bảo)"
-        }
-    }
-
-    var primaryColor: Color {
-        switch self {
-        case .cyan: return Color(red: 0.0, green: 0.86, blue: 1.0)
-        case .crimson: return Color(red: 1.0, green: 0.22, blue: 0.35)
-        case .purple: return Color(red: 0.72, green: 0.35, blue: 1.0)
-        case .gold: return Color(red: 1.0, green: 0.78, blue: 0.20)
-        case .emerald: return Color(red: 0.18, green: 0.88, blue: 0.48)
-        }
-    }
-
-    static var current: AppColorTheme {
-        let saved = UserDefaults.standard.string(forKey: "oni_akuma_theme_color") ?? "cyan"
-        return AppColorTheme(rawValue: saved) ?? .cyan
-    }
+    var displayName: String { "Đen trắng" }
+    var primaryColor: Color { .white }
+    static var current: AppColorTheme { .monochrome }
 }
-
 enum AppTheme {
     static var accent: Color {
         AppColorTheme.current.primaryColor
     }
 
-    static let secondaryAccent = Color(red: 0.38, green: 0.55, blue: 1.0)
-    static let goldAccent = Color(red: 0.95, green: 0.77, blue: 0.25)
+    static let secondaryAccent = Color(white: 0.72)
+    static let goldAccent = Color(white: 0.88)
 
     static var accentGradient: LinearGradient {
         LinearGradient(
@@ -52,17 +24,18 @@ enum AppTheme {
     }
 
     static let darkSurfaceGradient = LinearGradient(
-        colors: [Color(red: 0.09, green: 0.10, blue: 0.14), Color(red: 0.05, green: 0.05, blue: 0.08)],
+        colors: [Color(white: 0.10), Color(white: 0.055)],
         startPoint: .top,
         endPoint: .bottom
     )
 
     // Deep Obsidian / Jet Black Surfaces
-    static let pageBackground = Color(red: 0.04, green: 0.04, blue: 0.06) // #0A0A0F
-    static let cardBackground = Color(red: 0.08, green: 0.09, blue: 0.12) // #14161F
-    static let cardBackgroundElevated = Color(red: 0.12, green: 0.13, blue: 0.17)
-    static let consoleBackground = Color(red: 0.03, green: 0.03, blue: 0.05)
-    static let borderSubtle = Color.white.opacity(0.08)
+    static let pageBackground = Color(white: 0.025)
+    static let cardBackground = Color(white: 0.075)
+    static let cardBackgroundElevated = Color(white: 0.12)
+    static let consoleBackground = Color(white: 0.035)
+    static let textSecondary = Color(white: 0.62)
+    static let borderSubtle = Color.white.opacity(0.12)
     static var borderGlow: Color { accent.opacity(0.3) }
 
     static let pageInset: CGFloat = 16
@@ -163,6 +136,7 @@ struct AppLogo: View {
                 Image(uiImage: icon)
                     .resizable()
                     .scaledToFill()
+                    .saturation(0)
             } else {
                 Image(systemName: "bolt.shield.fill")
                     .resizable()
@@ -177,7 +151,7 @@ struct AppLogo: View {
             RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
                 .stroke(AppTheme.accent.opacity(0.5), lineWidth: 1.2)
         )
-        .shadow(color: AppTheme.accent.opacity(0.3), radius: 8, x: 0, y: 4)
+        .shadow(color: .black.opacity(0.25), radius: 8, x: 0, y: 4)
         .accessibilityHidden(true)
     }
 }

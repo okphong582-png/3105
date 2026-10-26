@@ -5,7 +5,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleDisplayName</key>
-    <string>OniAkuma</string>
+    <string>Mizze</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -13,13 +13,13 @@
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>OniAkuma</string>
+    <string>Mizze</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
     <string>1.1.1</string>
     <key>CFBundleVersion</key>
-    <string>7</string>
+    <string>8</string>
     <key>CFBundleDocumentTypes</key>
     <array>
         <dict>
@@ -57,7 +57,7 @@
                 <string>public.data</string>
             </array>
             <key>UTTypeDescription</key>
-            <string>OniAkuma Patch Package</string>
+            <string>Mizze Patch Package</string>
             <key>UTTypeIdentifier</key>
             <string>com.yangjiii.3105.patch-package</string>
             <key>UTTypeTagSpecification</key>
@@ -99,9 +99,9 @@
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>OniAkuma needs access to photos for wallpaper customization.</string>
+    <string>Mizze needs access to photos for wallpaper customization.</string>
     <key>NSDocumentsFolderUsageDescription</key>
-    <string>OniAkuma needs access to documents.</string>
+    <string>Mizze needs access to documents.</string>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>
@@ -125,8 +125,6 @@
         <string>freefireth</string>
         <string>freefire</string>
         <string>freefiremax</string>
-        <string>zalo</string>
-        <string>tg</string>
     </array>
     <key>MinimumOSVersion</key>
     <string>16.0</string>

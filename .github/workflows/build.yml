@@ -1,4 +1,4 @@
-name: Build OniAkuma iOS IPA
+name: Build Mizze iOS IPA
 
 on:
   push:
@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build OniAkuma iOS IPA
+    name: Build Mizze iOS IPA
     runs-on: macos-14
     permissions:
       contents: write
@@ -23,9 +23,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Select Xcode Version
+      - name: Select Xcode
         run: |
-          echo "Selecting optimal Xcode..."
           if [ -d "/Applications/Xcode_16.0.app" ]; then
             sudo xcode-select -s /Applications/Xcode_16.0.app
           elif [ -d "/Applications/Xcode_15.4.app" ]; then
@@ -33,7 +32,7 @@ jobs:
           fi
           xcodebuild -version
 
-      - name: Build Xcode Project (Release Fast)
+      - name: Build Mizze
         run: |
           set -o pipefail
           xcodebuild build \
@@ -46,67 +45,51 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
-            AD_HOC_CODE_SIGNING_ALLOWED=YES 2>&1 | tee build.log || {
-              echo ""
-              echo "==================== COMPILATION ERRORS ===================="
-              grep -E "error:" build.log || tail -n 50 build.log
-              echo "============================================================"
-              exit 1
-            }
+            AD_HOC_CODE_SIGNING_ALLOWED=YES 2>&1 | tee build.log
 
-      - name: Push Build Error Log on Failure
-        if: failure()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          echo "=== XCODEBUILD ERROR LOG ===" > build_failure.txt
-          grep -E "error:" build.log >> build_failure.txt || tail -n 60 build.log >> build_failure.txt
-          git add build_failure.txt
-          git commit -m "build failure log [skip ci]" || true
-          git push origin HEAD:main || true
-
-      - name: Upload Build Log on Failure
+      - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: build-failure-log
+          name: Mizze-build-failure-log
           path: build.log
+          if-no-files-found: ignore
+          retention-days: 7
 
-      - name: Package IPA
+      - name: Package Mizze IPA
         run: |
-          set -e
-          APP_PATH=$(find build/Build/Products/Release-iphoneos -name "*.app" -type d | head -n 1)
-          if [ -z "$APP_PATH" ]; then
-            echo "Error: .app bundle not found!"
-            exit 1
-          fi
-          echo "Found app bundle at: $APP_PATH"
-          
-          cp ThreeOneOSFive/cr_*.dat "$APP_PATH/" 2>/dev/null || true
-          cp ThreeOneOSFive/NextDNS.mobileconfig "$APP_PATH/" 2>/dev/null || true
-
+          set -euo pipefail
+          APP_PATH="build/Build/Products/Release-iphoneos/Mizze.app"
+          test -d "$APP_PATH"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$APP_PATH/Info.plist")" = "Mizze"
+          cp ThreeOneOSFive/cr_*.dat "$APP_PATH/"
+          cp ThreeOneOSFive/NextDNS.mobileconfig "$APP_PATH/"
           mkdir -p Payload
-          cp -r "$APP_PATH" Payload/
-          zip -r9 OniAkuma_iOS.ipa Payload
-          cp OniAkuma_iOS.ipa ZArchiver_iOS.ipa
+          cp -R "$APP_PATH" Payload/
+          zip -r9 Mizze_iOS.ipa Payload
+          unzip -tq Mizze_iOS.ipa
+          ls -lh Mizze_iOS.ipa
+          {
+            echo '### Mizze IPA'
+            echo 'Download the Mizze_iOS_IPA artifact below and extract Mizze_iOS.ipa.'
+            echo 'The IPA is unsigned and needs a compatible signing method before installation.'
+            echo "Source commit: $GITHUB_SHA"
+          } >> "$GITHUB_STEP_SUMMARY"
 
-          echo "=== IPA ARTIFACT GENERATED ==="
-          ls -lh OniAkuma_iOS.ipa
-
-      - name: Upload OniAkuma IPA
+      - name: Upload Mizze IPA
         uses: actions/upload-artifact@v4
         with:
-          name: OniAkuma_iOS_IPA
-          path: OniAkuma_iOS.ipa
+          name: Mizze_iOS_IPA
+          path: Mizze_iOS.ipa
+          if-no-files-found: error
           retention-days: 30
 
-      - name: Create GitHub Release (On tag)
+      - name: Publish tagged release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            OniAkuma_iOS.ipa
-            ZArchiver_iOS.ipa
+          files: Mizze_iOS.ipa
+          fail_on_unmatched_files: true
           draft: false
           prerelease: false
           generate_release_notes: true

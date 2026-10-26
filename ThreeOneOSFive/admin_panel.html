@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OniAkuma - Hệ Thống Quản Lý Server Key</title>
+    <title>Mizze - Hệ Thống Quản Lý Server Key</title>
     <!-- Google Fonts & FontAwesome Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -839,7 +839,7 @@
                 <i class="fa-solid fa-crown" style="color: var(--gold);"></i>
             </div>
             <div class="brand-info">
-                <h1>OniAkuma Server Portal</h1>
+                <h1>Mizze Server Portal</h1>
                 <p>HoangHaMod & TrongKien</p>
             </div>
         </div>
@@ -1003,7 +1003,7 @@
                                 <span class="tag" style="background: rgba(244, 162, 97, 0.15); color: var(--gold);">PREMIUM VIP KEY</span>
                             </label>
                             <div class="input-group">
-                                <input type="text" id="premKeyInput" class="mono" placeholder="VD: ONIAKUMA-VIP-2026">
+                                <input type="text" id="premKeyInput" class="mono" placeholder="VD: MIZZE-VIP-2026">
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="generatePremKey()">
                                     <i class="fa-solid fa-dice"></i> Sinh Mã
                                 </button>
@@ -1490,7 +1490,7 @@
             let p1 = '', p2 = '';
             for (let i = 0; i < 4; i++) p1 += chars.charAt(Math.floor(Math.random() * chars.length));
             for (let i = 0; i < 4; i++) p2 += chars.charAt(Math.floor(Math.random() * chars.length));
-            document.getElementById('premKeyInput').value = `ONIAKUMA-${p1}-${p2}`;
+            document.getElementById('premKeyInput').value = `MIZZE-${p1}-${p2}`;
         }
 
         // Generate Lite Key

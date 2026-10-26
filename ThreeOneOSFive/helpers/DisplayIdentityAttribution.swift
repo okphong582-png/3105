@@ -122,7 +122,7 @@ struct DisplayAttributionSheet: View {
                     HStack(spacing: 14) {
                         AppLogo(size: 44)
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("OniAkuma")
+                            Text("Mizze")
                                 .font(.headline)
                             Text(language.text("attribution.subtitle"))
                                 .font(.subheadline)
@@ -132,25 +132,6 @@ struct DisplayAttributionSheet: View {
                     .padding(.vertical, 4)
                 }
 
-                if let url = DisplayIdentityAttributionURL() {
-                    Section(language.text("attribution.link_section")) {
-                        LabeledContent(language.text("attribution.url")) {
-                            Text(url.absoluteString)
-                                .font(.caption.monospaced())
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.trailing)
-                                .textSelection(.enabled)
-                        }
-
-                        Link(destination: url) {
-                            Label(language.text("attribution.open"), systemImage: "arrow.up.right.square")
-                        }
-
-                        ShareLink(item: url) {
-                            Label(language.text("attribution.share"), systemImage: "square.and.arrow.up")
-                        }
-                    }
-                }
             }
             .formStyle(.grouped)
             .tint(AppTheme.accent)

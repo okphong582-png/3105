@@ -5,10 +5,10 @@ struct SettingsView: View {
     @Environment(\.appLanguage) private var language
     @EnvironmentObject private var appState: AppState
     @AppStorage(AppLanguage.storageKey) private var languageCode = AppLanguage.vietnamese.rawValue
-    @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "cyan"
+    @AppStorage("oni_akuma_theme_color") private var currentThemeRaw = "monochrome"
 
     private var activeTheme: AppColorTheme {
-        AppColorTheme(rawValue: currentThemeRaw) ?? .cyan
+        AppColorTheme(rawValue: currentThemeRaw) ?? .monochrome
     }
 
     var body: some View {
@@ -19,10 +19,7 @@ struct SettingsView: View {
                         AppLogo(size: 52)
 
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("VIP PRO MAX").font(.headline.weight(.bold))
-                            Text("Dev: @zwicka1 • Zalo: 0865979853")
-                                .font(.caption.weight(.semibold).monospaced())
-                                .foregroundStyle(activeTheme.primaryColor)
+                            Text("Mizze").font(.headline.weight(.bold))
                             Text("VIP Core System • v\(appVersion)")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
@@ -31,38 +28,10 @@ struct SettingsView: View {
                     .padding(.vertical, 4)
                 }
 
-                // Theme Color Customizer
-                Section("GIAO DIỆN MÀU SẮC (THEME)") {
-                    ForEach(AppColorTheme.allCases) { theme in
-                        Button {
-                            let generator = UIImpactFeedbackGenerator(style: .medium)
-                            generator.impactOccurred()
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                currentThemeRaw = theme.rawValue
-                            }
-                        } label: {
-                            HStack {
-                                Circle()
-                                    .fill(theme.primaryColor)
-                                    .frame(width: 18, height: 18)
-                                    .shadow(color: theme.primaryColor.opacity(0.4), radius: 4)
-
-                                Text(theme.displayName)
-                                    .font(.subheadline.weight(currentThemeRaw == theme.rawValue ? .bold : .regular))
-                                    .foregroundStyle(currentThemeRaw == theme.rawValue ? .white : .secondary)
-
-                                Spacer()
-
-                                if currentThemeRaw == theme.rawValue {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(theme.primaryColor)
-                                }
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
+                Section("Giao diện") {
+                    Label("Đen trắng", systemImage: "circle.lefthalf.filled")
+                        .foregroundStyle(.white)
                 }
-
                 Section(language.text("settings.language")) {
                     Picker(language.text("settings.language"), selection: $languageCode) {
                         ForEach(AppLanguage.allCases) { option in
@@ -85,7 +54,7 @@ struct SettingsView: View {
                         Text(appState.isSupported ? "Đã Kích Hoạt" : "Sẵn Sàng")
                             .foregroundStyle(appState.isSupported ? Color.green : activeTheme.primaryColor)
                     }
-                    LabeledContent("Nhân Khai Thác", value: "Exploit Kernel By OniAkuma")
+                    LabeledContent("Nhân Khai Thác", value: "Exploit Kernel By Mizze")
                     LabeledContent("iOS 17", value: ExploitSupportPolicy.verifiedIOS17Range)
                     LabeledContent("iOS 18", value: ExploitSupportPolicy.verifiedIOS18Range)
                     LabeledContent("iOS 26", value: ExploitSupportPolicy.verifiedIOS26Range)
@@ -132,23 +101,6 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("HỖ TRỢ & CỘNG ĐỒNG") {
-                    creditsRow(
-                        name: "Developer & Hỗ Trợ Zalo (Chính Thức)",
-                        role: "Zalo: 0865979853",
-                        url: "https://zalo.me/0865979853"
-                    )
-                    creditsRow(
-                        name: "Developer & Hỗ Trợ Telegram",
-                        role: "Telegram: @zwicka1",
-                        url: "https://t.me/zwicka1"
-                    )
-                    creditsRow(
-                        name: "Nhóm Hỗ Trợ & Thảo Luận",
-                        role: "Telegram: @zwicka1",
-                        url: "https://t.me/zwicka1"
-                    )
-                }
             }
             .tint(activeTheme.primaryColor)
             .navigationTitle(language.text("settings.title"))
@@ -166,30 +118,6 @@ struct SettingsView: View {
         Bundle.main.object(forInfoDictionaryKey: "AppReleaseDisplayVersion") as? String
             ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
             ?? "1.1.1"
-    }
-
-    @ViewBuilder
-    private func creditsRow(name: String, role: String, url: String) -> some View {
-        if let destination = URL(string: url) {
-            Link(destination: destination) {
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(name)
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                        Text(role)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(activeTheme.primaryColor)
-                        .frame(width: 28, height: 28)
-                }
-                .contentShape(Rectangle())
-            }
-        }
     }
 
     private func maskedKey(_ key: String) -> String {

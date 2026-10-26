@@ -136,14 +136,14 @@ struct AppDataBrowserView: View {
                     let workspaceDestination = FileBrowserDestination(
                         containerPath: workspaceURL.path,
                         startPath: workspaceURL.path,
-                        title: "OniAkuma",
+                        title: "Mizze",
                         bundleID: nil
                     )
                     NavigationLink(value: workspaceDestination) {
                         HStack(spacing: 10) {
                             AppRowIcon(systemName: "folder.fill")
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("OniAkuma")
+                                Text("Mizze")
                                     .font(.subheadline.weight(.semibold))
                                 Text(language.text("browser.workspace_subtitle"))
                                     .font(.caption)
@@ -158,7 +158,7 @@ struct AppDataBrowserView: View {
                             FileShareHelper.share(
                                 url: URL(fileURLWithPath: workspaceURL.path),
                                 isDirectory: true,
-                                defaultName: "Workspace_OniAkuma"
+                                defaultName: "Workspace_Mizze"
                             )
                         } label: {
                             Label(language.text("browser.share_to_device"), systemImage: "square.and.arrow.up")

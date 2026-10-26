@@ -2,8 +2,9 @@ import SwiftUI
 import UIKit
 import UniformTypeIdentifiers
 
-// MARK: - Main Injector View (Thiết Kế Cyber Tactical Độc Quyền - Tập Trung 100% Tab Yabao)
+// MARK: - Main dashboard
 struct MainInjectorView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.appLanguage) private var language
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var store: PatchProjectStore
@@ -31,15 +32,15 @@ struct MainInjectorView: View {
                     yabao.selectedGame = chosenBundle
                     modManager.selectedBundle = chosenBundle
                     yabao.checkInjectionState()
-                    withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
                         hasSelectedGame = true
                     }
                 }
-                .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                .transition(.opacity)
             } else {
                 // 2. MÀN HÌNH ĐIỀU KHIỂN CHÍNH (DUY NHẤT TAB YABAO CHEAT)
                 mainDashboardContent
-                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+                    .transition(.opacity)
             }
         }
         .onAppear {
@@ -49,11 +50,7 @@ struct MainInjectorView: View {
             DispatchQueue.global(qos: .userInitiated).async {
                 ContainerStore.warmupAndActivateGameContainer(bundleID: yabao.selectedGame)
             }
-            if !nextDNSService.isSetupCompleted {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                    showNextDNSSetup = true
-                }
-            }
+
         }
         .sheet(isPresented: $showNextDNSSetup) {
             NextDNSSetupSheet()
@@ -64,43 +61,10 @@ struct MainInjectorView: View {
     private var mainDashboardContent: some View {
         NavigationStack {
             ZStack {
-                // Dark Obsidian Background with Ambient Glows
-                Color(red: 0.03, green: 0.04, blue: 0.07).ignoresSafeArea()
-
-                // Ambient Radial Lights (Neon Purple VIP Theme)
-                VStack {
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [Color(red: 0.70, green: 0.28, blue: 0.98).opacity(0.18), Color.clear],
-                                center: .center,
-                                startRadius: 10,
-                                endRadius: 190
-                            )
-                        )
-                        .frame(width: 340, height: 340)
-                        .blur(radius: 80)
-                        .offset(x: -80, y: -100)
-
-                    Spacer()
-
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [Color(red: 0.90, green: 0.22, blue: 0.90).opacity(0.15), Color.clear],
-                                center: .center,
-                                startRadius: 10,
-                                endRadius: 190
-                            )
-                        )
-                        .frame(width: 340, height: 340)
-                        .blur(radius: 80)
-                        .offset(x: 80, y: 100)
-                }
-                .ignoresSafeArea()
+                AppTheme.pageBackground.ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 20) {
                         // Top Header Bar: Back button < | Title | Quick Tool Buttons
                         topNavBar
 
@@ -118,19 +82,19 @@ struct MainInjectorView: View {
 
                         Spacer(minLength: 24)
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 24)
                     .padding(.top, 8)
                     .padding(.bottom, 36)
                 }
             }
             .navigationBarHidden(true)
-            .sheet(isPresented: $showSettings) { SettingsView() }
-            .sheet(isPresented: $showLogs) { LogView() }
+            .sheet(isPresented: $showSettings) { SettingsView().saturation(0) }
+            .sheet(isPresented: $showLogs) { LogView().saturation(0) }
             .sheet(isPresented: $showPatchProjects) {
-                PatchProjectsView()
+                PatchProjectsView().saturation(0)
             }
             .sheet(isPresented: $showAppDataBrowser) {
-                AppDataBrowserView(tabSession: $tabSession)
+                AppDataBrowserView(tabSession: $tabSession).saturation(0)
             }
             .sheet(isPresented: $showFileImporter) {
                 FileDocumentPicker(
@@ -161,104 +125,36 @@ struct MainInjectorView: View {
 
     // MARK: - Top Navigation Bar
     private var topNavBar: some View {
-        HStack {
-            // Nút Back < để quay về màn hình chọn 2 Logo bất kỳ lúc nào
+        HStack(spacing: 12) {
             Button {
-                let generator = UIImpactFeedbackGenerator(style: .medium)
-                generator.impactOccurred()
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    hasSelectedGame = false
-                }
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) { hasSelectedGame = false }
             } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 14, weight: .black))
-                    Text("ĐỔI GAME")
-                        .font(.system(size: 11, weight: .black, design: .monospaced))
-                }
-                .foregroundStyle(Color.white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(Color.white.opacity(0.08))
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(Color.white.opacity(0.15), lineWidth: 1))
+                Image(systemName: "chevron.left").frame(width: 44, height: 44)
             }
-
-            Spacer()
-
-            // Brand Title & Status
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(appState.exploitStatus.isSuccess ? Color.green : (appState.kernelExploitRunning ? Color.yellow : Color.orange))
-                    .frame(width: 7, height: 7)
-                    .shadow(color: appState.exploitStatus.isSuccess ? Color.green : Color.orange, radius: 4)
-
-                Text(yabao.selectedGame == "com.dts.freefiremax" ? "FREE FIRE MAX" : "FREE FIRE")
-                    .font(.system(size: 15, weight: .black, design: .monospaced))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.white, Color(red: 0.78, green: 0.40, blue: 1.0)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .tracking(1.5)
-            }
-
-            Spacer()
-
-            // Quick Tool Buttons: [Gói Mod] [Duyệt File Container / Dán Tệp] [Cài đặt]
-            HStack(spacing: 7) {
+            .accessibilityLabel("Đổi game")
+            Text("Bảng điều khiển")
+                .font(.system(size: 18, weight: .semibold)).tracking(-0.5)
+                .lineLimit(1).minimumScaleFactor(0.8)
+            Spacer(minLength: 0)
+            Menu {
+                Button { showPatchProjects = true } label: { Label("Gói mod", systemImage: "folder") }
                 Button {
-                    let gen = UIImpactFeedbackGenerator(style: .medium)
-                    gen.impactOccurred()
-                    showPatchProjects = true
-                } label: {
-                    Image(systemName: "folder.badge.gearshape")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color(red: 0.78, green: 0.40, blue: 1.0))
-                        .frame(width: 32, height: 32)
-                        .background(Color(red: 0.78, green: 0.40, blue: 1.0).opacity(0.12))
-                        .cornerRadius(8)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(red: 0.78, green: 0.40, blue: 1.0).opacity(0.3), lineWidth: 1))
-                }
-
-                Button {
-                    let gen = UIImpactFeedbackGenerator(style: .medium)
-                    gen.impactOccurred()
-                    // Tải trước ngay lập tức danh sách ứng dụng để mở ra là có sẵn không delay
                     ZArchiverAppService.shared.loadApps()
                     showAppDataBrowser = true
-                } label: {
-                    Image(systemName: "internaldrive")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color(red: 0.90, green: 0.35, blue: 0.90))
-                        .frame(width: 32, height: 32)
-                        .background(Color(red: 0.90, green: 0.35, blue: 0.90).opacity(0.12))
-                        .cornerRadius(8)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color(red: 0.90, green: 0.35, blue: 0.90).opacity(0.3), lineWidth: 1))
-                }
-
-                Button {
-                    showSettings = true
-                } label: {
-                    Image(systemName: "gearshape.fill")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color.white.opacity(0.7))
-                        .frame(width: 32, height: 32)
-                        .background(Color.white.opacity(0.08))
-                        .cornerRadius(8)
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.12), lineWidth: 1))
-                }
+                } label: { Label("Duyệt tệp", systemImage: "internaldrive") }
+                Button { showSettings = true } label: { Label("Cài đặt", systemImage: "gearshape") }
+            } label: {
+                Image(systemName: "ellipsis").frame(width: 44, height: 44)
+                    .background(AppTheme.cardBackground, in: Circle())
             }
+            .accessibilityLabel("Công cụ và cài đặt")
         }
-        .padding(.vertical, 4)
+        .foregroundStyle(.white)
     }
-
     // MARK: - Selected Game Header Card (Tactical Cyber Display với Logo OB Mới)
     private var selectedGameHeaderCard: some View {
         let isMax = yabao.selectedGame == "com.dts.freefiremax"
-        let accentColor = Color(red: 0.75, green: 0.35, blue: 1.0)
+        let accentColor = Color.white
 
         return HStack(spacing: 14) {
             // Square App Logo Icon
@@ -274,21 +170,21 @@ struct MainInjectorView: View {
             // Game Details
             VStack(alignment: .leading, spacing: 3) {
                 Text(isMax ? "Free Fire MAX" : "Free Fire")
-                    .font(.system(size: 17, weight: .black, design: .rounded))
+                    .font(.system(size: 17, weight: .semibold, design: .default))
                     .foregroundStyle(.white)
 
-                Text(yabao.selectedGame)
+                Text(isMax ? "MAX EDITION" : "ORIGINAL EDITION")
                     .font(.system(size: 10, weight: .semibold, design: .monospaced))
                     .foregroundStyle(Color.secondary)
 
                 HStack(spacing: 5) {
                     Circle()
-                        .fill(yabao.isOnline ? Color.green : Color.orange)
+                        .fill(yabao.isOnline ? Color.white : AppTheme.textSecondary)
                         .frame(width: 6, height: 6)
-                        .shadow(color: yabao.isOnline ? Color.green : Color.orange, radius: 3)
-                    Text(yabao.isOnline ? "HỆ THỐNG ONLINE • ĐÃ KÍCH HOẠT" : "SẴN SÀNG KÍCH HOẠT")
-                        .font(.system(size: 9, weight: .black, design: .monospaced))
-                        .foregroundStyle(yabao.isOnline ? Color.green : Color.orange)
+                        .shadow(color: yabao.isOnline ? Color.white : AppTheme.textSecondary, radius: 3)
+                    Text(yabao.isOnline ? "Đã bật tính năng" : "Chưa bật tính năng")
+                        .font(.system(size: 9, weight: .medium, design: .default))
+                        .foregroundStyle(yabao.isOnline ? Color.white : AppTheme.textSecondary)
                 }
                 .padding(.top, 1)
             }
@@ -299,7 +195,7 @@ struct MainInjectorView: View {
             Button {
                 let gen = UIImpactFeedbackGenerator(style: .medium)
                 gen.impactOccurred()
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.3)) {
                     hasSelectedGame = false
                 }
             } label: {
@@ -314,7 +210,7 @@ struct MainInjectorView: View {
         .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color(red: 0.08, green: 0.06, blue: 0.14))
+                .fill(AppTheme.cardBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -343,8 +239,8 @@ struct MainInjectorView: View {
                             .fill(
                                 LinearGradient(
                                     colors: nextDNSService.isSetupCompleted
-                                        ? [Color.green.opacity(0.3), Color(red: 0.72, green: 0.35, blue: 1.0).opacity(0.15)]
-                                        : [Color.orange.opacity(0.3), Color.red.opacity(0.15)],
+                                        ? [Color.white.opacity(0.3), Color.white.opacity(0.15)]
+                                        : [Color.white.opacity(0.3), Color.white.opacity(0.15)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -353,26 +249,26 @@ struct MainInjectorView: View {
 
                         Image(systemName: nextDNSService.isSetupCompleted ? "checkmark.shield.fill" : "shield.slash.fill")
                             .font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(nextDNSService.isSetupCompleted ? Color.green : Color.orange)
-                            .shadow(color: (nextDNSService.isSetupCompleted ? Color.green : Color.orange).opacity(0.6), radius: 4)
+                            .foregroundStyle(nextDNSService.isSetupCompleted ? Color.white : AppTheme.textSecondary)
+                            .shadow(color: (nextDNSService.isSetupCompleted ? Color.white : AppTheme.textSecondary).opacity(0.6), radius: 4)
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 6) {
-                            Text("ANTIBAN NEXTDNS VIP")
-                                .font(.system(size: 11.5, weight: .black, design: .monospaced))
+                            Text("CẤU HÌNH DNS")
+                                .font(.system(size: 11.5, weight: .medium, design: .default))
                                 .foregroundStyle(.white)
 
                             Text(nextDNSService.isSetupCompleted ? "HOẠT ĐỘNG" : "CHƯA CÀI")
-                                .font(.system(size: 8, weight: .black, design: .monospaced))
-                                .foregroundStyle(nextDNSService.isSetupCompleted ? Color.green : Color.orange)
+                                .font(.system(size: 8, weight: .medium, design: .default))
+                                .foregroundStyle(nextDNSService.isSetupCompleted ? Color.white : AppTheme.textSecondary)
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 2)
-                                .background(Capsule().fill((nextDNSService.isSetupCompleted ? Color.green : Color.orange).opacity(0.15)))
-                                .overlay(Capsule().stroke((nextDNSService.isSetupCompleted ? Color.green : Color.orange).opacity(0.4), lineWidth: 0.8))
+                                .background(Capsule().fill((nextDNSService.isSetupCompleted ? Color.white : AppTheme.textSecondary).opacity(0.15)))
+                                .overlay(Capsule().stroke((nextDNSService.isSetupCompleted ? Color.white : AppTheme.textSecondary).opacity(0.4), lineWidth: 0.8))
                         }
 
-                        Text(nextDNSService.isSetupCompleted ? "Bảo vệ rank 100% • Chặn máy chủ quét Blackbox" : "Nhấn để cài cấu hình DNS chống khoá tài khoản")
+                        Text(nextDNSService.isSetupCompleted ? "Đã cài cấu hình DNS" : "Nhấn để xem hướng dẫn cài đặt")
                             .font(.system(size: 9.5, weight: .medium))
                             .foregroundStyle(Color.white.opacity(0.6))
                             .lineLimit(1)
@@ -390,12 +286,12 @@ struct MainInjectorView: View {
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(red: 0.08, green: 0.06, blue: 0.14))
+                .fill(AppTheme.cardBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(
-                    nextDNSService.isSetupCompleted ? Color.green.opacity(0.3) : Color.orange.opacity(0.3),
+                    nextDNSService.isSetupCompleted ? Color.white.opacity(0.3) : Color.white.opacity(0.3),
                     lineWidth: 1
                 )
         )
@@ -403,38 +299,19 @@ struct MainInjectorView: View {
 
     // MARK: - Open Game Button (Tactical Cyber Launch Station)
     private var openGameButton: some View {
-        Button {
-            openGame()
-        } label: {
+        Button { openGame() } label: {
             HStack(spacing: 10) {
-                Image(systemName: "play.fill")
-                    .font(.system(size: 16, weight: .black))
-
-                Text("KHỞI ĐỘNG VÀO GAME")
-                    .font(.system(size: 16, weight: .black, design: .monospaced))
-                    .tracking(1.5)
+                Text("Mở game").font(.system(size: 15, weight: .semibold))
+                Image(systemName: "arrow.up.right")
             }
             .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 54)
-            .background(
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.52, green: 0.15, blue: 0.90),
-                        Color(red: 0.72, green: 0.25, blue: 0.98),
-                        Color(red: 0.90, green: 0.28, blue: 0.90)
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .shadow(color: Color(red: 0.72, green: 0.25, blue: 0.98).opacity(0.55), radius: 14, y: 4)
+            .frame(maxWidth: .infinity, minHeight: 54)
+            .background(AppTheme.cardBackground, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.25)))
         }
-        .buttonStyle(.plain)
-        .padding(.top, 6)
+        .buttonStyle(CardScaleButtonStyle())
+        .padding(.top, 4)
     }
-
     // MARK: - Open Game Action
     private func openGame() {
         let gen = UIImpactFeedbackGenerator(style: .heavy)
@@ -456,19 +333,19 @@ struct MainInjectorView: View {
     private func toastView(message: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(Color.green)
+                .foregroundStyle(Color.white)
             Text(message)
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(.white)
                 .lineLimit(2)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 24)
         .padding(.vertical, 12)
         .background(
             Capsule()
-                .fill(Color(red: 0.1, green: 0.12, blue: 0.16))
+                .fill(AppTheme.cardBackground)
                 .shadow(color: .black.opacity(0.6), radius: 10, y: 4)
         )
-        .overlay(Capsule().stroke(Color.green.opacity(0.5), lineWidth: 1.2))
+        .overlay(Capsule().stroke(Color.white.opacity(0.5), lineWidth: 1.2))
     }
 }

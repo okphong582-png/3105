@@ -314,7 +314,7 @@ final class AdminServerService: ObservableObject {
 
     // MARK: - Key Generation Helper
     private func generateRandomKey(isBypass: Bool) -> String {
-        let prefix = isBypass ? "PASS" : "ONIAKUMA"
+        let prefix = isBypass ? "PASS" : "MIZZE"
         let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         let part1 = String((0..<4).compactMap { _ in chars.randomElement() })
         let part2 = String((0..<4).compactMap { _ in chars.randomElement() })

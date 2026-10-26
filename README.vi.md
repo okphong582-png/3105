@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/images/app-icon.png" width="132" alt="Biểu tượng ứng dụng 3105">
+  <img src="ThreeOneOSFive/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png" width="132" alt="Biểu tượng ứng dụng 3105">
 </p>
 
-<h1 align="center">3105</h1>
+<h1 align="center">Mizze</h1>
 
 <p align="center">
   Trình quản lý dữ liệu ứng dụng, patch theo bundle, dọn dẹp giới hạn và hình nền PosterBoard dành cho iOS.

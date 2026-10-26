@@ -92,10 +92,10 @@ struct VPNBlockedView: View {
                 Spacer()
 
                 VStack(spacing: 4) {
-                    Text("Hệ Thống Bảo Mật OniAkuma Anti-Tamper")
+                    Text("Hệ Thống Bảo Mật Mizze Anti-Tamper")
                         .font(.caption2.weight(.medium))
                         .foregroundStyle(.secondary.opacity(0.6))
-                    Text("Exploit Kernel By OniAkuma")
+                    Text("Exploit Kernel By Mizze")
                         .font(.caption2.monospaced())
                         .foregroundStyle(.secondary.opacity(0.4))
                 }
