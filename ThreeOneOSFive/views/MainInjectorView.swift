@@ -6,6 +6,13 @@ struct MainInjectorView: View {
     @ObservedObject private var yabao = YabaoCheatManager.shared
     @ObservedObject private var modManager = ModFeatureManager.shared
     @State private var hasSelectedGame = false
+    @State private var menuNotice: MenuNotice?
+
+    private struct MenuNotice {
+        let success: Bool
+        let message: String
+        let wasEnabling: Bool
+    }
 
     var body: some View {
         Group {
@@ -21,6 +28,13 @@ struct MainInjectorView: View {
                     }
                 }
                 .transition(.opacity)
+            }
+        }
+        .overlay {
+            if let notice = menuNotice {
+                noticeOverlay(notice)
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .scale(scale: 0.95)))
+                    .zIndex(20)
             }
         }
     }
@@ -44,7 +58,11 @@ struct MainInjectorView: View {
                 }
 
                 selectedGameCard
-                YabaoCheatTabView()
+                YabaoCheatTabView { success, message, wasEnabling in
+                    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.25)) {
+                        menuNotice = MenuNotice(success: success, message: message, wasEnabling: wasEnabling)
+                    }
+                }
 
                 Button(action: openGame) {
                     HStack(spacing: 10) {
@@ -79,6 +97,50 @@ struct MainInjectorView: View {
                     .background(AppTheme.cardBackgroundElevated, in: RoundedRectangle(cornerRadius: 16))
                     .padding(24)
             }
+        }
+    }
+
+    private func noticeOverlay(_ notice: MenuNotice) -> some View {
+        ZStack {
+            Color.black.opacity(0.60).ignoresSafeArea()
+            VStack(spacing: 20) {
+                Text("MIZZE")
+                    .font(.system(size: 10, weight: .semibold))
+                    .tracking(4)
+                    .foregroundStyle(Color.black.opacity(0.5))
+                Image(systemName: notice.success ? "checkmark" : "exclamationmark")
+                    .font(.system(size: 30, weight: .medium))
+                    .foregroundStyle(.white)
+                    .frame(width: 72, height: 72)
+                    .background(Color.black, in: Circle())
+                    .accessibilityHidden(true)
+                VStack(spacing: 10) {
+                    Text(notice.success ? (notice.wasEnabling ? "Đã bật Menu" : "Đã tắt Menu") : "Chưa hoàn tất")
+                        .font(.system(size: 25, weight: .semibold))
+                        .tracking(-0.5)
+                    Text(notice.message)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.black.opacity(0.65))
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Button {
+                    withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) { menuNotice = nil }
+                } label: {
+                    Text("Tiếp tục")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity, minHeight: 52)
+                        .background(Color.black, in: RoundedRectangle(cornerRadius: 16))
+                }
+                .buttonStyle(CardScaleButtonStyle())
+            }
+            .foregroundStyle(.black)
+            .padding(28)
+            .frame(maxWidth: 350)
+            .background(Color(white: 0.97), in: RoundedRectangle(cornerRadius: 28))
+            .shadow(color: .black.opacity(0.3), radius: 30, y: 12)
+            .padding(24)
         }
     }
 

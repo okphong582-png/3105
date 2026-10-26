@@ -9,6 +9,44 @@ func expect(_ condition: @autoclosure () -> Bool, _ message: String) {
     precondition(condition(), message)
 }
 
+for bundleID in ["com.dts.freefireth", "com.dts.freefiremax"] {
+    var refreshCount = 0
+    let metadataValues: [String?] = [nil, "", bundleID]
+    for metadata in metadataValues {
+        let path = MenuGameContainerResolver.resolve(
+            bundleID: bundleID,
+            lookup: { "/resolved-by-existing-lookup" },
+            metadataIdentifier: { _ in metadata },
+            refresh: { refreshCount += 1; return nil }
+        )
+        expect(path == "/resolved-by-existing-lookup", "Missing metadata incorrectly blocked a working container")
+    }
+    expect(refreshCount == 0, "A valid existing lookup should not require refresh")
+    let otherBundleID = bundleID == "com.dts.freefireth" ? "com.dts.freefiremax" : "com.dts.freefireth"
+    let refreshed = MenuGameContainerResolver.resolve(
+        bundleID: bundleID,
+        lookup: { "/stale-other-game" },
+        metadataIdentifier: { $0 == "/stale-other-game" ? otherBundleID : bundleID },
+        refresh: { refreshCount += 1; return "/correct-game" }
+    )
+    expect(refreshed == "/correct-game" && refreshCount == 1, "A stale cross-game cache was not refreshed")
+    let rejected = MenuGameContainerResolver.resolve(
+        bundleID: bundleID,
+        lookup: { "/other-game" },
+        metadataIdentifier: { _ in otherBundleID },
+        refresh: { "/still-other-game" }
+    )
+    expect(rejected == nil, "A known different game container was accepted")
+    let retried = MenuGameContainerResolver.resolve(
+        bundleID: bundleID,
+        lookup: { nil },
+        metadataIdentifier: { _ in nil },
+        refresh: { "/newly-resolved-game" }
+    )
+    expect(retried == "/newly-resolved-game", "A failed initial lookup was not retried")
+}
+print("PASS: existing FF/FF MAX lookups without metadata, stale cache refresh and conflicting identity rejection")
+
 func documents(_ game: String) throws -> URL {
     let url = fixture.appendingPathComponent(game).appendingPathComponent("Documents")
     try fm.createDirectory(at: url, withIntermediateDirectories: true)

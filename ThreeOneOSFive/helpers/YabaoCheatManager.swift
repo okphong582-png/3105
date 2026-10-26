@@ -250,26 +250,16 @@ final class YabaoCheatManager: ObservableObject {
 
     private func gameDocumentsURL(bundleID: String) throws -> URL {
         guard ["com.dts.freefireth", "com.dts.freefiremax"].contains(bundleID),
-              let path = ContainerStore.warmupAndActivateGameContainer(bundleID: bundleID),
+              let path = MenuGameContainerResolver.resolve(
+                bundleID: bundleID,
+                lookup: { ContainerStore.warmupAndActivateGameContainer(bundleID: bundleID) },
+                metadataIdentifier: { ContainerStore.readContainerMetadata(containerPath: $0)?.bundleID },
+                refresh: { ContainerStore.refreshAppContainerPath(bundleID: bundleID) }
+              ),
               ContainerStore.isApplicationContainerPath(path) else {
             throw menuError("Không tìm thấy dữ liệu game đã chọn. Hãy mở game một lần trước.")
         }
         let container = URL(fileURLWithPath: path).standardizedFileURL.resolvingSymlinksInPath()
-        // Older cached lookups may point at the other FF edition. Verify identity before any writes or deletion.
-        if let metadata = ContainerStore.readContainerMetadata(containerPath: container.path), !metadata.bundleID.isEmpty {
-            guard metadata.bundleID == bundleID else {
-                throw menuError("Thư mục dữ liệu không khớp phiên bản game đã chọn.")
-            }
-        } else {
-            let identityPaths = [
-                "Library/Preferences/\(bundleID).plist",
-                "Library/Saved Application State/\(bundleID).savedState",
-                "Library/Caches/\(bundleID)"
-            ]
-            guard identityPaths.contains(where: { FileManager.default.fileExists(atPath: container.appendingPathComponent($0).path) }) else {
-                throw menuError("Chưa xác minh được thư mục của phiên bản game này. Hãy mở game rồi thử lại.")
-            }
-        }
         let documents = container.appendingPathComponent("Documents")
         guard documents.resolvingSymlinksInPath().deletingLastPathComponent().path == container.path else {
             throw menuError("Đường dẫn Documents không nằm trong dữ liệu game đã chọn.")

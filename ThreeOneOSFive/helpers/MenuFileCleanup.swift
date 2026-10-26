@@ -1,5 +1,26 @@
 import Foundation
 
+enum MenuGameContainerResolver {
+    static func resolve(
+        bundleID: String,
+        lookup: () -> String?,
+        metadataIdentifier: (String) -> String?,
+        refresh: () -> String?
+    ) -> String? {
+        func hasConflictingIdentity(_ path: String) -> Bool {
+            guard let identifier = metadataIdentifier(path)?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !identifier.isEmpty else {
+                // Existing OS/container lookups still work when metadata cannot be read.
+                return false
+            }
+            return identifier != bundleID
+        }
+        if let path = lookup(), !hasConflictingIdentity(path) { return path }
+        guard let path = refresh(), !hasConflictingIdentity(path) else { return nil }
+        return path
+    }
+}
+
 enum MenuFileCleanup {
     static let filenames = [
         "Assembly-CSharp-patch.bytes",

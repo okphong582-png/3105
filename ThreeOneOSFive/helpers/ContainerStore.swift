@@ -116,18 +116,15 @@ enum ContainerStore {
             return resolved
         }
 
-        let alt = (bundleID == "com.dts.freefireth") ? "com.dts.freefiremax" : "com.dts.freefireth"
-        if let altResolved = resolveAppContainerPath(bundleID: alt) {
-            _ = grantContainerAccess(altResolved)
-            _ = MCMActivateContainer(2, alt, false, nil)
-            containerCacheLock.lock()
-            cachedContainerPaths[bundleID] = altResolved
-            containerCacheLock.unlock()
-            UserDefaults.standard.set(altResolved, forKey: "resolved_container_\(bundleID)")
-            return altResolved
-        }
-
         return nil
+    }
+
+    static func refreshAppContainerPath(bundleID: String) -> String? {
+        containerCacheLock.lock()
+        cachedContainerPaths.removeValue(forKey: bundleID)
+        containerCacheLock.unlock()
+        UserDefaults.standard.removeObject(forKey: "resolved_container_\(bundleID)")
+        return resolveAppContainerPath(bundleID: bundleID)
     }
 
     static func resolveAppContainerPath(bundleID: String) -> String? {
@@ -201,9 +198,9 @@ enum ContainerStore {
             guard isApplicationContainerPath(canonical) else { continue }
 
             // 1. Kiểm tra metadata plist nếu đọc được
-            if let metadata = readContainerMetadata(containerPath: dir),
-               metadata.bundleID == bundleID {
-                return canonical
+            if let metadata = readContainerMetadata(containerPath: dir), !metadata.bundleID.isEmpty {
+                if metadata.bundleID == bundleID { return canonical }
+                continue
             }
 
             // 2. Nhận diện chuẩn xác qua file plist trong Library/Preferences

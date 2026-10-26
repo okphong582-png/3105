@@ -5,10 +5,8 @@ typealias FeatureMenuTabView = YabaoCheatTabView
 
 @MainActor
 struct YabaoCheatTabView: View {
+    var onResult: (Bool, String, Bool) -> Void = { _, _, _ in }
     @ObservedObject private var yabao = YabaoCheatManager.shared
-    @State private var alertMessage = ""
-    @State private var showAlert = false
-    @State private var isAlertSuccess = true
     @State private var isSubmitting = false
     @State private var isTurningOn = false
 
@@ -60,9 +58,7 @@ struct YabaoCheatTabView: View {
                 Task { @MainActor in
                     defer { isSubmitting = false }
                     let (success, message) = await yabao.toggleFeature()
-                    alertMessage = message
-                    isAlertSuccess = success
-                    showAlert = true
+                    onResult(success, message, isTurningOn)
                 }
             } label: {
                 HStack(spacing: 10) {
@@ -82,8 +78,5 @@ struct YabaoCheatTabView: View {
         .padding(26)
         .background(Color(white: 0.96), in: RoundedRectangle(cornerRadius: 28))
         .onAppear { yabao.checkInjectionState() }
-        .alert(isPresented: $showAlert) {
-            Alert(title: Text(isAlertSuccess ? "Thành công" : "Thông báo"), message: Text(alertMessage), dismissButton: .default(Text("Đóng")))
-        }
     }
 }
