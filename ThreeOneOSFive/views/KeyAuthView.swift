@@ -229,6 +229,6 @@ struct KeyAuthView: View {
             }
         }
         guard let url = URL(string: destination), ["https", "http"].contains(url.scheme?.lowercased() ?? "") else { return }
-        UIApplication.shared.open(url)
+        _ = await UIApplication.shared.open(url)
     }
 }
