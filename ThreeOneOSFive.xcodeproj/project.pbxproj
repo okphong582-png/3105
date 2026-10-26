@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4D495A5A4500000000000002 /* MenuFileCleanup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D495A5A4500000000000001; };
 		ZA01DS02 /* ZArchiverDesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZA01DS01; };
 		ZA01MV02 /* ZArchiverMainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZA01MV01; };
 		ZA01TE02 /* ZArchiverTextEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZA01TE01; };
@@ -100,9 +101,6 @@
 		3105CV22 /* cr_v2.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CV21; };
 		3105CE12 /* cr_e1.dat in Resources */ = {isa = PBXBuildFile; fileRef = 3105CE11; };
 		3105HIH2 /* Hih.3105 in Resources */ = {isa = PBXBuildFile; fileRef = 3105HIH1; };
-		3105NDN2 /* NextDNS.mobileconfig in Resources */ = {isa = PBXBuildFile; fileRef = 3105NDN1; };
-		3105NDS2 /* NextDNSInstallerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105NDS1; };
-		3105NDV2 /* NextDNSSetupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105NDV1; };
 		3105SPV2 /* StealthPatchVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105SPV1; };
 		3105FPV2 /* FeaturePayloadVault.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3105FPV1; };
 		3105FTH2 /* ffth.png in Resources */ = {isa = PBXBuildFile; fileRef = 3105FTH1; };
@@ -114,6 +112,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4D495A5A4500000000000001 /* MenuFileCleanup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuFileCleanup.swift; sourceTree = "<group>"; };
 		ZA01DS01 /* ZArchiverDesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZArchiverDesignSystem.swift; sourceTree = "<group>"; };
 		ZA01MV01 /* ZArchiverMainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZArchiverMainView.swift; sourceTree = "<group>"; };
 		ZA01TE01 /* ZArchiverTextEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZArchiverTextEditorView.swift; sourceTree = "<group>"; };
@@ -215,9 +214,6 @@
 		3105CV21 /* cr_v2.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_v2.dat"; sourceTree = "<group>"; };
 		3105CE11 /* cr_e1.dat */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cr_e1.dat"; sourceTree = "<group>"; };
 		3105HIH1 /* Hih.3105 */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Hih.3105"; sourceTree = "<group>"; };
-		3105NDN1 /* NextDNS.mobileconfig */ = {isa = PBXFileReference; lastKnownFileType = file; path = "NextDNS.mobileconfig"; sourceTree = "<group>"; };
-		3105NDS1 /* NextDNSInstallerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextDNSInstallerService.swift; sourceTree = "<group>"; };
-		3105NDV1 /* NextDNSSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NextDNSSetupSheet.swift; sourceTree = "<group>"; };
 		3105SPV1 /* StealthPatchVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StealthPatchVault.swift; sourceTree = "<group>"; };
 		3105FPV1 /* FeaturePayloadVault.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeaturePayloadVault.swift; sourceTree = "<group>"; };
 		3105FTH1 /* ffth.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ffth.png; sourceTree = "<group>"; };
@@ -282,7 +278,6 @@
 				3105CV21 /* cr_v2.dat */,
 				3105CE11 /* cr_e1.dat */,
 				3105HIH1 /* Hih.3105 */,
-				3105NDN1 /* NextDNS.mobileconfig */,
 				3105ADM0 /* admin_panel.html */,
 				3105FTH1 /* ffth.png */,
 				3105FMX1 /* ffmax.png */,
@@ -340,7 +335,6 @@
 				3105MLG1 /* MultiLayerSecurityGateView.swift */,
 				3105AMV1 /* AdminManagerView.swift */,
 				3105NIG1 /* NoInternetGateView.swift */,
-				3105NDV1 /* NextDNSSetupSheet.swift */,
 			);
 			path = views;
 			sourceTree = "<group>";
@@ -353,13 +347,13 @@
 				3105BSG0 /* BinarySecurityGuard.h */,
 				3105BSG1 /* BinarySecurityGuard.m */,
 				3105FSH1 /* FileShareHelper.swift */,
-				3105NDS1 /* NextDNSInstallerService.swift */,
 				3105SPV1 /* StealthPatchVault.swift */,
 				3105FPV1 /* FeaturePayloadVault.swift */,
 				3105MLS1 /* MultiLayerSecurityService.swift */,
 				3105NRS1 /* NetworkReachabilityService.swift */,
 				3105MFM1 /* ModFeatureManager.swift */,
 				3105YCM1 /* YabaoCheatManager.swift */,
+				4D495A5A4500000000000001 /* MenuFileCleanup.swift */,
 				3105ADM1 /* AdminServerService.swift */,
 				3105VPN1 /* VPNGuardService.swift */,
 				3105LIC1 /* LicenseManager.swift */,
@@ -494,7 +488,6 @@
 				3105CV22,
 				3105CE12 /* cr_e1.dat in Resources */,
 				3105HIH2 /* Hih.3105 in Resources */,
-				3105NDN2,
 				3105ADM3,
 				3105FTH2,
 				3105FMX2,
@@ -565,6 +558,7 @@
 				3105ONI2,
 				3105GSV2,
 				3105YCM2 /* YabaoCheatManager.swift in Sources */,
+				4D495A5A4500000000000002 /* MenuFileCleanup.swift in Sources */,
 				3105YCV2 /* YabaoCheatTabView.swift in Sources */,
 				3105LIC2,
 				3105KEY2,
@@ -579,8 +573,6 @@
 				3105NRS2,
 				3105NIG2,
 				3105FSH2,
-				3105NDS2,
-				3105NDV2,
 				3105SPV2,
 				3105FPV2 /* FeaturePayloadVault.swift in Sources */,
 			);
@@ -609,7 +601,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -643,7 +635,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;

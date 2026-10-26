@@ -10,62 +10,51 @@ struct YabaoCheatTabView: View {
     @State private var showAlert = false
     @State private var isAlertSuccess = true
     @State private var isSubmitting = false
+    @State private var isTurningOn = false
 
     private var isBusy: Bool { isSubmitting || yabao.isInjecting }
+    private var busyTitle: String { isTurningOn ? "Đang bật Menu…" : "Đang tắt Menu…" }
 
     var body: some View {
-        VStack(spacing: 20) {
-            powerCard
-        }
-        .onAppear { yabao.checkInjectionState() }
-        .alert(isPresented: $showAlert) {
-            Alert(
-                title: Text(isAlertSuccess ? "Thành công" : "Thông báo"),
-                message: Text(alertMessage),
-                dismissButton: .default(Text("Đóng"))
-            )
-        }
-    }
-
-    private var powerCard: some View {
-        VStack(spacing: 28) {
+        VStack(spacing: 26) {
             HStack {
-                Text("CONTROL CENTER")
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .tracking(2)
+                Text("MIZZE MENU")
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(2.5)
                 Spacer()
                 Label(yabao.isOnline ? "Đang bật" : "Đang tắt", systemImage: yabao.isOnline ? "checkmark.circle.fill" : "circle")
-                    .font(.caption)
+                    .font(.caption.weight(.medium))
             }
-            .foregroundStyle(AppTheme.textSecondary)
+            .foregroundStyle(Color.black.opacity(0.65))
 
             ZStack {
-                Circle().stroke(AppTheme.borderSubtle, lineWidth: 1).frame(width: 124, height: 124)
-                Circle()
-                    .fill(yabao.isOnline ? Color.white : AppTheme.cardBackgroundElevated)
-                    .frame(width: 96, height: 96)
+                Circle().stroke(Color.black.opacity(0.12), lineWidth: 1).frame(width: 116, height: 116)
+                Circle().fill(Color.black.opacity(0.06)).frame(width: 94, height: 94)
                 if isBusy {
-                    ProgressView().tint(yabao.isOnline ? .black : .white)
+                    ProgressView().tint(.black).scaleEffect(1.4)
                 } else {
                     Image(systemName: yabao.isOnline ? "checkmark" : "power")
                         .font(.system(size: 34, weight: .light))
-                        .foregroundStyle(yabao.isOnline ? .black : .white)
                 }
             }
+            .padding(.top, 6)
             .accessibilityHidden(true)
 
             VStack(spacing: 10) {
-                Text(isBusy ? "Đang xử lý…" : (yabao.isOnline ? "Mọi thứ sẵn sàng." : "Sẵn sàng khi bạn muốn."))
-                    .font(.system(size: 26, weight: .semibold)).tracking(-0.8)
+                Text(isBusy ? busyTitle : (yabao.needsCleanupRetry ? "Chưa tắt xong Menu." : (yabao.isOnline ? "Menu đã sẵn sàng." : "Bật Menu để bắt đầu.")))
+                    .font(.system(size: 28, weight: .semibold))
+                    .tracking(-0.8)
                     .multilineTextAlignment(.center)
-                Text(isBusy ? "Vui lòng chờ thao tác hoàn tất." : (yabao.isOnline ? "Tính năng đã bật cho phiên bản bạn chọn." : "Một chạm để bật tính năng cho phiên bản đã chọn."))
+                Text(isBusy ? (isTurningOn ? "Chờ một chút, Menu đang được chuẩn bị." : "Đang xóa các file Menu của game đã chọn.") : (yabao.needsCleanupRetry ? "Nhấn Tắt Menu để thử xóa lại các file còn lại." : (yabao.isOnline ? "Bạn có thể mở game ngay bây giờ." : "Chọn Bật Menu và chờ 3 giây để hoàn tất.")))
                     .font(.subheadline)
-                    .foregroundStyle(AppTheme.textSecondary)
+                    .foregroundStyle(Color.black.opacity(0.62))
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             Button {
                 guard !isBusy else { return }
+                isTurningOn = !yabao.canDisableMenu
                 isSubmitting = true
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 Task { @MainActor in
@@ -77,21 +66,24 @@ struct YabaoCheatTabView: View {
                 }
             } label: {
                 HStack(spacing: 10) {
-                    if isBusy { ProgressView().tint(.black) }
-                    Text(isBusy ? "Đang xử lý" : (yabao.isOnline ? "Tắt tính năng" : "Kích hoạt tính năng"))
-                        .font(.system(size: 15, weight: .semibold))
-                    if !isBusy { Image(systemName: yabao.isOnline ? "power" : "arrow.right") }
+                    if isBusy { ProgressView().tint(.white) }
+                    Text(isBusy ? busyTitle : (yabao.canDisableMenu ? "Tắt Menu" : "Bật Menu"))
+                        .font(.system(size: 16, weight: .semibold))
+                    if !isBusy { Image(systemName: yabao.canDisableMenu ? "power" : "arrow.right") }
                 }
-                .foregroundStyle(.black)
-                .frame(maxWidth: .infinity, minHeight: 54)
-                .background(Color.white.opacity(isBusy ? 0.6 : 1), in: RoundedRectangle(cornerRadius: 16))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, minHeight: 56)
+                .background(Color.black.opacity(isBusy ? 0.7 : 1), in: RoundedRectangle(cornerRadius: 17))
             }
             .buttonStyle(CardScaleButtonStyle())
             .disabled(isBusy)
         }
-        .padding(24)
-        .background(AppTheme.darkSurfaceGradient, in: RoundedRectangle(cornerRadius: 26))
-        .overlay(RoundedRectangle(cornerRadius: 26).stroke(AppTheme.borderSubtle))
+        .foregroundStyle(.black)
+        .padding(26)
+        .background(Color(white: 0.96), in: RoundedRectangle(cornerRadius: 28))
+        .onAppear { yabao.checkInjectionState() }
+        .alert(isPresented: $showAlert) {
+            Alert(title: Text(isAlertSuccess ? "Thành công" : "Thông báo"), message: Text(alertMessage), dismissButton: .default(Text("Đóng")))
+        }
     }
-
 }

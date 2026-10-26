@@ -24,18 +24,18 @@ enum AppTheme {
     }
 
     static let darkSurfaceGradient = LinearGradient(
-        colors: [Color(white: 0.10), Color(white: 0.055)],
+        colors: [Color(white: 0.23), Color(white: 0.16)],
         startPoint: .top,
         endPoint: .bottom
     )
 
     // Deep Obsidian / Jet Black Surfaces
-    static let pageBackground = Color(white: 0.025)
-    static let cardBackground = Color(white: 0.075)
-    static let cardBackgroundElevated = Color(white: 0.12)
+    static let pageBackground = Color(white: 0.09)
+    static let cardBackground = Color(white: 0.16)
+    static let cardBackgroundElevated = Color(white: 0.23)
     static let consoleBackground = Color(white: 0.035)
-    static let textSecondary = Color(white: 0.62)
-    static let borderSubtle = Color.white.opacity(0.12)
+    static let textSecondary = Color(white: 0.78)
+    static let borderSubtle = Color.white.opacity(0.20)
     static var borderGlow: Color { accent.opacity(0.3) }
 
     static let pageInset: CGFloat = 16

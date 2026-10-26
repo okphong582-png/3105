@@ -58,7 +58,6 @@ struct GameSelectionView: View {
     var onSelectGame: (String) -> Void
     @ObservedObject private var modManager = ModFeatureManager.shared
     @ObservedObject private var licenseManager = LicenseManager.shared
-    @State private var showNextDNSSetup = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private var maskedKeyText: String {
         let raw = licenseManager.currentLicense?.key ?? UserDefaults.standard.string(forKey: "oni_saved_key") ?? ""
@@ -109,12 +108,6 @@ struct GameSelectionView: View {
                 HStack {
                     Text("MIZZE").font(.system(size: 12, weight: .semibold)).tracking(4)
                     Spacer()
-                    Button { showNextDNSSetup = true } label: {
-                        Image(systemName: "shield.lefthalf.filled")
-                            .frame(width: 44, height: 44)
-                            .background(AppTheme.cardBackground, in: Circle())
-                    }
-                    .accessibilityLabel("Cài đặt DNS")
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Chọn trải nghiệm.")
@@ -146,7 +139,6 @@ struct GameSelectionView: View {
         }
         .background(AppTheme.pageBackground.ignoresSafeArea())
         .foregroundStyle(.white)
-        .sheet(isPresented: $showNextDNSSetup) { NextDNSSetupSheet() }
     }
 
     private func gameCard(isMax: Bool, number: String, subtitle: String) -> some View {

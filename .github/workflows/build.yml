@@ -32,6 +32,11 @@ jobs:
           fi
           xcodebuild -version
 
+      - name: Verify Menu cleanup boundaries
+        run: |
+          cat ThreeOneOSFive/helpers/MenuFileCleanup.swift scripts/test-menu-cleanup.swift > "$RUNNER_TEMP/mizze-cleanup-tests.swift"
+          swift "$RUNNER_TEMP/mizze-cleanup-tests.swift"
+
       - name: Build Mizze
         run: |
           set -o pipefail
@@ -63,7 +68,6 @@ jobs:
           test -d "$APP_PATH"
           test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$APP_PATH/Info.plist")" = "Mizze"
           cp ThreeOneOSFive/cr_*.dat "$APP_PATH/"
-          cp ThreeOneOSFive/NextDNS.mobileconfig "$APP_PATH/"
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
           zip -r9 Mizze_iOS.ipa Payload

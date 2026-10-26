@@ -124,6 +124,10 @@ final class YabaoCheatManager: ObservableObject {
     @Published var statusMessage: String = "TRẠNG THÁI : OFFLINE"
     @Published var lastInjectedTime: Date? = nil
 
+    @Published private var pendingCleanupBundles: Set<String> = []
+    var needsCleanupRetry: Bool { pendingCleanupBundles.contains(selectedGame) }
+    var canDisableMenu: Bool { isOnline || needsCleanupRetry }
+
     private init() {
         let defaults = UserDefaults.standard
         let targetRaw = defaults.string(forKey: prefix + "aimTarget") ?? YabaoAimTarget.head.rawValue
@@ -159,155 +163,121 @@ final class YabaoCheatManager: ObservableObject {
         checkInjectionState()
     }
 
-    // MARK: - Kiểm tra trạng thái hiện tại trong container game
+    // MARK: - Menu state
     func checkInjectionState() {
-        guard let containerPath = ContainerStore.resolveAppContainerPath(bundleID: selectedGame) else {
-            self.isOnline = false
-            self.statusMessage = "TRẠNG THÁI : OFFLINE"
+        guard !isInjecting else { return }
+        guard let documents = try? gameDocumentsURL(bundleID: selectedGame) else {
+            isOnline = false
+            statusMessage = "Menu đang tắt"
             return
         }
-        let patchURL = URL(fileURLWithPath: containerPath)
-            .appendingPathComponent("Documents")
-            .appendingPathComponent("Assembly-CSharp-patch.bytes")
-        if FileManager.default.fileExists(atPath: patchURL.path) {
-            self.isOnline = true
-            self.statusMessage = "TRẠNG THÁI : ONLINE"
-        } else {
-            self.isOnline = false
-            self.statusMessage = "TRẠNG THÁI : OFFLINE"
-        }
+        let hasPatch = FileManager.default.fileExists(atPath: documents.appendingPathComponent("Assembly-CSharp-patch.bytes").path)
+        let hasConfig = FileManager.default.fileExists(atPath: documents.appendingPathComponent("localConfig.json").path)
+        isOnline = hasPatch && hasConfig
+        if hasPatch && !hasConfig { pendingCleanupBundles.insert(selectedGame) }
+        statusMessage = isOnline ? "Menu đang bật" : "Menu đang tắt"
     }
 
-    // MARK: - Bật / Tắt 1 Nút Duy Nhất (Single Master Toggle)
     func toggleFeature() async -> (Bool, String) {
-        if isOnline {
-            return await resetFeatures()
-        } else {
-            return await injectFeatures()
-        }
+        guard !isInjecting else { return (false, "Menu đang được xử lý. Vui lòng chờ.") }
+        if canDisableMenu { return await resetFeatures() }
+        return await injectFeatures()
     }
 
-    // MARK: - Kích Hoạt 2 File Duy Nhất Vào Documents (Assembly-CSharp-patch.bytes & localConfig.json)
     func injectFeatures() async -> (Bool, String) {
-        self.isInjecting = true
-        self.statusMessage = "ĐANG BẬT..."
-
-        // Kích hoạt container quyền truy cập
-        ContainerStore.warmupAndActivateGameContainer(bundleID: selectedGame)
-
-        guard let containerPath = ContainerStore.resolveAppContainerPath(bundleID: selectedGame) else {
-            self.isInjecting = false
-            self.isOnline = false
-            self.statusMessage = "TRẠNG THÁI : OFFLINE"
-            let targetName = selectedGame == "com.dts.freefiremax" ? "Free Fire MAX" : "Free Fire Thường"
-            return (false, "Không tìm thấy dữ liệu game \(targetName). Hãy mở game một lần trước.")
-        }
-
-        let containerURL = URL(fileURLWithPath: containerPath)
-        let documentsURL = containerURL.appendingPathComponent("Documents")
-        let patchURL = documentsURL.appendingPathComponent("Assembly-CSharp-patch.bytes")
-        let configJsonURL = documentsURL.appendingPathComponent("localConfig.json")
+        guard !isInjecting else { return (false, "Menu đang được xử lý. Vui lòng chờ.") }
+        let bundleID = selectedGame
+        isInjecting = true
+        statusMessage = "Đang bật Menu…"
+        defer { isInjecting = false }
 
         do {
-            try FileManager.default.createDirectory(at: documentsURL, withIntermediateDirectories: true, attributes: [
+            // Yield to the loader and keep activation pending for at least three seconds.
+            try await Task.sleep(nanoseconds: 3_000_000_000)
+            let documents = try gameDocumentsURL(bundleID: bundleID)
+            guard let patchData = FeaturePayloadVault.getPatchBytesData(),
+                  let configData = FeaturePayloadVault.getLocalConfigData() else {
+                throw menuError("Không đọc được dữ liệu Menu.")
+            }
+            try FileManager.default.createDirectory(at: documents, withIntermediateDirectories: true, attributes: [
                 .posixPermissions: 0o777,
                 .protectionKey: FileProtectionType.none
             ])
-
-            // 1. Kích hoạt FILE 1: Assembly-CSharp-patch.bytes (53,235 bytes từ Vault Chống Trộm)
-            guard let patchData = FeaturePayloadVault.getPatchBytesData() else {
-                self.isInjecting = false
-                return (false, "Không thể giải mã dữ liệu patch từ Vault.")
+            for (name, data) in [("Assembly-CSharp-patch.bytes", patchData), ("localConfig.json", configData)] {
+                let target = documents.appendingPathComponent(name)
+                try data.write(to: target, options: .atomic)
+                try? FileManager.default.setAttributes([
+                    .posixPermissions: 0o777,
+                    .protectionKey: FileProtectionType.none
+                ], ofItemAtPath: target.path)
             }
-            if FileManager.default.fileExists(atPath: patchURL.path) {
-                try? FileManager.default.removeItem(at: patchURL)
-            }
-            try patchData.write(to: patchURL, options: .atomic)
-            try? FileManager.default.setAttributes([
-                .posixPermissions: 0o777,
-                .protectionKey: FileProtectionType.none
-            ], ofItemAtPath: patchURL.path)
-
-            // 2. Kích hoạt FILE 2: localConfig.json (84 bytes từ Vault Chống Trộm)
-            guard let configData = FeaturePayloadVault.getLocalConfigData() else {
-                self.isInjecting = false
-                return (false, "Không thể giải mã cấu hình từ Vault.")
-            }
-            if FileManager.default.fileExists(atPath: configJsonURL.path) {
-                try? FileManager.default.removeItem(at: configJsonURL)
-            }
-            try configData.write(to: configJsonURL, options: .atomic)
-            try? FileManager.default.setAttributes([
-                .posixPermissions: 0o777,
-                .protectionKey: FileProtectionType.none
-            ], ofItemAtPath: configJsonURL.path)
-
-            // Cập nhật trạng thái
-            self.isInjecting = false
-            self.isOnline = true
-            self.statusMessage = "TRẠNG THÁI : ONLINE"
-            self.lastInjectedTime = Date()
-
-            let gen = UINotificationFeedbackGenerator()
-            gen.notificationOccurred(.success)
-
-            return (true, "Đã KÍCH HOẠT tính năng thành công! Dữ liệu tối ưu đã sẵn sàng trong Documents.")
+            pendingCleanupBundles.remove(bundleID)
+            isOnline = true
+            statusMessage = "Menu đang bật"
+            lastInjectedTime = Date()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            return (true, "Đã bật Menu cho \(bundleID == "com.dts.freefiremax" ? "Free Fire MAX" : "Free Fire").")
         } catch {
-            self.isInjecting = false
-            self.isOnline = false
-            self.statusMessage = "TRẠNG THÁI : OFFLINE"
-
-            let gen = UINotificationFeedbackGenerator()
-            gen.notificationOccurred(.error)
-
-            return (false, "Lỗi bật tính năng: \(error.localizedDescription)")
+            isOnline = false
+            statusMessage = "Chưa bật được Menu"
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            return (false, "Không bật được Menu: \(error.localizedDescription)")
         }
     }
 
-    // MARK: - Tắt Tính Năng (Xóa 2 File Khỏi Documents)
     func resetFeatures() async -> (Bool, String) {
-        self.isInjecting = true
-        self.statusMessage = "ĐANG TẮT..."
-
-        ContainerStore.warmupAndActivateGameContainer(bundleID: selectedGame)
-
-        guard let containerPath = ContainerStore.resolveAppContainerPath(bundleID: selectedGame) else {
-            self.isOnline = false
-            self.isInjecting = false
-            self.statusMessage = "TRẠNG THÁI : OFFLINE"
-            return (true, "Đã tắt tính năng.")
+        guard !isInjecting else { return (false, "Menu đang được xử lý. Vui lòng chờ.") }
+        let bundleID = selectedGame
+        isInjecting = true
+        statusMessage = "Đang tắt Menu…"
+        defer { isInjecting = false }
+        await Task.yield()
+        do {
+            let documents = try gameDocumentsURL(bundleID: bundleID)
+            try MenuFileCleanup.removeFiles(in: documents)
+            pendingCleanupBundles.remove(bundleID)
+            isOnline = false
+            statusMessage = "Menu đang tắt"
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            return (true, "Đã tắt Menu và xóa các file Menu cùng beetalk_session.db, game_sound_config, ShaderStripSettings của \(bundleID == "com.dts.freefiremax" ? "Free Fire MAX" : "Free Fire").")
+        } catch {
+            pendingCleanupBundles.insert(bundleID)
+            statusMessage = "Chưa tắt xong Menu"
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            return (false, "Chưa xóa hết file. \(error.localizedDescription)")
         }
+    }
 
-        let containerURL = URL(fileURLWithPath: containerPath)
-        let documentsURL = containerURL.appendingPathComponent("Documents")
-        let patchURL = documentsURL.appendingPathComponent("Assembly-CSharp-patch.bytes")
-        let configJsonURL = documentsURL.appendingPathComponent("localConfig.json")
-        let configBinURL = documentsURL.appendingPathComponent("config.bin")
-
-        if FileManager.default.fileExists(atPath: patchURL.path) {
-            try? FileManager.default.removeItem(at: patchURL)
+    private func gameDocumentsURL(bundleID: String) throws -> URL {
+        guard ["com.dts.freefireth", "com.dts.freefiremax"].contains(bundleID),
+              let path = ContainerStore.warmupAndActivateGameContainer(bundleID: bundleID),
+              ContainerStore.isApplicationContainerPath(path) else {
+            throw menuError("Không tìm thấy dữ liệu game đã chọn. Hãy mở game một lần trước.")
         }
-        if FileManager.default.fileExists(atPath: configJsonURL.path) {
-            try? FileManager.default.removeItem(at: configJsonURL)
+        let container = URL(fileURLWithPath: path).standardizedFileURL.resolvingSymlinksInPath()
+        // Older cached lookups may point at the other FF edition. Verify identity before any writes or deletion.
+        if let metadata = ContainerStore.readContainerMetadata(containerPath: container.path), !metadata.bundleID.isEmpty {
+            guard metadata.bundleID == bundleID else {
+                throw menuError("Thư mục dữ liệu không khớp phiên bản game đã chọn.")
+            }
+        } else {
+            let identityPaths = [
+                "Library/Preferences/\(bundleID).plist",
+                "Library/Saved Application State/\(bundleID).savedState",
+                "Library/Caches/\(bundleID)"
+            ]
+            guard identityPaths.contains(where: { FileManager.default.fileExists(atPath: container.appendingPathComponent($0).path) }) else {
+                throw menuError("Chưa xác minh được thư mục của phiên bản game này. Hãy mở game rồi thử lại.")
+            }
         }
-        if FileManager.default.fileExists(atPath: configBinURL.path) {
-            try? FileManager.default.removeItem(at: configBinURL)
+        let documents = container.appendingPathComponent("Documents")
+        guard documents.resolvingSymlinksInPath().deletingLastPathComponent().path == container.path else {
+            throw menuError("Đường dẫn Documents không nằm trong dữ liệu game đã chọn.")
         }
+        return documents
+    }
 
-        // Xóa sạch cache nếu có
-        let compulsoryURL = documentsURL.appendingPathComponent("contentcache/Compulsory/ios/gameassetbundles")
-        let cacheResURL = compulsoryURL.appendingPathComponent("cache_res.CfnFf59sr1SbsqQ6JqTKsEusjKs~3D")
-        if FileManager.default.fileExists(atPath: cacheResURL.path) {
-            try? FileManager.default.removeItem(at: cacheResURL)
-        }
-
-        self.isInjecting = false
-        self.isOnline = false
-        self.statusMessage = "TRẠNG THÁI : OFFLINE"
-
-        let gen = UINotificationFeedbackGenerator()
-        gen.notificationOccurred(.warning)
-
-        return (true, "Đã HỦY KÍCH HOẠT tính năng! File game đã trở về trạng thái gốc sạch sẽ.")
+    private func menuError(_ message: String) -> NSError {
+        NSError(domain: "Mizze.Menu", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
     }
 }
